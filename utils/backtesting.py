@@ -1,4 +1,4 @@
-
+import pandas as pd
 
 def backtest_daily(agent, data):
     signals = []
@@ -9,7 +9,8 @@ def backtest_daily(agent, data):
 
     data['Signal'] = signals
 
-    positions = data['Signal'].replace(0, method='ffill')
+    positions = data['Signal'].replace(0, pd.NA)
+    positions = positions.ffill()
     positions.iloc[0] = 0
 
     returns = data['Close'].pct_change().fillna(0)
