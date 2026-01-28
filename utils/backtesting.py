@@ -17,3 +17,11 @@ def backtest_daily(agent, data):
     strategy_returns = positions.shift(1) * returns
     equity = (1 + strategy_returns).cumprod()
     return (equity.iloc[-1] - 1) * 100
+
+def buy_and_hold(data):
+    """
+    Buy & Hold benchmark
+    """
+    returns = data['Close'].pct_change().fillna(0)
+    equity = (1 + returns).cumprod()
+    return (equity.iloc[-1] - 1) * 100
