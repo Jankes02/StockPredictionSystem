@@ -1,4 +1,4 @@
-from agents.MACD import MACD
+from agents.MACDAgent import MACDAgent
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ for filename in os.listdir(intraday_data_folder):
     intraday_data_frames.append(pd.read_csv(f'{intraday_data_folder}\\{filename}', parse_dates=['Date'], index_col='Date'))
 
 if __name__ == '__main__':
-    macd_agent = MACD()
+    macd_agent = MACDAgent()
     results = {}
     for i in range(len(daily_data_frames)):
         results[symbols[i]] = bt.backtest_daily(macd_agent, daily_data_frames[i])
