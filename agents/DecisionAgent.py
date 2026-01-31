@@ -27,7 +27,6 @@ class DecisionAgent:
             "aggressive": {"buy": 0.3, "sell": -0.3},
         }
 
-    # ---------- PUBLIC API ----------
 
     def decide(self, signals: List[dict]) -> List[dict]:
         if not signals:
@@ -43,7 +42,6 @@ class DecisionAgent:
 
         return self._apply_portfolio_constraints(decisions)
 
-    # ---------- SYMBOL LEVEL ----------
 
     def _decide_for_symbol(self, symbol: str, signals: List[dict]) -> dict:
         filtered = [
@@ -77,13 +75,11 @@ class DecisionAgent:
         else:
             return self._hold(symbol)
 
-    # ---------- PORTFOLIO LEVEL ----------
 
     def _apply_portfolio_constraints(self, decisions: List[dict]) -> List[dict]:
         if self.max_positions is None:
             return decisions
 
-        # sortuj wg siły sygnału
         decisions = sorted(
             decisions,
             key=lambda d: abs(d["score"]),
@@ -92,7 +88,6 @@ class DecisionAgent:
 
         return decisions[: self.max_positions]
 
-    # ---------- HELPERS ----------
 
     def _group_by_symbol(self, signals: List[dict]) -> Dict[str, List[dict]]:
         grouped = defaultdict(list)
