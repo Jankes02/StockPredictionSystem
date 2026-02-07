@@ -1,8 +1,6 @@
+from base.BaseAgent import BaseAgent
+from base.AgentSignal import AgentSignal
 import pandas as pd
-from base import BaseAgent, AgentSignal
-
-import pandas as pd
-import numpy as np
 
 
 class MACDAgent(BaseAgent):
@@ -22,10 +20,10 @@ class MACDAgent(BaseAgent):
         self.signal_period = signal_period
         self.confidence_scale = confidence_scale
 
-    def generate_signal(self, data: pd.DataFrame) -> AgentSignal:
+    def generate_signal(self, data: pd.DataFrame, symbol: str) -> AgentSignal:
         min_len = self.slow_period + self.signal_period + 2
         if len(data) < min_len:
-            return self._neutral_signal()
+            return self._neutral_signal(symbol)
 
         close = data["Close"]
 
@@ -45,25 +43,10 @@ class MACDAgent(BaseAgent):
             signal = -1
 
         if signal == 0:
-            return self._neutral_signal()
+            return self._neutral_signal(symbol)
 
         hist = curr_macd - curr_signal
 
         confidence = min(abs(hist) / close.iloc[-1] * self.confidence_scale, 1)
 
-        return {
-            "agent": self.name,
-            "signal": signal,
-            "confidence": float(confidence),
-            "horizon": self.horizon,
-            "kind": self.kind,
-        }
-
-    def _neutral_signal(self) -> AgentSignal:
-        return {
-            "agent": self.name,
-            "signal": 0,
-            "confidence": 0,
-            "horizon": self.horizon,
-            "kind": self.kind,
-        }
+        return self._pack(symbol, signal, float(confidence))
