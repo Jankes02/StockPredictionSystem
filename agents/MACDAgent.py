@@ -1,6 +1,7 @@
-from base.BaseAgent import BaseAgent
-from base.AgentSignal import AgentSignal
+from agents.base.BaseAgent import BaseAgent
+from agents.base.AgentSignal import AgentSignal
 import pandas as pd
+import numpy as np
 
 
 class MACDAgent(BaseAgent):
@@ -36,6 +37,8 @@ class MACDAgent(BaseAgent):
         prev_macd, curr_macd = macd_line.iloc[-2], macd_line.iloc[-1]
         prev_signal, curr_signal = signal_line.iloc[-2], signal_line.iloc[-1]
 
+        histogram = macd_line - signal_line
+
         signal = 0
         if prev_macd < prev_signal and curr_macd > curr_signal:
             signal = 1
@@ -45,8 +48,21 @@ class MACDAgent(BaseAgent):
         if signal == 0:
             return self._neutral_signal(symbol)
 
-        hist = curr_macd - curr_signal
+        curr_hist = histogram.iloc[-1]
 
-        confidence = min(abs(hist) / close.iloc[-1] * self.confidence_scale, 1)
+        # confidence = min(abs(hist) / close.iloc[-1] * self.confidence_scale, 1)
+
+        window = 50
+        hist_std = histogram.tail(window).std()
+    
+    # 2. Skalowanie: ile "odchyleń" ma obecny dystans?
+    # Jeśli curr_hist jest równe odchyleniu standardowemu, wynik to ~0.76 (z sigmoidem)
+    # Używamy abs(), bo confidence jest zawsze dodatnie (0-1)
+        if hist_std > 0:
+        # Wykorzystujemy funkcję tanh lub sigmoid, aby "zamknąć" wynik w 0..1
+        # Skalujemy różnicę przez zmienność. Mnożnik 2.0 dostosowuje czułość.
+            confidence = float(np.tanh(abs(curr_hist) / (2 * hist_std)))
+        else:
+            confidence = 0.5  # Wartość domyślna przy braku zmienności
 
         return self._pack(symbol, signal, float(confidence))

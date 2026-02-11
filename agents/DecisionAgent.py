@@ -1,13 +1,13 @@
 from typing import List, Dict, Literal
 from collections import defaultdict
-from base.Decision import Decision
+from agents.base.Decision import Decision
 
 
 class DecisionAgent:
     def __init__(
         self,
         mode: Literal["passive", "balanced", "aggressive"] = "balanced",
-        min_confidence: float = 0.15,
+        min_confidence: float = 0.1,
         max_positions: int | None = None,
     ):
         self.mode = mode
@@ -64,7 +64,12 @@ class DecisionAgent:
             weight = self.kind_weights.get(s["kind"], 1.0)
             contribution = s["signal"] * s["confidence"] * weight
             score += contribution
-            contributors.append(s["agent"])
+            contributors.append({
+                "agent": s["agent"],
+                "signal": s["signal"],
+                "confidence": s["confidence"],
+                "kind": s["kind"],
+            })
 
         thresholds = self.thresholds[self.mode]
 
@@ -103,7 +108,10 @@ class DecisionAgent:
         if not trend_signals:
             return 0
 
-        total = sum(s["signal"] * s["confidence"] for s in trend_signals)
+        total = sum(
+            s["signal"] * s["confidence"] * self.kind_weights["trend"]
+            for s in trend_signals
+        )
         return 1 if total > 0 else -1
 
     def _decision(self, symbol: str, action: str, score: float, contributors: List[str]) -> Decision:
