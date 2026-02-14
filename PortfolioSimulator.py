@@ -1,23 +1,24 @@
+from typing import Dict, List, Literal, Optional, TypedDict
+
 import pandas as pd
-from typing import Dict, List, Literal
+
+from agents.base.Decision import Decision
 
 
-Position = {
-    "symbol": str,
-    "quantity": int,
-    "entry_price": float,
-    "entry_date": pd.Timestamp,
-}
+class Position(TypedDict):
+    symbol: str
+    quantity: int
+    entry_price: float
+    entry_date: pd.Timestamp
 
 
-Trade = {
-    "symbol": str,
-    "action": Literal["BUY", "SELL"],
-    "price": float,
-    "quantity": int,
-    "date": pd.Timestamp,
-    "pnl": float | None,
-}
+class Trade(TypedDict):
+    symbol: str
+    action: Literal["BUY", "SELL"]
+    price: float
+    quantity: int
+    date: pd.Timestamp
+    pnl: Optional[float]
 
 
 class PortfolioSimulator:
@@ -30,8 +31,8 @@ class PortfolioSimulator:
         self.cash = initial_cash
         self.position_size = position_size
 
-        self.positions: Dict[str, dict] = {}
-        self.trades: List[dict] = []
+        self.positions: Dict[str, Position] = {}
+        self.trades: List[Trade] = []
         self.equity_curve: List[dict] = []
 
     # ---------- MAIN API ----------
@@ -40,8 +41,8 @@ class PortfolioSimulator:
         self,
         date: pd.Timestamp,
         prices: Dict[str, float],
-        decisions: List[dict],
-    ):
+        decisions: List[Decision],
+    ) -> None:
         for d in decisions:
             if d["action"] == "SELL":
                 self._sell(d["symbol"], prices.get(d["symbol"]), date)
@@ -54,7 +55,7 @@ class PortfolioSimulator:
 
     # ---------- TRADING ----------
 
-    def _buy(self, symbol: str, price: float | None, date):
+    def _buy(self, symbol: str, price: Optional[float], date: pd.Timestamp) -> None:
         if price is None:
             return
         if symbol in self.positions:
@@ -87,7 +88,7 @@ class PortfolioSimulator:
             "pnl": None,
         })
 
-    def _sell(self, symbol: str, price: float | None, date):
+    def _sell(self, symbol: str, price: Optional[float], date: pd.Timestamp) -> None:
         if price is None:
             return
         if symbol not in self.positions:
@@ -111,7 +112,7 @@ class PortfolioSimulator:
 
     # ---------- EQUITY ----------
 
-    def _record_equity(self, date, prices):
+    def _record_equity(self, date: pd.Timestamp, prices: Dict[str, float]) -> None:
         value = self.cash
         for pos in self.positions.values():
             price = prices.get(pos["symbol"])
@@ -127,7 +128,7 @@ class PortfolioSimulator:
 
     # ---------- METRICS ----------
 
-    def summary(self):
+    def summary(self) -> dict:
         realized_pnl = sum(
             t["pnl"] for t in self.trades
             if t["pnl"] is not None

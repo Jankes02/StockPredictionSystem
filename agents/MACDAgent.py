@@ -49,20 +49,12 @@ class MACDAgent(BaseAgent):
             return self._neutral_signal(symbol)
 
         curr_hist = histogram.iloc[-1]
-
-        # confidence = min(abs(hist) / close.iloc[-1] * self.confidence_scale, 1)
-
         window = 50
         hist_std = histogram.tail(window).std()
-    
-    # 2. Skalowanie: ile "odchyleń" ma obecny dystans?
-    # Jeśli curr_hist jest równe odchyleniu standardowemu, wynik to ~0.76 (z sigmoidem)
-    # Używamy abs(), bo confidence jest zawsze dodatnie (0-1)
+
         if hist_std > 0:
-        # Wykorzystujemy funkcję tanh lub sigmoid, aby "zamknąć" wynik w 0..1
-        # Skalujemy różnicę przez zmienność. Mnożnik 2.0 dostosowuje czułość.
             confidence = float(np.tanh(abs(curr_hist) / (2 * hist_std)))
         else:
-            confidence = 0.5  # Wartość domyślna przy braku zmienności
+            confidence = 0.5
 
         return self._pack(symbol, signal, float(confidence))

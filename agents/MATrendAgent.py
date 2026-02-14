@@ -21,7 +21,10 @@ class MATrendAgent(BaseAgent):
         ma_slow = close.rolling(self.slow).mean()
 
         diff = ma_fast.iloc[-1] - ma_slow.iloc[-1]
+        last_close = close.iloc[-1]
+        if pd.isna(last_close) or last_close <= 0:
+            return self._neutral_signal(symbol)
         signal = 1 if diff > 0 else -1
-        confidence = abs(diff) / close.iloc[-1]
+        confidence = abs(diff) / last_close
 
         return self._pack(symbol, signal, confidence)

@@ -1,6 +1,6 @@
-from typing import List, Dict, Literal
+from typing import Dict, List, Literal, Optional
 from collections import defaultdict
-from agents.base.Decision import Decision
+from agents.base.Decision import ContributingAgent, Decision
 
 
 class DecisionAgent:
@@ -8,7 +8,7 @@ class DecisionAgent:
         self,
         mode: Literal["passive", "balanced", "aggressive"] = "balanced",
         min_confidence: float = 0.1,
-        max_positions: int | None = None,
+        max_positions: Optional[int] = None,
     ):
         self.mode = mode
         self.min_confidence = min_confidence
@@ -28,12 +28,12 @@ class DecisionAgent:
         }
 
 
-    def decide(self, signals: List[dict]) -> List[dict]:
+    def decide(self, signals: List[dict]) -> List[Decision]:
         if not signals:
             return []
 
         by_symbol = self._group_by_symbol(signals)
-        decisions: List[dict] = []
+        decisions: List[Decision] = []
 
         for symbol, symbol_signals in by_symbol.items():
             decision = self._decide_for_symbol(symbol, symbol_signals)
@@ -43,7 +43,7 @@ class DecisionAgent:
         return self._apply_portfolio_constraints(decisions)
 
 
-    def _decide_for_symbol(self, symbol: str, signals: List[dict]) -> dict:
+    def _decide_for_symbol(self, symbol: str, signals: List[dict]) -> Decision:
         filtered = [
             s for s in signals
             if s["signal"] != 0 and s["confidence"] >= self.min_confidence
@@ -81,7 +81,7 @@ class DecisionAgent:
             return self._hold(symbol)
 
 
-    def _apply_portfolio_constraints(self, decisions: List[dict]) -> List[dict]:
+    def _apply_portfolio_constraints(self, decisions: List[Decision]) -> List[Decision]:
         if self.max_positions is None:
             return decisions
 
@@ -114,7 +114,13 @@ class DecisionAgent:
         )
         return 1 if total > 0 else -1
 
-    def _decision(self, symbol: str, action: str, score: float, contributors: List[str]) -> Decision:
+    def _decision(
+        self,
+        symbol: str,
+        action: str,
+        score: float,
+        contributors: List[ContributingAgent],
+    ) -> Decision:
         return {
             "symbol": symbol,
             "action": action,

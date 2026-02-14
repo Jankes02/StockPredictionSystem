@@ -23,10 +23,14 @@ class BollingerAgent(BaseAgent):
         upper = ma + self.std_mult * std
         lower = ma - self.std_mult * std
         last = close.iloc[-1]
+        lower_val = lower.iloc[-1]
+        upper_val = upper.iloc[-1]
 
-        if last < lower.iloc[-1]:
-            return self._pack(symbol, 1, (lower.iloc[-1] - last) / last)
-        if last > upper.iloc[-1]:
-            return self._pack(symbol, -1, (last - upper.iloc[-1]) / last)
+        if pd.isna(last) or last <= 0:
+            return self._neutral_signal(symbol)
+        if last < lower_val:
+            return self._pack(symbol, 1, (lower_val - last) / last)
+        if last > upper_val:
+            return self._pack(symbol, -1, (last - upper_val) / last)
 
         return self._neutral_signal(symbol)

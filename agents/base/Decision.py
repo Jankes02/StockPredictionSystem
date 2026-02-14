@@ -1,4 +1,11 @@
-from typing import TypedDict, Literal
+from typing import List, Literal, TypedDict
+
+
+class ContributingAgent(TypedDict):
+    agent: str
+    signal: int
+    confidence: float
+    kind: str
 
 
 class Decision(TypedDict):
@@ -6,4 +13,4 @@ class Decision(TypedDict):
     action: Literal["BUY", "SELL", "HOLD"]
     score: float
     confidence: float
-    contributing_agents: list[str]
+    contributing_agents: List[ContributingAgent]

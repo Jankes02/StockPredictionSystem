@@ -1,0 +1,46 @@
+data:
+  daily_dir: "data/daily"
+  five_min_dir: "data/5min"
+
+# WIG20 symbols (WSE)
+symbols:
+  - ALE
+  - ALR
+  - BDX
+  - CCC
+  - CDR
+  - DNP
+  - KGH
+  - KRU
+  - KTY
+  - LPP
+  - MBK
+  - OPL
+  - PCO
+  - PEO
+  - PGE
+  - PKN
+  - PKO
+  - PZU
+  - SPL
+  - ZAB
+
+backtest:
+  initial_cash: 100000
+  data_frequency: "daily"   # daily | 5min
+
+portfolio:
+  position_size: 0.1   # fraction of cash per new position
+
+decision:
+  mode: "aggressive"    # passive | balanced | aggressive
+  min_confidence: 0.1
+  max_positions: null
+
+agents:
+  macd: { fast_period: 8, slow_period: 17, signal_period: 9, confidence_scale: 5 }
+  rsi: { period: 14 }
+  roc: { period: 10, threshold: 0.02 }
+  bollinger: { window: 20, std_mult: 2 }
+  matrend: { fast_window: 50, slow_window: 200 }
+  # breakout: { lookback: 20 }

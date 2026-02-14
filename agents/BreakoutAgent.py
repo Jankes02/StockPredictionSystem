@@ -19,9 +19,9 @@ class BreakoutAgent(BaseAgent):
         low = data["Low"].iloc[-self.lookback:-1].min()
         close = data["Close"].iloc[-1]
 
-        if close > high:
+        if close > high and high > 0:
             return self._pack(symbol, 1, (close - high) / high)
-        if close < low:
+        if close < low and low > 0:
             return self._pack(symbol, -1, (low - close) / low)
 
         return self._neutral_signal(symbol)

@@ -1,52 +1,72 @@
-from agents.MACDAgent import MACDAgent
-from agents.RSIAgent import RSIAgent
-from agents.ROCAgent import ROCAgent
-from agents.BollingerAgent import BollingerAgent
-from agents.MATrendAgent import MATrendAgent
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import pandas as pd
+
+from config import (
+    load_config,
+    get_data_dir,
+    build_agents,
+    build_decision_agent,
+    get_backtest_options,
+)
 from utils.backtesting import backtest_portfolio_daily
 from MetricsCalculator import MetricsCalculator
 from utils.plotting import plot_equity_with_drawdown
-import pandas as pd
-import numpy as np
 
-daily_data_folder = 'data\\daily'
-intraday_data_folder = 'data\\5min'
-symbols = [
-    'ALE', 'ALR', 'BDX', 'CCC', 'CDR',
-    'DNP', 'KGH', 'KRU', 'KTY', 'LPP',
-    'MBK', 'OPL', 'PCO', 'PEO', 'PGE',
-    'PKN', 'PKO', 'PZU', 'SPL', 'ZAB'
-]
 
-data_by_symbol = {}
+def load_price_data(
+    folder: Path,
+    symbols: List[str],
+    *,
+    date_col: str = "Date",
+    required_columns: Optional[List[str]] = None,
+) -> Dict[str, pd.DataFrame]:
+    """
+    Load CSV price data for symbols that have a file in the given folder.
+    Symbols without a file (e.g. ZAB in daily when only 5min exists) are skipped.
+    """
+    if required_columns is None:
+        required_columns = ["Date", "Close"]
+    loaded: Dict[str, pd.DataFrame] = {}
+    for symbol in symbols:
+        path = folder / f"{symbol.lower()}.csv"
+        if not path.exists():
+            continue
+        try:
+            df = pd.read_csv(path, parse_dates=[date_col])
+            if not all(c in df.columns for c in required_columns):
+                continue
+            df = df.dropna(subset=required_columns)
+            df = df.set_index(date_col)
+            loaded[symbol] = df
+        except (pd.errors.EmptyDataError, pd.errors.ParserError, ValueError):
+            continue
+    return loaded
 
-for symbol in symbols:
-    try:
-        path = f"{daily_data_folder}\\{symbol.lower()}.csv"
-        df = pd.read_csv(path, parse_dates=["Date"], index_col="Date")
-        data_by_symbol[symbol] = df
-    except:
-        continue
-    
+
 if __name__ == "__main__":
-    agents = [
-        MACDAgent(),
-        RSIAgent(),
-        ROCAgent(),
-        BollingerAgent(),
-        MATrendAgent()
-    ]
+    cfg = load_config()
+    data_dir = get_data_dir(cfg)
+    symbols = cfg.get("symbols") or []
+    agents = build_agents(cfg)
+    decision_agent = build_decision_agent(cfg)
+    opts = get_backtest_options(cfg)
+
+    data_by_symbol = load_price_data(data_dir, symbols)
 
     portfolio = backtest_portfolio_daily(
         agents=agents,
         data_by_symbol=data_by_symbol,
-        initial_cash=100_000
+        initial_cash=opts["initial_cash"],
+        position_size=opts["position_size"],
+        decision_agent=decision_agent,
     )
 
     metrics = MetricsCalculator(
         portfolio.equity_curve,
-        portfolio.trades
+        portfolio.trades,
     )
     summary = metrics.summary()
-    print(metrics.summary())
-    # plot_equity_with_drawdown(portfolio.equity_curve)
+    print(summary)
+    plot_equity_with_drawdown(portfolio.equity_curve)
