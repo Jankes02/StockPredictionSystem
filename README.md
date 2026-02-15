@@ -43,4 +43,8 @@ Place one CSV per symbol in `data/daily/` (and optionally `data/5min/`). Each fi
 
 ## License
 
-(Add your license here.)
+Copyright © 2026 Rafał Jankowski. All rights reserved.
+
+This software is for **academic and research use only**. Commercial use, distribution, sublicensing, or modification for commercial purposes is prohibited without explicit written permission from the author.
+
+See [LICENSE](LICENSE) for full terms.
