@@ -1,6 +1,6 @@
 data:
   daily_dir: "data/daily"
-  five_min_dir: "data/5min"
+  5min_dir: "data/5min"
 
 # WIG20 symbols (WSE)
 symbols:
@@ -42,5 +42,5 @@ agents:
   rsi: { period: 14 }
   roc: { period: 10, threshold: 0.02 }
   bollinger: { window: 20, std_mult: 2 }
-  matrend: { fast_window: 50, slow_window: 200 }
+  matrend: { fast: 50, slow: 200 }
   # breakout: { lookback: 20 }

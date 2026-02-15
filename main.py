@@ -10,9 +10,9 @@ from config import (
     build_decision_agent,
     get_backtest_options,
 )
-from utils.backtesting import backtest_portfolio_daily
-from MetricsCalculator import MetricsCalculator
-from utils.plotting import plot_equity_with_drawdown
+from src.utils.backtesting import backtest_portfolio_daily
+from src.utils.MetricsCalculator import MetricsCalculator
+from src.utils.plotting import plot_equity_with_drawdown
 
 
 def load_price_data(

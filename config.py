@@ -6,14 +6,14 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from agents.base.BaseAgent import BaseAgent
-from agents.DecisionAgent import DecisionAgent
-from agents.MACDAgent import MACDAgent
-from agents.RSIAgent import RSIAgent
-from agents.ROCAgent import ROCAgent
-from agents.BollingerAgent import BollingerAgent
-from agents.MATrendAgent import MATrendAgent
-from agents.BreakoutAgent import BreakoutAgent
+from src.agents.base.BaseAgent import BaseAgent
+from src.agents.DecisionAgent import DecisionAgent
+from src.agents.MACDAgent import MACDAgent
+from src.agents.RSIAgent import RSIAgent
+from src.agents.ROCAgent import ROCAgent
+from src.agents.BollingerAgent import BollingerAgent
+from src.agents.MATrendAgent import MATrendAgent
+from src.agents.BreakoutAgent import BreakoutAgent
 
 
 AGENT_REGISTRY: Dict[str, type] = {
@@ -27,9 +27,9 @@ AGENT_REGISTRY: Dict[str, type] = {
 
 
 def load_config(config_path: Optional[Path] = None) -> dict:
-    """Load YAML config and resolve paths. Paths are relative to config file directory."""
+    """Load YAML config and resolve paths. Paths are relative to config file directory (project root)."""
     if config_path is None:
-        config_path = Path(__file__).parent / "config.yaml"
+        config_path = Path(__file__).resolve().parent / "config.yaml"
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"Config not found: {config_path}")
@@ -44,7 +44,7 @@ def load_config(config_path: Optional[Path] = None) -> dict:
     data = cfg.get("data", {})
     cfg["data"] = {
         "daily_dir": (base_dir / data.get("daily_dir", "data/daily")).resolve(),
-        "five_min_dir": (base_dir / data.get("five_min_dir", "data/5min")).resolve(),
+        "5min_dir": (base_dir / data.get("5min_dir", "data/5min")).resolve(),
     }
     return cfg
 
@@ -53,7 +53,7 @@ def get_data_dir(cfg: dict) -> Path:
     """Return the data directory Path for the configured backtest frequency."""
     freq = (cfg.get("backtest") or {}).get("data_frequency", "daily")
     if freq == "5min":
-        return cfg["data"]["five_min_dir"]
+        return cfg["data"]["5min_dir"]
     return cfg["data"]["daily_dir"]
 
 
