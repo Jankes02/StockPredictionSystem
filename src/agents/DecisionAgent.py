@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, Optional
 from collections import defaultdict
-from agents.base.Decision import ContributingAgent, Decision
+from src.agents.base.Decision import ContributingAgent, Decision
 
 
 class DecisionAgent:

@@ -2,7 +2,7 @@ from typing import Dict, List, Literal, Optional, TypedDict
 
 import pandas as pd
 
-from agents.base.Decision import Decision
+from src.agents.base.Decision import Decision
 
 
 class Position(TypedDict):

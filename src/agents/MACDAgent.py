@@ -1,5 +1,5 @@
-from agents.base.BaseAgent import BaseAgent
-from agents.base.AgentSignal import AgentSignal
+from src.agents.base.BaseAgent import BaseAgent
+from src.agents.base.AgentSignal import AgentSignal
 import pandas as pd
 import numpy as np
 

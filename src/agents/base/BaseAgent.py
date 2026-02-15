@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from agents.base.AgentSignal import AgentSignal
+from src.agents.base.AgentSignal import AgentSignal
 
 
 class BaseAgent(ABC):

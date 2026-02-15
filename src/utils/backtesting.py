@@ -2,9 +2,9 @@ from typing import Dict, List, Optional, Sequence
 
 import pandas as pd
 
-from agents.base.BaseAgent import BaseAgent
-from agents.DecisionAgent import DecisionAgent
-from PortfolioSimulator import PortfolioSimulator
+from src.agents.base.BaseAgent import BaseAgent
+from src.agents.DecisionAgent import DecisionAgent
+from src.utils.PortfolioSimulator import PortfolioSimulator
 
 
 def backtest_portfolio_daily(
