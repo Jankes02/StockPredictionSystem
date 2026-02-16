@@ -7,6 +7,49 @@ from src.agents.DecisionAgent import DecisionAgent
 from src.utils.PortfolioSimulator import PortfolioSimulator
 
 
+def backtest_portfolio_intraday(
+    agents: Sequence[BaseAgent],
+    data_by_symbol: Dict[str, pd.DataFrame],
+    initial_cash: float = 100_000,
+    position_size: float = 0.1,
+    decision_agent: Optional[DecisionAgent] = None,
+) -> PortfolioSimulator:
+    if not data_by_symbol:
+        return PortfolioSimulator(initial_cash, position_size)
+
+    decision_agent = decision_agent or DecisionAgent(mode="aggressive")
+    portfolio = PortfolioSimulator(initial_cash, position_size)
+
+    symbols = list(data_by_symbol.keys())
+    common_times = data_by_symbol[symbols[0]].index
+    for sym in symbols[1:]:
+        common_times = common_times.intersection(data_by_symbol[sym].index)
+    common_times = common_times.sort_values()
+
+    for bar_time in common_times:
+        bar_signals = []
+
+        for symbol in symbols:
+            data = data_by_symbol[symbol].loc[:bar_time]
+            if len(data) < 2:
+                continue
+
+            for agent in agents:
+                sig = agent.generate_signal(data, symbol)
+                bar_signals.append(sig)
+
+        decisions = decision_agent.decide(bar_signals)
+
+        prices = {
+            symbol: float(data_by_symbol[symbol].loc[bar_time]["Close"])
+            for symbol in symbols
+        }
+
+        portfolio.process_day(bar_time, prices, decisions)
+
+    return portfolio
+
+
 def backtest_portfolio_daily(
     agents: Sequence[BaseAgent],
     data_by_symbol: Dict[str, pd.DataFrame],

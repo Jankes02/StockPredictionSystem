@@ -27,20 +27,22 @@ symbols:
 
 backtest:
   initial_cash: 100000
-  data_frequency: "daily"   # daily | 5min
+  data_frequency: "5min"   # daily | 5min
 
 portfolio:
   position_size: 0.1   # fraction of cash per new position
 
 decision:
-  mode: "aggressive"    # passive | balanced | aggressive
+  mode: "balanced"    # passive | balanced | aggressive
   min_confidence: 0.1
   max_positions: null
 
 agents:
+  # daily
   macd: { fast_period: 8, slow_period: 17, signal_period: 9, confidence_scale: 5 }
   rsi: { period: 14 }
   roc: { period: 10, threshold: 0.02 }
   bollinger: { window: 20, std_mult: 2 }
   matrend: { fast: 50, slow: 200 }
-  # breakout: { lookback: 20 }
+  # intraday
+  breakout: { lookback: 39, confidence_scale: 25 }

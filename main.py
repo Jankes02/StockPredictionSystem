@@ -10,7 +10,7 @@ from config import (
     build_decision_agent,
     get_backtest_options,
 )
-from src.utils.backtesting import backtest_portfolio_daily
+from src.utils.backtesting import backtest_portfolio_daily, backtest_portfolio_intraday
 from src.utils.MetricsCalculator import MetricsCalculator
 from src.utils.plotting import plot_equity_with_drawdown
 
@@ -45,23 +45,45 @@ def load_price_data(
     return loaded
 
 
+def _is_intraday(cfg: dict) -> bool:
+    return (cfg.get("backtest") or {}).get("data_frequency", "daily") == "5min"
+
+
+def _agents_for_horizon(agents: list, horizon: str) -> list:
+    """Return only agents whose horizon matches (e.g. 'daily' or 'intraday')."""
+    return [a for a in agents if getattr(a, "horizon", None) == horizon]
+
+
 if __name__ == "__main__":
     cfg = load_config()
     data_dir = get_data_dir(cfg)
     symbols = cfg.get("symbols") or []
     agents = build_agents(cfg)
+    horizon = "intraday" if _is_intraday(cfg) else "daily"
+    agents = _agents_for_horizon(agents, horizon)
     decision_agent = build_decision_agent(cfg)
     opts = get_backtest_options(cfg)
 
-    data_by_symbol = load_price_data(data_dir, symbols)
+    # Intraday (5min) needs OHLC
+    required_cols = ["Date", "Close", "High", "Low"] if _is_intraday(cfg) else None
+    data_by_symbol = load_price_data(data_dir, symbols, required_columns=required_cols)
 
-    portfolio = backtest_portfolio_daily(
-        agents=agents,
-        data_by_symbol=data_by_symbol,
-        initial_cash=opts["initial_cash"],
-        position_size=opts["position_size"],
-        decision_agent=decision_agent,
-    )
+    if _is_intraday(cfg):
+        portfolio = backtest_portfolio_intraday(
+            agents=agents,
+            data_by_symbol=data_by_symbol,
+            initial_cash=opts["initial_cash"],
+            position_size=opts["position_size"],
+            decision_agent=decision_agent,
+        )
+    else:
+        portfolio = backtest_portfolio_daily(
+            agents=agents,
+            data_by_symbol=data_by_symbol,
+            initial_cash=opts["initial_cash"],
+            position_size=opts["position_size"],
+            decision_agent=decision_agent,
+        )
 
     metrics = MetricsCalculator(
         portfolio.equity_curve,
