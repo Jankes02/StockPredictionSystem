@@ -5,7 +5,6 @@ import pandas as pd
 
 class BollingerAgent(BaseAgent):
     name = "bollinger"
-    horizon = "daily"
     kind = "mean_reversion"
 
     def __init__(self, window=20, std_mult=2):

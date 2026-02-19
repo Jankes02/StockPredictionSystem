@@ -1,6 +1,5 @@
 data:
   daily_dir: "data/daily"
-  5min_dir: "data/5min"
 
 # WIG20 symbols (WSE)
 symbols:
@@ -23,11 +22,10 @@ symbols:
   - PKO
   - PZU
   - SPL
-  - ZAB
 
 backtest:
   initial_cash: 100000
-  data_frequency: "daily"   # daily | 5min
+  data_frequency: "daily"   # daily
 
 portfolio:
   position_size: 0.1   # fraction of cash per new position
@@ -43,4 +41,3 @@ agents:
   roc: { period: 10, threshold: 0.02 }
   bollinger: { window: 20, std_mult: 2 }
   matrend: { fast: 50, slow: 200 }
-  # breakout: { lookback: 20 }

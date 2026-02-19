@@ -6,7 +6,6 @@ import numpy as np
 
 class MACDAgent(BaseAgent):
     name = "macd"
-    horizon = "daily"
     kind = "momentum"
 
     def __init__(

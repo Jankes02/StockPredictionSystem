@@ -13,7 +13,6 @@ from src.agents.RSIAgent import RSIAgent
 from src.agents.ROCAgent import ROCAgent
 from src.agents.BollingerAgent import BollingerAgent
 from src.agents.MATrendAgent import MATrendAgent
-from src.agents.BreakoutAgent import BreakoutAgent
 
 
 AGENT_REGISTRY: Dict[str, type] = {
@@ -22,7 +21,6 @@ AGENT_REGISTRY: Dict[str, type] = {
     "roc": ROCAgent,
     "bollinger": BollingerAgent,
     "matrend": MATrendAgent,
-    "breakout": BreakoutAgent,
 }
 
 
@@ -44,7 +42,6 @@ def load_config(config_path: Optional[Path] = None) -> dict:
     data = cfg.get("data", {})
     cfg["data"] = {
         "daily_dir": (base_dir / data.get("daily_dir", "data/daily")).resolve(),
-        "5min_dir": (base_dir / data.get("5min_dir", "data/5min")).resolve(),
     }
     return cfg
 
@@ -52,8 +49,6 @@ def load_config(config_path: Optional[Path] = None) -> dict:
 def get_data_dir(cfg: dict) -> Path:
     """Return the data directory Path for the configured backtest frequency."""
     freq = (cfg.get("backtest") or {}).get("data_frequency", "daily")
-    if freq == "5min":
-        return cfg["data"]["5min_dir"]
     return cfg["data"]["daily_dir"]
 
 

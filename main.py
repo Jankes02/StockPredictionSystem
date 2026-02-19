@@ -24,7 +24,7 @@ def load_price_data(
 ) -> Dict[str, pd.DataFrame]:
     """
     Load CSV price data for symbols that have a file in the given folder.
-    Symbols without a file (e.g. ZAB in daily when only 5min exists) are skipped.
+    Symbols without a file are skipped.
     """
     if required_columns is None:
         required_columns = ["Date", "Close"]
