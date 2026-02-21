@@ -1,0 +1,54 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+\documentclass{icis}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\sloppy
+
+\title{A Multi-Agent Decision Support System for Stock Trading}
+\researchtype{Completed Research Paper}
+\shorttitle{Multi-Agent Stock Trading System}
+\conference{Americas Conference on Information Systems, AMCIS 2026}
+
+\usepackage[hidelinks]{hyperref}
+\addbibresource{references.bib}
+
+\begin{document}
+
+\maketitle
+
+% No authors or abstract per submission guidelines for review.
+
+%======================================
+\section{Introduction}
+%======================================
+
+Decision support systems are now a central part of financial markets. They help both institutional and retail investors to process information and make trading decisions \autocite{hendershott_does_2011}. In information systems (IS) research, these systems link decision support, computational methods, and market structure. They affect how people and organizations invest and manage risk. Researchers have also used agent-based artificial markets to study trading behavior and market dynamics, both for traditional stocks and for digital assets \autocite{8675280}. This paper presents the design and evaluation of a multi-agent stock prediction and trading system for the Polish equity market. The system focuses on stocks in the WIG20 index on the Warsaw Stock Exchange (WSE). It works as a decision support tool: several technical-analysis agents, each using a different method, produce signals that are sent to one central decision agent. That agent then produces buy, sell, or hold recommendations and gives a confidence level for each.
+
+Stock market prediction and automated trading have attracted both practitioners and researchers for a long time. Technical analysis uses indicators based on price and volume, such as MACD (moving average convergence-divergence), RSI (relative strength index), and ROC (rate of change). It is still widely used in practice. At the same time, the efficient market hypothesis is often tested with algorithms and statistics \autocite{boboc2013}. Many studies suggest that using several signals together is more robust than using only one indicator. Multi-agent system (MAS) designs fit this idea well: each agent can use one method, and a separate layer can combine their outputs and make the final decision.
+
+The Polish market is a good setting for this research. The Warsaw Stock Exchange is the largest exchange in Central and Eastern Europe by market value. It offers liquid trading in WIG20 blue-chip stocks. Compared with large Western markets, WSE has received less attention in IS and finance research on algorithmic trading and decision support. This creates an opportunity to test multi-agent systems in a different market. In addition, a system based on clear technical indicators and a transparent decision agent is suitable for academic evaluation. We can backtest it, compare it with buy-and-hold and single-agent baselines, and test what happens when we leave out one agent or change parameters. This supports the goal of a reproducible study with clear value for a thesis and for publication.
+
+The system follows three main design principles. First, each signal agent uses only one method (e.g., trend-following with MACD, momentum with RSI or ROC, or volatility with Bollinger Bands). It only sends trading signals with a confidence value; it does not decide on the whole portfolio. Second, one decision agent receives all signals and uses configurable rules (e.g., passive, balanced, or aggressive) to produce the final buy/sell/hold decision. In this way, how signals are combined is clear and can be checked. Third, the design is modular: new agents can be added without changing how signal agents and the decision agent work together. This allows both future extensions and controlled experiments (e.g., removing one agent to see how much it contributes).
+
+The rest of the paper is organized as follows. We first review literature on decision support, algorithmic trading, multi-agent systems in finance, and technical analysis. We then present the system architecture: the base agent contract, the signal agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend), and the decision agent. Next we describe the evaluation: data (WIG20 stocks, daily frequency), baselines (buy-and-hold and single-agent runs), and metrics (returns, drawdown, Sharpe ratio, win rate). We report results and discuss what they mean for design and for future work (e.g., confidence weighting, regime sensitivity, other markets). We end by summarizing how this work contributes to IS research on decision support in financial markets.
+
+%======================================
+\section{Background}
+%======================================
+
+\subsection{Decision Support and Algorithmic Trading}
+
+In financial markets, decision support systems (DSS) have moved from tools that support human analysts to systems that run trading strategies automatically on market data \autocite{hendershott_does_2011}. Research in this area looks at how algorithmic trading affects liquidity, volatility, and how prices are discovered. It also looks at how design choices—which signals to use, how to combine them, and how to execute trades—affect results. In IS research, these systems are studied as artifacts that combine technology and human decision making. Their success depends not only on how accurate their predictions are but also on whether they are transparent, easy to configure, and fit the way organizations make decisions.
+
+\subsection{Technical Analysis and Market Efficiency}
+
+Technical analysis uses indicators based on price and volume (e.g., moving averages, RSI, ROC) to generate trading signals. Whether it really works is still debated. The efficient market hypothesis (EMH) states that prices already reflect all available information, so it may be hard to profit from technical rules. Researchers have tested technical strategies using algorithmic backtests and statistics \autocite{boboc2013}. This work gives a basis for testing indicator-based strategies in a controlled way.
+
+\subsection{Multi-Agent Systems in Financial Markets}
+
+In a multi-agent system (MAS), several autonomous agents interact, for example by sharing market data or through a central coordinator. In finance, agent-based models have been used to simulate different types of traders, to study how markets behave, and to analyse liquidity and volatility. This includes artificial markets for digital assets such as Bitcoin \autocite{8675280}. Such work shows that MAS designs can represent many different strategies in one framework and make it easier to experiment with how agents are coordinated or how their signals are combined. In this paper we build on these ideas. We implement a multi-agent trading system where several technical-analysis agents produce signals, and one central decision component combines them into final trading recommendations.
+
+\end{document}
