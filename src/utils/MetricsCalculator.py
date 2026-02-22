@@ -69,11 +69,17 @@ class MetricsCalculator:
     # ---------- TRADING ----------
 
     def num_trades(self) -> int:
-        closed = self.trades[self.trades["pnl"].notna()]
+        try:
+            closed = self.trades[self.trades["pnl"].notna()]
+        except KeyError:
+            return 0
         return len(closed)
 
     def win_rate(self) -> float:
-        closed = self.trades[self.trades["pnl"].notna()]
+        try:
+            closed = self.trades[self.trades["pnl"].notna()]
+        except KeyError:
+            return 0.0
         if closed.empty:
             return 0.0
         return float((closed["pnl"] > 0).mean())

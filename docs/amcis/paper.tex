@@ -7,6 +7,8 @@
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
 
 \sloppy
 
@@ -69,7 +71,7 @@ Figure~\ref{fig:sys_architecture} summarizes the system architecture.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{system_architecture.png}
-    \caption{System architecture.}
+    \caption{System architecture}
     \label{fig:sys_architecture}
 \end{figure}
 
@@ -188,7 +190,67 @@ To assess the multi-agent system, we compare it against two types of baselines. 
 
 \subsection{Metrics}
 
-We report the following metrics for the equity curve and the list of closed trades. \textbf{Total return}\label{metric:return} is the percentage change in portfolio value from the first to the last date. \textbf{CAGR} (compound annual growth rate) is the annualized return over the backtest period. \textbf{Max drawdown} is the largest peak-to-trough decline in portfolio value, expressed as a negative fraction (e.g.\ $-0.15$ for 15\%). It summarizes downside risk over the period. \textbf{Sharpe ratio} measures risk-adjusted return: we use the standard definition in which excess return (portfolio return minus risk-free rate) is divided by the standard deviation of returns; we annualize it using a factor of $\sqrt{252}$ (as there are \~{}252 trading days in a year) for daily data and report it with risk-free rate equal to zero unless stated otherwise \autocite{sharpe1966}. \textbf{Calmar ratio} is CAGR divided by the absolute value of max drawdown, so that higher values indicate better return per unit of drawdown risk. \textbf{Number of trades} is the count of closed (simulated) trades. \textbf{Win rate} is the fraction of closed trades which generated profit. These metrics are computed by a dedicated metrics calculator on the output of the portfolio simulator and are used both for the multi-agent system and for the baselines.
+We report the following metrics for the equity curve and the list of closed trades. \textbf{Total return}\label{metric:return} is the percentage change in portfolio value from the first to the last date. \textbf{CAGR} (compound annual growth rate) is the annualized return over the backtest period. \textbf{Max drawdown} is the largest peak-to-trough decline in portfolio value, expressed as a negative fraction (e.g.\ $-0.15$ for 15\%). It summarizes downside risk over the period. \textbf{Sharpe ratio} measures risk-adjusted return: we use the standard definition in which excess return (portfolio return minus risk-free rate) is divided by the standard deviation of returns; we annualize it using a factor of $\sqrt{252}$ (as there are \~{}252 trading days in a year) for daily data and report it with risk-free rate equal to zero unless stated otherwise \autocite{sharpe1966}. \textbf{Calmar ratio} is CAGR divided by the absolute value of max drawdown, so that higher values indicate better return per unit of drawdown risk. \textbf{Number of trades} is the count of closed (simulated) trades. \textbf{Win rate} is the fraction of closed trades which generated profit. These metrics are computed by a dedicated metrics calculator on the output of the portfolio simulator and are used both for the multi-agent system and for the baselines. The formulae for these metrics are presented below.
+\begin{equation*}
+    total\_return =
+    \frac{\text{portfolio}_{end}}{\text{portfolio}_{start}} - 1
+\end{equation*}
+where $\text{portfolio}_{start,end}$ represents total portfolio value: capital and positions.
+\begin{equation*}
+    CAGR =
+    \left( \dfrac{\text{portfolio}_{end}}{\text{portfolio}_{start}} \right)^{-years} - 1
+\end{equation*}
+where $years$ represents years passed during the simulated period.
+\begin{equation*}
+    max\_drawdown =
+    \min\!\left( \dfrac{equity - rolling\_max}{rolling\_max} \right)
+\end{equation*}
+where $equity$ is portfolio values over time and $rolling\_max$ denotes a cumulative maximum array of equity.
+\begin{equation*}
+    Sharpe = \frac{R_p - R_f}{\sigma_p}
+\end{equation*}
+\begin{equation*}
+    Sharpe = \frac{\overline{R}_p - R_f}{\sigma_p} \, \sqrt{252}
+\end{equation*}
+where $\overline{R}_p$ is the average daily portfolio return, $R_f$ is the risk-free rate of return, $\sigma_p$ is standard deviation of daily portfolio returns, and 252 represents the approximate trading days per year.
+\begin{equation*}
+    Calmar =
+    \frac{CAGR}{|max\_drawdown|}
+\end{equation*}
+\begin{equation*}
+    win\_rate =
+    \frac{winning\_trades}{all\_trades}
+\end{equation*}
+where $winning\_trades$ denotes number of profitable trades.
 
+\subsection{Results}
+
+A series of tests has been performed in order to examine the influence of configuration parameters on the performance of the system. Parameter fine-tuning focuses on two variables: trading behavior and minimum confidence threshold. Table below showcases the total return of simulations with each combination of these two parameters.
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc}
+%\toprule
+ &  & \multicolumn{3}{c}{\textbf{behavior}} \\
+\cmidrule(lr){3-5}
+ &  & passive & balanced & aggressive \\
+\midrule
+\multirow{7}{*}[-0.5em]{\hspace{-0.8em}\rotatebox{90}{min confidence}}
+& 0    & 0 & 0.12          & 0.76 \\
+& 0.05 & 0 & 0.17          & 0.84 \\
+& 0.1  & 0 & 0.15          & \textbf{0.88} \\
+& 0.15 & 0 & 0.17          & 0.8 \\
+& 0.2  & 0 & 0.35          & 0.65 \\
+& 0.25 & 0 & 0.3           & 0.55 \\
+& 0.3  & 0 & \textbf{0.43} & 0.59 \\
+\bottomrule
+\end{tabular}
+\caption{Total return by behavior and minimum confidence}
+\end{table}
+
+Value 0 in every cell of the \textit{passive} behavior column states that the system refrained from executing any trades at all, therefore generating no profit over the testing period. Moving on to the \textit{balanced} behavior, the system manages to generate profit, but does so by performing a small amount of trades. The series of backtesting experiments proved that the \textit{aggressive} behavior is most beneficial for the performance of the system. The optimal minimum confidence for this mode is 0.1. Lowering the threshold generates noise in trade signals and limits generated profit. Increasing it, on the other hand, puts too much limitation on the decision agent, resulting in a significant drop of total return. Best result in columns \textit{balanced} and \textit{aggressive} are in bold.
+
+It is worth noting that every set of parameters resulting in a total return lower than buy-and-hold WIG20 index strategy is suboptimal. This issue will be discussed in subsection \hyperref[sub:interpretation]{Interpretation of results}.
+
+\newpage
 \printbibliography
 \end{document}
