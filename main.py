@@ -11,6 +11,10 @@ from config import (
     get_backtest_options,
 )
 from src.utils.backtesting import backtest_portfolio_daily
+from src.utils.benchmark import (
+    build_buy_and_hold_wig20_curve,
+    buy_and_hold_wig20_total_return,
+)
 from src.utils.MetricsCalculator import MetricsCalculator
 from src.utils.plotting import plot_equity_with_drawdown
 
@@ -68,5 +72,16 @@ if __name__ == "__main__":
         portfolio.trades,
     )
     summary = metrics.summary()
+
+    benchmark_curve = build_buy_and_hold_wig20_curve(
+        portfolio.equity_curve,
+        data_dir,
+        opts["initial_cash"],
+    )
+    if benchmark_curve is not None:
+        bh_return = buy_and_hold_wig20_total_return(benchmark_curve, opts["initial_cash"])
+        if bh_return is not None:
+            print(f"Buy-and-hold WIG20 total return: {round(bh_return, 2)}")
+
     print(summary)
-    plot_equity_with_drawdown(portfolio.equity_curve)
+    plot_equity_with_drawdown(portfolio.equity_curve, benchmark_curve=benchmark_curve)

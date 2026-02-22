@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,7 +16,10 @@ def plot_equity_curve(equity_curve: List[dict]) -> None:
     plt.show()
 
 
-def plot_equity_with_drawdown(equity_curve: List[dict]) -> None:
+def plot_equity_with_drawdown(
+    equity_curve: List[dict],
+    benchmark_curve: Optional[List[dict]] = None,
+) -> None:
     df = pd.DataFrame(equity_curve).set_index("date")
 
     equity = df["equity"]
@@ -25,12 +28,20 @@ def plot_equity_with_drawdown(equity_curve: List[dict]) -> None:
 
     _, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 
-    ax1.plot(equity)
+    ax1.plot(equity.index, equity.values, label="Strategy")
+    if benchmark_curve:
+        bdf = pd.DataFrame(benchmark_curve).set_index("date")
+        ax1.plot(bdf.index, bdf["equity"], label="Buy-and-hold WIG20")
     ax1.set_title("Equity Curve")
+    ax1.set_ylabel("Equity")
+    ax1.legend()
     ax1.grid(True)
 
     ax2.fill_between(drawdown.index, drawdown, 0)
     ax2.set_title("Drawdown")
+    ax2.set_ylabel("Drawdown")
     ax2.grid(True)
 
+    plt.xlabel("Date")
+    plt.tight_layout()
     plt.show()
