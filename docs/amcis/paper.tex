@@ -3,6 +3,9 @@
 \documentclass{icis}
 
 \usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{mathtools}
 \usepackage{xcolor}
 
 \sloppy
@@ -50,6 +53,142 @@ Technical analysis uses indicators based on price and volume (e.g., moving avera
 \subsection{Multi-Agent Systems in Financial Markets}
 
 In a multi-agent system (MAS), several autonomous agents interact, for example by sharing market data or through a central coordinator. In finance, agent-based models have been used to simulate different types of traders, to study how markets behave, and to analyze liquidity and volatility. This includes artificial markets for digital assets such as Bitcoin \autocite{8675280}. Such work shows that MAS designs can represent many different strategies in one framework and make it easier to experiment with how agents are coordinated or how their signals are combined. In this paper we build on these ideas. We implement a multi-agent trading system where several technical-analysis agents produce signals, and one central decision component combines them into final trading recommendations.
+
+%======================================
+\section{Methods}
+%======================================
+
+\subsection{System Architecture}
+
+The system consists of four layers. Data layer loads stock price data into the system and transforms it into a correct format. The data is then passed to the signal layer featuring several independent signal agents that apply their rules and produce buy/sell signals with certain confidence. If this confidence is lower than minimal confidence (configured for decision agent), the signal is ignored. These indications are interpreted by the decision agent in order to output the final buy, sell or hold recommendations per symbol.  All these calls are registered and passed to the final layer: presentation layer. It consists of two major components: portfolio simulator and metrics calculator. The first one goes through all actions taken and forms the equity curve. Next, the latter calculates metrics of interest. Finally, these indicators are then printed to console and an equity curve plot is generated.
+
+Components of different layers communicate using certain contracts that state what kind of data is required for the operation to be successful. For example, each signal agent inherits from a common base class, which guarantees that communication with all types of agents is uniform, even those added in terms of future development.
+
+Figure~\ref{fig:sys_architecture} summarizes the system architecture.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{system_architecture.png}
+    \caption{System architecture.}
+    \label{fig:sys_architecture}
+\end{figure}
+
+\subsection{Dataset} 
+\phantomsection
+\label{subsec:dataset}
+
+The time series dataset used for testing correctness and quality of the system can be described by the following features:
+\begin{itemize}
+    \item Period: 05/26/2021--01/15/2026
+    \item Frequency: daily
+    \item Symbols: WIG20 constituent companies (excluding Żabka Sp. z o.o., as it was listed on the WSE on 10/17/2024 - much later than other companies featured)
+    \item Number of symbols: 19
+    \item Required columns: Date, Close (closing price in PLN)
+    \item Index column: Date
+    \item Incomplete data reaction: drop row
+\end{itemize}
+
+The data has been downloaded from public repository, \href{https://stooq.com}{Stooq}. 
+
+\subsection{Agent Methods}
+
+Each signal agent follows their individual approach and returns a signal ($+1$, $-1$, or $0$) plus a confidence value in $[0, 1]$. The five agents are as follows.
+
+\textbf{MACD (moving average convergence-divergence).} This agent uses two exponential moving averages (EMAs) of the closing price: a fast EMA (default span 8) and a slow EMA (default span 17). The MACD line is their difference; the signal line is an EMA of the MACD line (default span 9). The agent emits $+1$ when the MACD line crosses above the signal line and $-1$ when it crosses below. Confidence is based on the current histogram (MACD minus signal line) relative to its recent volatility over the last 50 bars. It is computed as follows.
+\begin{equation*}
+    confidence =
+    \tanh\left(\frac{\lvert h \rvert}{2\sigma}\right)
+\end{equation*}
+where $h$ is the histogram value and $\sigma$ is the standard deviation of the histogram in that window. Configurable parameters: \texttt{fast\_period}, \texttt{slow\_period}, \texttt{signal\_period}.
+
+\textbf{RSI (relative strength index).} The agent computes the average gain and average loss over a rolling window (default 14 days). Gains are positive price changes; losses are the absolute values of negative changes. RSI equals $100 - 100/(1 + \mathit{RS})$, where $\mathit{RS} = \mathit{avg\_gain} / \mathit{avg\_loss}$. Action to take is determined as follows.
+\begin{equation*}
+    action =
+    \begin{cases}
+        buy, & \text{if } RSI < 30, \\
+        sell, & \text{if } RSI > 70, \\
+        hold, & \text{otherwise.}
+    \end{cases}
+\end{equation*}
+Along with these action signals, a confidence value is returned, computed as follows.
+\begin{equation*}
+    confidence =
+    \begin{cases}
+        \dfrac{30 - RSI}{30}, & \text{if } RSI < 30, \\
+        \dfrac{RSI - 70}{30}, & \text{if } RSI > 70, \\
+        0, & \text{otherwise.}
+    \end{cases}
+\end{equation*}
+Configurable parameter: \texttt{period}.
+
+\textbf{ROC (rate of change).} The rate of change is the percentage change in the closing price over a fixed number of days (default 10). Action to take is determined as follows.
+\begin{equation*}
+    action =
+    \begin{cases}
+        buy, & \text{if } ROC > threshold, \\
+        sell, & \text{if } ROC < -threshold, \\
+        hold, & \text{otherwise}
+    \end{cases}
+\end{equation*}
+where $threshold$ is a configurable parameter of this agent. For these actions, a confidence value equal to $|ROC|$ is provided. Configurable parameters: \texttt{period}, \texttt{threshold}.
+
+\textbf{Bollinger Bands.} The agent uses a simple moving average (SMA) of the closing price over a window (default 20) as the middle band. Then, upper and lower bands are calculated as follows.
+\begin{equation*}
+    U =
+    middle + mlt \cdot \sigma
+\end{equation*}
+\begin{equation*}
+    L =
+    middle - mlt \cdot \sigma
+\end{equation*}
+where $middle$ is the middle band value, $mlt$ is the configurable multiplier, and $\sigma$ denotes rolling standard deviation. Action to take is determined as follows.
+\begin{equation*}
+    action =
+    \begin{cases}
+        buy, & \text{if } close < L, \\
+        sell, & \text{if } close > U, \\
+        hold, & \text{otherwise}
+    \end{cases}
+\end{equation*}
+where $close$ represents latest closing price. For these actions, the confidence value is computed as follows.
+\begin{equation*}
+\mathrm{confidence} =
+\begin{dcases}
+\min\!\left( \dfrac{L - \mathit{close}}{\mathit{close}}, 1 \right), & \text{if } \mathit{close} < L, \\
+\min\!\left( \dfrac{\mathit{close} - U}{\mathit{close}}, 1 \right), & \text{if } \mathit{close} > U, \\
+0, & \text{otherwise.}
+\end{dcases}
+\end{equation*}
+Configurable parameters: \texttt{window}, \texttt{std\_mult}.
+
+\textbf{MA trend.} The agent uses two SMAs of the closing price: fast (default 50) and slow (default 200). Signals are generated as follows.
+\begin{equation*}
+    action =
+    \begin{cases}
+        buy, & \text{if } fast < slow, \\
+        sell, & \text{if } fast > slow, \\
+        hold, & \text{otherwise.}
+    \end{cases}
+\end{equation*}
+Confidence for this agent is the absolute difference between the two SMAs divided by the latest close, so that stronger separation gives higher confidence. Configurable parameters: \texttt{fast}, \texttt{slow}.
+
+All agents use only the closing price series (and the date index) from the dataset. They return a neutral (hold) signal when there are not enough observations to compute their respective indicators.
+
+%======================================
+\section{Evaluation and Results}
+%======================================
+
+\subsection{Backtest Methodology}
+
+We evaluate the system by backtesting it on historical data described in subsection \hyperref[subsec:dataset]{Dataset}. The backtest runs over a common set of dates for all symbols available. For each date in period, we collect signals from all agents for all symbols. Next, the decision agent makes decisions for the day based on aggregated signals, and passes them to the portfolio simulator, together with that day's closing prices. The simulator updates cash and positions according to received recommendations. At the end of the simulation, information regarding recommended trades and their outcomes is passed to the metrics calculator. Afterwards, computed metrics and generated plots are presented on the display.
+
+\subsection{Baselines}
+
+To assess the multi-agent system, we compare it against two types of baselines. The first strategy relies on buying-and-holding the WIG20 index strategy over the same period. Buy-and-hold is a standard benchmark in the evaluation of trading strategies, as it represents a passive alternative that does not rely on timing or signal-based decisions \autocite{dichtl2020}. We report the same metrics for buy-and-hold as for the system so that return and risk can be compared directly, although the most important one is \hyperref[metric:return]{total return}. The second baseline is a set of single-agent runs: for each signal agent type, we run the backtest with only that agent and the decision agent over the same period. This shows whether combining several agents improves outcomes in comparison to using one indicator alone. Optionally, we can also compare different decision-agent modes (passive, balanced, aggressive) or exclude one agent at a time to study the contribution of each component.
+
+\subsection{Metrics}
+
+We report the following metrics for the equity curve and the list of closed trades. \textbf{Total return}\label{metric:return} is the percentage change in portfolio value from the first to the last date. \textbf{CAGR} (compound annual growth rate) is the annualized return over the backtest period. \textbf{Max drawdown} is the largest peak-to-trough decline in portfolio value, expressed as a negative fraction (e.g.\ $-0.15$ for 15\%). It summarizes downside risk over the period. \textbf{Sharpe ratio} measures risk-adjusted return: we use the standard definition in which excess return (portfolio return minus risk-free rate) is divided by the standard deviation of returns; we annualize it using a factor of $\sqrt{252}$ (as there are \~{}252 trading days in a year) for daily data and report it with risk-free rate equal to zero unless stated otherwise \autocite{sharpe1966}. \textbf{Calmar ratio} is CAGR divided by the absolute value of max drawdown, so that higher values indicate better return per unit of drawdown risk. \textbf{Number of trades} is the count of closed (simulated) trades. \textbf{Win rate} is the fraction of closed trades which generated profit. These metrics are computed by a dedicated metrics calculator on the output of the portfolio simulator and are used both for the multi-agent system and for the baselines.
 
 \printbibliography
 \end{document}
