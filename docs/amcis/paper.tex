@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{comment}
 
 \sloppy
 
@@ -21,29 +22,30 @@
 \addbibresource{references.bib}
 
 \begin{document}
-
 \maketitle
 
 % No authors or abstract per submission guidelines for review.
+\begin{comment}
 \begin{abstract}
-We present the design and evaluation of a multi-agent decision support system for stock trading on the Warsaw Stock Exchange, focused on WIG20 index constituents. Several technical-analysis agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend) produce signals with confidence values; one decision agent aggregates them and produces buy, sell, or hold recommendations with configurable behavior and a minimum confidence threshold. We backtest the system on daily data from May 2021 to January 2026 against buy-and-hold WIG20. The best configuration achieves 88\% total return versus 53\% for the index, with a steadier equity path, Sharpe ratio 1.3, and maximum drawdown 12\%. The results support the view that this modular multi-agent design can serve as a usable decision support tool and contribute to IS research on decision support in financial markets.
+Decision support systems and algorithmic trading are crucial to financial markets, yet research on the Warsaw Stock Exchange (WSE) remains limited. This paper presents the design and evaluation of a multi-agent decision support system for stock trading on WIG$20$ index constituents. The system combines five technical analysis signal agents with a single decision agent that aggregates their signals and produces buy/sell/hold recommendations with configurable behavior. We describe the architecture, dataset used, and the agent methods; we backtest the system on daily data and compare it with buy-and-hold WIG$20$. The paper reports results across parameter combinations, discusses interpretation, limitations, and implications for practice, and outlines future work.
 
-\emph{\textbf{Keywords:} decision support systems, algorithmic trading, multi-agent systems, technical analysis, stock trading, Warsaw Stock Exchange, WIG20, backtesting, financial markets}
+\emph{\textbf{Keywords:} decision support systems, algorithmic trading, multi-agent systems, technical analysis, stock trading, Warsaw Stock Exchange, backtesting, financial markets}
 \end{abstract}
+\end{comment}
 
 %======================================
 \section{Introduction}
 %======================================
 
-Decision support systems are now a central part of financial markets. They help both institutional and retail investors process information and make trading decisions \autocite{hendershott_does_2011}. In information systems (IS) research, these systems combine decision support, computational methods, and market structure. They affect how people and organizations invest and manage risk. Researchers have also used agent-based artificial markets to study trading behavior and market dynamics, both for traditional stocks and for digital assets \autocite{8675280}. This paper presents the design and evaluation of a multi-agent stock prediction and trading system for the Polish market. The system focuses on stocks in the WIG20 index on the Warsaw Stock Exchange (WSE). It works as a decision support tool: several technical-analysis agents, each using a different method, produce signals that are sent to one central decision agent along with a confidence level. That agent then produces buy/sell recommendations.
+Decision support systems are now a central part of financial markets. They help both institutional and retail investors process information and make trading decisions \autocite{hendershott_does_2011}. In information systems (IS) research, these systems combine decision support, computational methods, and market structure. They affect how people and organizations invest and manage risk. Researchers have also used agent-based artificial markets to study trading behavior and market dynamics, both for traditional stocks and for digital assets \autocite{8675280}. This paper presents the design and evaluation of a multi-agent stock prediction and trading system for the Polish market. The system focuses on stocks in the WIG$20$ index on the Warsaw Stock Exchange (WSE). It works as a decision support tool: several technical-analysis agents, each using a different method, produce signals that are sent to one central decision agent along with a confidence level. That agent then produces buy/sell recommendations.
 
 Stock market prediction and automated trading have attracted both practitioners and researchers for a long time. Technical analysis uses indicators based on price and volume, such as MACD (moving average convergence-divergence), RSI (relative strength index), and ROC (rate of change). This methodology is still widely used in practice. At the same time, the efficient market hypothesis is often tested with algorithms and statistics \autocite{boboc2013}. Many studies suggest that using several signals together is more robust and stable than using only one indicator. Multi-agent system (MAS) designs fit this idea well: each agent can use one method and a separate layer can combine their outputs and make the final decision.
 
-The Polish market is a good setting for this research. The Warsaw Stock Exchange is the largest exchange in Central and Eastern Europe by market value. It offers liquid trading in WIG20 blue-chip stocks. Compared with large Western markets, WSE has received less attention in IS and finance research on algorithmic trading and decision support. This creates an opportunity to test multi-agent systems in a different environment. In addition, a system based on clear technical indicators and a transparent decision agent is well suited for evaluation. We can backtest it and compare its performance with investing directly in the WIG20 index and other strategies.
+The Polish market is a good setting for this research. The Warsaw Stock Exchange is the largest exchange in Central and Eastern Europe by market value. It offers liquid trading in WIG$20$ blue-chip stocks. Compared with large Western markets, WSE has received less attention in IS and finance research on algorithmic trading and decision support. This creates an opportunity to test multi-agent systems in a different environment. In addition, a system based on clear technical indicators and a transparent decision agent is well suited for evaluation. We can backtest it and compare its performance with investing directly in the WIG$20$ index and other strategies.
 
 The system follows three main design principles. First, each signal agent uses only one method (e.g., trend-following with MACD, momentum with RSI or ROC, or volatility with Bollinger Bands). It sends trading signals with a confidence value; it does not decide on the whole portfolio. Second, one decision agent receives all signals and uses configurable rules (e.g. passive, balanced, or aggressive behavior) to produce the final buy/sell/hold decision. Third, the design is modular: agents can be easily removed or added, as long as they follow the communication contract described above. This allows both future extensions and controlled experiments (e.g. removing one agent to examine its contribution).
 
-The rest of the paper is organized as follows. We first review literature on decision support, algorithmic trading, multi-agent systems in finance, and technical analysis. We then present the system architecture: the base agent contract, the signal agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend), and the decision agent. Next we describe the evaluation: data (WIG20 stocks, daily frequency), baselines (buy-and-hold and single-agent runs), and metrics (returns, drawdown, Sharpe ratio, win rate). We report results and discuss what they mean for design and for future work (e.g., confidence weighting, regime sensitivity, other markets). We end by summarizing how this work contributes to IS research on decision support in financial markets.
+The rest of the paper is organized as follows. We first review literature on decision support, algorithmic trading, multi-agent systems in finance, and technical analysis. We then present the system architecture: the base agent contract, the signal agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend), and the decision agent. Next we describe the evaluation: data (WIG$20$ stocks, daily frequency), baselines (buy-and-hold and single-agent runs), and metrics (returns, drawdown, Sharpe ratio, win rate). We report results and discuss what they mean for design and for future work (e.g., confidence weighting, regime sensitivity, other markets). We end by summarizing how this work contributes to IS research on decision support in financial markets.
 
 %======================================
 \section{Background}
@@ -67,7 +69,11 @@ In a multi-agent system (MAS), several autonomous agents interact, for example b
 
 \subsection{System Architecture}
 
-The system consists of four layers. Data layer loads stock price data into the system and transforms it into a correct format. The data is then passed to the signal layer featuring several independent signal agents that apply their rules and produce buy/sell signals with certain confidence. If this confidence is lower than minimal confidence (configured for decision agent), the signal is ignored. These indications are interpreted by the decision agent in order to output the final buy, sell or hold recommendations per symbol.  All these calls are registered and passed to the final layer: presentation layer. It consists of two major components: portfolio simulator and metrics calculator. The first one goes through all actions taken and forms the equity curve. Next, the latter calculates metrics of interest. Finally, these indicators are then printed to console and an equity curve plot is generated.
+The system consists of four layers. Data layer loads stock price data into the system and transforms it into a correct format. The data is then passed to the signal layer featuring several independent signal agents that apply their rules and produce buy/sell signals with certain confidence. If this confidence is lower than minimal confidence (configured for decision agent), the signal is ignored. These indications are interpreted by the decision agent in order to output the final buy, sell or hold recommendations per symbol.  
+
+The decision agent aggregates the filtered signals into a single score (weighted by confidence and by agent type: trend, momentum, mean-reversion, volatility). It then compares this score to configurable thresholds to decide buy, sell, or hold. The \textbf{passive}, \textbf{balanced}, and \textbf{aggressive} behavior modes differ by these thresholds. In \emph{passive} mode, the score must reach $\pm 1.2$ to trigger a trade, and only signals that agree with the overall trend direction (from trend-following agents) are counted; this makes the agent very conservative and might results in no trades being executed. In \emph{balanced} mode, the thresholds are $\pm 0.7$, and all signals contribute regardless of trend. In \emph{aggressive} mode, the thresholds are $\pm 0.3$, so weaker combined signals are enough to trigger a trade and more positions are opened.
+
+All these calls are registered and passed to the final layer: presentation layer. It consists of two major components: portfolio simulator and metrics calculator. The former goes through all actions taken and forms the equity curve. Next, the latter calculates metrics of interest. Finally, these indicators are then printed to console and an equity curve plot is generated.
 
 Components of different layers communicate using certain contracts that state what kind of data is required for the operation to be successful. For example, each signal agent inherits from a common base class, which guarantees that communication with all types of agents is uniform, even those added in terms of future development.
 
@@ -88,7 +94,7 @@ The time series dataset used for testing correctness and quality of the system c
 \begin{itemize}
     \item Period: 05/26/2021--01/15/2026
     \item Frequency: daily
-    \item Symbols: WIG20 constituent companies (excluding Żabka Sp. z o.o., as it was listed on the WSE on 10/17/2024 - much later than other companies featured)
+    \item Symbols: WIG$20$ constituent companies (excluding Żabka Sp. z o.o., as it was listed on the WSE on 10/17/2024 - much later than other companies featured)
     \item Number of symbols: 19
     \item Required columns: Date, Close (closing price in PLN)
     \item Index column: Date
@@ -102,81 +108,81 @@ Such period lets the system react to different market scenarios occuring through
 Each signal agent follows their individual approach and returns a signal ($+1$, $-1$, or $0$) plus a confidence value in $[0, 1]$. The five agents are as follows.
 
 \textbf{MACD (moving average convergence-divergence).} This agent uses two exponential moving averages (EMAs) of the closing price: a fast EMA (default span 8) and a slow EMA (default span 17). The MACD line is their difference; the signal line is an EMA of the MACD line (default span 9). The agent emits $+1$ when the MACD line crosses above the signal line and $-1$ when it crosses below. Confidence is based on the current histogram (MACD minus signal line) relative to its recent volatility over the last 50 bars. It is computed as follows.
-\begin{equation*}
+\begin{equation}
     confidence =
     \tanh\left(\frac{\lvert h \rvert}{2\sigma}\right)
-\end{equation*}
+\end{equation}
 where $h$ is the histogram value and $\sigma$ is the standard deviation of the histogram in that window. Configurable parameters: \texttt{fast\_period}, \texttt{slow\_period}, \texttt{signal\_period}.
 
 \textbf{RSI (relative strength index).} The agent computes the average gain and average loss over a rolling window (default 14 days). Gains are positive price changes; losses are the absolute values of negative changes. RSI equals $100 - 100/(1 + \mathit{RS})$, where $\mathit{RS} = \mathit{avg\_gain} / \mathit{avg\_loss}$. Action to take is determined as follows.
-\begin{equation*}
+\begin{equation}
     action =
     \begin{cases}
         buy, & \text{if } RSI < 30, \\
         sell, & \text{if } RSI > 70, \\
         hold, & \text{otherwise.}
     \end{cases}
-\end{equation*}
+\end{equation}
 Along with these action signals, a confidence value is returned, computed as follows.
-\begin{equation*}
+\begin{equation}
     confidence =
     \begin{cases}
         \dfrac{30 - RSI}{30}, & \text{if } RSI < 30, \\
         \dfrac{RSI - 70}{30}, & \text{if } RSI > 70, \\
         0, & \text{otherwise.}
     \end{cases}
-\end{equation*}
+\end{equation}
 Configurable parameter: \texttt{period}.
 
 \textbf{ROC (rate of change).} The rate of change is the percentage change in the closing price over a fixed number of days (default 10). Action to take is determined as follows.
-\begin{equation*}
+\begin{equation}
     action =
     \begin{cases}
         buy, & \text{if } ROC > threshold, \\
         sell, & \text{if } ROC < -threshold, \\
         hold, & \text{otherwise}
     \end{cases}
-\end{equation*}
+\end{equation}
 where $threshold$ is a configurable parameter of this agent. For these actions, a confidence value equal to $|ROC|$ is provided. Configurable parameters: \texttt{period}, \texttt{threshold}.
 
 \textbf{Bollinger Bands.} The agent uses a simple moving average (SMA) of the closing price over a window (default 20) as the middle band. Then, upper and lower bands are calculated as follows.
-\begin{equation*}
+\begin{equation}
     U =
     middle + mlt \cdot \sigma
-\end{equation*}
-\begin{equation*}
+\end{equation}
+\begin{equation}
     L =
     middle - mlt \cdot \sigma
-\end{equation*}
+\end{equation}
 where $middle$ is the middle band value, $mlt$ is the configurable multiplier, and $\sigma$ denotes rolling standard deviation. Action to take is determined as follows.
-\begin{equation*}
+\begin{equation}
     action =
     \begin{cases}
         buy, & \text{if } close < L, \\
         sell, & \text{if } close > U, \\
         hold, & \text{otherwise}
     \end{cases}
-\end{equation*}
+\end{equation}
 where $close$ represents latest closing price. For these actions, the confidence value is computed as follows.
-\begin{equation*}
+\begin{equation}
 \mathrm{confidence} =
 \begin{dcases}
 \min\!\left( \dfrac{L - \mathit{close}}{\mathit{close}}, 1 \right), & \text{if } \mathit{close} < L, \\
 \min\!\left( \dfrac{\mathit{close} - U}{\mathit{close}}, 1 \right), & \text{if } \mathit{close} > U, \\
 0, & \text{otherwise.}
 \end{dcases}
-\end{equation*}
+\end{equation}
 Configurable parameters: \texttt{window}, \texttt{std\_mult}.
 
 \textbf{MA trend.} The agent uses two SMAs of the closing price: fast (default 50) and slow (default 200). Signals are generated as follows.
-\begin{equation*}
+\begin{equation}
     action =
     \begin{cases}
         buy, & \text{if } fast < slow, \\
         sell, & \text{if } fast > slow, \\
         hold, & \text{otherwise.}
     \end{cases}
-\end{equation*}
+\end{equation}
 Confidence for this agent is the absolute difference between the two SMAs divided by the latest close, so that stronger separation gives higher confidence. Configurable parameters: \texttt{fast}, \texttt{slow}.
 
 All agents use only the closing price series (and the date index) from the dataset. They return a neutral (hold) signal when there are not enough observations to compute their respective indicators.
@@ -191,41 +197,41 @@ We evaluate the system by backtesting it on historical data described in subsect
 
 \subsection{Baselines}
 
-To assess the multi-agent system, we compare it against two types of baselines. The first strategy relies on buying-and-holding the WIG20 index strategy over the same period. Buy-and-hold is a standard benchmark in the evaluation of trading strategies, as it represents a passive alternative that does not rely on timing or signal-based decisions \autocite{dichtl2020}. We report the same metrics for buy-and-hold as for the system so that return and risk can be compared directly, although the most important one is \hyperref[metric:return]{total return}. The second baseline is a set of single-agent runs: for each signal agent type, we run the backtest with only that agent and the decision agent over the same period. This shows whether combining several agents improves outcomes in comparison to using one indicator alone. Optionally, we can also compare different decision-agent modes (passive, balanced, aggressive) or exclude one agent at a time to study the contribution of each component.
+To assess the multi-agent system, we compare it against two types of baselines. The first strategy relies on buying-and-holding the WIG$20$ index strategy over the same period. Buy-and-hold is a standard benchmark in the evaluation of trading strategies, as it represents a passive alternative that does not rely on timing or signal-based decisions \autocite{dichtl2020}. We report the same metrics for buy-and-hold as for the system so that return and risk can be compared directly, although the most important one is \hyperref[metric:return]{total return}. The second baseline is a set of single-agent runs: for each signal agent type, we run the backtest with only that agent and the decision agent over the same period. This shows whether combining several agents improves outcomes in comparison to using one indicator alone. Optionally, we can also compare different decision-agent modes (passive, balanced, aggressive) or exclude one agent at a time to study the contribution of each component.
 
 \subsection{Metrics}
 
 We report the following metrics for the equity curve and the list of closed trades. \textbf{Total return}\label{metric:return} is the percentage change in portfolio value from the first to the last date. \textbf{CAGR} (compound annual growth rate) is the annualized return over the backtest period. \textbf{Max drawdown} is the largest peak-to-trough decline in portfolio value, expressed as a negative fraction (e.g.\ $-0.15$ for $15$\%). It summarizes downside risk over the period. \textbf{Sharpe ratio} measures risk-adjusted return: we use the standard definition in which excess return (portfolio return minus risk-free rate) is divided by the standard deviation of returns; we annualize it using a factor of $\sqrt{252}$ (as there are \~{}$252$ trading days in a year) for daily data and report it with risk-free rate equal to zero unless stated otherwise \autocite{sharpe1966}. \textbf{Calmar ratio} is CAGR divided by the absolute value of max drawdown, so that higher values indicate better return per unit of drawdown risk. \textbf{Number of trades} is the count of closed (simulated) trades. \textbf{Win rate} is the fraction of closed trades which generated profit. These metrics are computed by a dedicated metrics calculator on the output of the portfolio simulator and are used both for the multi-agent system and for the baselines. The formulae for these metrics are presented below.
-\begin{equation*}
+\begin{equation}
     total\_return =
     \frac{\text{portfolio}_{end}}{\text{portfolio}_{start}} - 1
-\end{equation*}
+\end{equation}
 where $\text{portfolio}_{start,end}$ represents total portfolio value: capital and positions.
-\begin{equation*}
+\begin{equation}
     CAGR =
     \left( \dfrac{\text{portfolio}_{end}}{\text{portfolio}_{start}} \right)^{-years} - 1
-\end{equation*}
+\end{equation}
 where $years$ represents years passed during the simulated period.
-\begin{equation*}
+\begin{equation}
     max\_drawdown =
     \min\!\left( \dfrac{equity - rolling\_max}{rolling\_max} \right)
-\end{equation*}
+\end{equation}
 where $equity$ is portfolio values over time and $rolling\_max$ denotes a cumulative maximum array of equity.
-\begin{equation*}
+\begin{equation}
     Sharpe = \frac{R_p - R_f}{\sigma_p}
-\end{equation*}
-\begin{equation*}
+\end{equation}
+\begin{equation}
     Sharpe = \frac{\overline{R}_p - R_f}{\sigma_p} \, \sqrt{252}
-\end{equation*}
+\end{equation}
 where $\overline{R}_p$ is the average daily portfolio return, $R_f$ is the risk-free rate of return, $\sigma_p$ is standard deviation of daily portfolio returns, and 252 represents the approximate trading days per year.
-\begin{equation*}
+\begin{equation}
     Calmar =
     \frac{CAGR}{|max\_drawdown|}
-\end{equation*}
-\begin{equation*}
+\end{equation}
+\begin{equation}
     win\_rate =
     \frac{winning\_trades}{all\_trades}
-\end{equation*}
+\end{equation}
 where $winning\_trades$ denotes number of profitable trades.
 
 \subsection{Results}
@@ -256,18 +262,27 @@ A series of tests has been performed in order to examine the influence of config
 
 Value $0$ in every cell of the \textit{passive} behavior column states that the system refrained from executing any trades at all, therefore generating no profit over the testing period. Moving on to the \textit{balanced} behavior, the system manages to generate profit, but does so by performing a small amount of trades. The series of backtesting experiments proved that the \textit{aggressive} behavior is most beneficial for the performance of the system. The optimal minimum confidence for this mode is 0.1. Lowering the threshold generates noise in trade signals and limits generated profit. Increasing it, on the other hand, puts too much limitation on the decision agent, resulting in a significant drop of total return. Best result in columns \textit{balanced} and \textit{aggressive} are in bold.
 
-It is worth noting that every set of parameters resulting in a total return lower than buy-and-hold WIG20 index strategy is suboptimal. This issue will be discussed in subsection \hyperref[sub:interpretation]{Interpretation of Results}.
+It is worth noting that every set of parameters resulting in a total return lower than buy-and-hold WIG$20$ index strategy is suboptimal. This issue will be discussed in subsection \hyperref[sub:interpretation]{Interpretation of Results}.
 
 Figure~\ref{fig:equity_curves} demonstrates system performance against the buy-and-hold performance for optimal set of parameters.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{equity_curves.png}
-    \caption{Equity curves for system strategy and buy-and-hold WIG20}
+    \caption{Equity curves for system strategy and buy-and-hold WIG$20$}
     \label{fig:equity_curves}
 \end{figure}
 
-The equity of system strategy is much more stable in comparison to the buy-and-hold strategy. The former represents a steady increase of equity, heavily outperforming the latter over a long period.
+The equity of system strategy is much more stable in comparison to the buy-and-hold strategy. The former represents a steady increase of equity, heavily outperforming the latter over a long period. Moving on to another important metric, figure~\ref{fig:drawdown} presents drawdown over time for system strategy with optimal set of parameters.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{drawdown.png}
+    \caption{Drawdown over time for system strategy}
+    \label{fig:drawdown}
+\end{figure}
+
+An average drawdown of $-0.03$ indicates that equity does not go down significantly upon reaching new peaks. A maximum drawdown of $-0.12$ suggests that even in the worst observed period, losses remained contained within a moderate range. The gap between these values shows that extreme downside events have not dominated the performance. The drawdown statistics reinforce the statement that the equity growth over time was stable and controlled.
 
 Table below features metric values for the discussed strategy.
 \begin{table}[H]
@@ -284,25 +299,25 @@ Table below features metric values for the discussed strategy.
 
 \subsection{Interpretation of Results}\label{sub:interpretation}
 
-The results show that decision agent configuration has a strong effect on performance. In passive mode the system refrained from opening any positions. The thresholds for buy and sell are high, so the combined score of the signal agents rarely reaches them. This suggests that passive mode is too conservative for the WIG20 dataset and the chosen agents when used together. In balanced mode the system trades and achieves positive returns for all tested values of minimum confidence. In aggressive mode the decision agent reacts to weaker signals, so more trades are executed. For the period and data used here, the best total return ($88$\%) is reached with aggressive behavior and a minimum confidence of $0.1$. Lower minimum confidence lets more signals through and can add noise; higher minimum confidence restricts trading and reduces the number of opportunities, which in our experiments led to worse results. The sensitivity to these parameters indicates that in practice they should be set with care, for example by backtesting over a training window or by comparing several configurations as in this study.
+The results show that decision agent configuration has a strong effect on performance. In passive mode the system refrained from opening any positions. The thresholds for buy and sell are high, so the combined score of the signal agents rarely reaches them. This suggests that passive mode is too conservative for the WIG$20$ dataset and the chosen agents when used together. In balanced mode the system trades and achieves positive returns for all tested values of minimum confidence. In aggressive mode the decision agent reacts to weaker signals, so more trades are executed. For the period and data used here, the best total return ($88$\%) is reached with aggressive behavior and a minimum confidence of $0.1$. Lower minimum confidence lets more signals through and can add noise; higher minimum confidence restricts trading and reduces the number of opportunities, which in our experiments led to worse results. The sensitivity to these parameters indicates that in practice they should be set with care, for example by backtesting over a training window or by comparing several configurations as in this study.
 
-Comparing the multi-agent strategy with buy-and-hold WIG20 is important for judging whether the system adds value. Over the same backtest period, buy-and-hold WIG20 yields a total return of 53\%. As noted in the \hyperref[sub:results]{Results} subsection, any parameter combination that yields a total return below this benchmark is suboptimal for an investor who could instead hold the index. The equity curve for the best configuration shows a steadier path than buy-and-hold, with a sustained increase and a lower maximum drawdown. This suggests that for the backtest period the combination of several technical indicators and the decision agent was able to capture part of the upside while limiting the worst peak-to-trough loss. Such an outcome is consistent with the idea that aggregating multiple signals can improve robustness compared with a single indicator, although it is not guaranteed that it will hold in other periods or markets.
+Comparing the multi-agent strategy with buy-and-hold WIG$20$ is important for judging whether the system adds value. Over the same backtest period, buy-and-hold WIG$20$ yields a total return of $53$\%. As noted in the \hyperref[sub:results]{Results} subsection, any parameter combination that yields a total return below this benchmark is suboptimal for an investor who could instead hold the index. The equity curve for the best configuration shows a steadier path than buy-and-hold, with a sustained increase and a lower maximum drawdown. This suggests that for the backtest period the combination of several technical indicators and the decision agent was able to capture part of the upside while limiting the worst peak-to-trough loss. Such an outcome is consistent with the idea that aggregating multiple signals can improve robustness compared with a single indicator, although it is not guaranteed that it will hold in other periods or markets.
 
-Metrics for the best configuration, reported in Table~\ref{tab:metrics}, indicate solid risk-adjusted performance for the backtest. A Sharpe ratio above $1$ is often considered good in practice, and the Calmar ratio shows that the annualized return is comparable to the size of the maximum drawdown. The win rate of $70$\% means that the majority of closed trades turned out profitable. These results support the view that the multi-agent design, with distinct signal agents and a single decision layer, can produce a usable decision support tool for the WIG20 setting. At the same time, backtest performance can be influenced by overfitting and selection bias \autocite{bailey2014}, so the numbers should be interpreted as evidence that the system is capable of performing well under the tested conditions rather than as a guarantee of future returns. Further work could test the same configuration on out-of-sample data or on other markets to assess versatility.
+Metrics for the best configuration, reported in Table~\ref{tab:metrics}, indicate solid risk-adjusted performance for the backtest. A Sharpe ratio above $1$ is often considered good in practice, and the Calmar ratio shows that the annualized return is comparable to the size of the maximum drawdown. The win rate of $70$\% means that the majority of closed trades turned out profitable. These results support the view that the multi-agent design, with distinct signal agents and a single decision layer, can produce a usable decision support tool for the WIG$20$ setting. At the same time, backtest performance can be influenced by overfitting and selection bias \autocite{bailey2014}, so the numbers should be interpreted as evidence that the system is capable of performing well under the tested conditions rather than as a guarantee of future returns. Further work could test the same configuration on out-of-sample data or on other markets to assess versatility.
 
 \subsection{Limitations}
 
-Several limitations of this study should be kept in mind. First, the evaluation is based entirely on historical backtesting. Any live trading is yet to be conducted. The backtest assumes execution at the closing price each day. Transaction costs (commissions, spreads, or taxes) are omitted. In practice, frequent trading or large orders would reduce net returns. Second, the results are specific to one market (WSE) and one time period (May 2021 to January 2026). Performance may differ in other markets, or in other years. The system has not been tested on out-of-sample data or on a true walk-forward basis, so we cannot claim that the best configuration would hold in the future. Third, the choice of the best parameter combination comes from a grid search over the same period used for evaluation. This can lead to overfitting and selection bias \autocite{bailey2014}: the reported metrics may be optimistic relative to what would be achieved on new data. Finally, the signal agents use only price-based technical indicators (daily close and, where applicable, high and low). The system does not use fundamental data, news of relevant events, or alternative data sources. These limitations suggest that the findings should be interpreted as evidence of the system’s potential under the tested conditions rather than as a guarantee of real-world performance.
+Several limitations of this study should be kept in mind. First, the evaluation is based entirely on historical backtesting. Any live trading is yet to be conducted. The backtest assumes execution at the closing price each day. Transaction costs (commissions, spreads, or taxes) are omitted. In practice, frequent trading or large orders would reduce net returns. Second, the results are specific to one market (WSE) and one time period (May 2021 to January 2026). Performance may differ in other markets, or in other years. The system has not been tested on out-of-sample data or on a true walk-forward basis, so we cannot claim that the best configuration would hold in the future. Third, the choice of the best parameter combination comes from a grid search over the same period used for evaluation. This can lead to overfitting and selection bias \autocite{bailey2014}: the reported metrics may be optimistic relative to what would be achieved on new data. Finally, the signal agents use only price-based technical indicators (daily close and, where applicable, high and low). The system does not use fundamental data, news of relevant events, or alternative data sources. These limitations suggest that the findings should be interpreted as evidence of the system’s potential under the tested conditions rather than as a guarantee of real-world performance. For reproducibility, the dataset and source code used in this study may be shared upon reasonable request.
 
 \subsection{Implications and Future Work}
 
-Given the interpretation and limitations above, the main takeaway for practice is that the multi-agent design can be used as a useful decision support tool in the WIG20 setting provided parameters are validated (e.g.\ walk-forward or out-of-sample) before deployment, and that findings do not generalize beyond the tested period and market without further evaluation.
+Given the interpretation and limitations above, the main takeaway for practice is that the multi-agent design can be used as a useful decision support tool in the WIG$20$ setting provided parameters are validated (e.g.\ walk-forward or out-of-sample) before deployment, and that findings do not generalize beyond the tested period and market without further evaluation.
 
 Future work could address the limitations above and extend the system in several directions. Out-of-sample and walk-forward testing would help assess whether the best configuration holds on new data. Testing on other markets (e.g.\ other European indices or developed markets) would show how well the design generalizes. Including transaction costs, slippage, and execution constraints in the backtest would make the results more realistic. Adding fundamental or alternative data sources could improve signal quality. Furthermore, the current runtime is rather long (\~{}$54$ seconds for this dataset and agent set). An optimization of the backtest and signal-generation pipeline would be highly beneficial, especially as the system is developed further (e.g.\ more agents, longer history, or higher-frequency data). Possible directions include vectorization of indicator computations, parallelization across symbols or dates, or more efficient data structures for the equity curve and trades.
 
 \section{Conclusion}
 
-This paper presented the design and evaluation of a multi-agent decision support system for stock trading on the Warsaw Stock Exchange (WSE), focused on WIG20 index constituents. The system combines several technical analysis signal agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend) with a single decision agent that aggregates their signals and produces buy/sell/hold recommendations with configurable behavior (passive, balanced, or aggressive) and a minimum confidence threshold. We backtested the system on daily data from May 2021 to January 2026 and compared it with buy-and-hold WIG20. For the tested period, the best configuration (aggressive behavior, minimum confidence $0.1$) achieved a total return of $88$\% and a steadier equity path than buy-and-hold WIG20 ($53$\% total return), with solid risk-adjusted metrics (Sharpe ratio $1.3$, max drawdown $-12$\%). The results support the view that a modular multi-agent design with distinct signal agents and a transparent decision layer can serve as a usable decision support tool in the WIG20 setting, provided parameters are validated before deployment. The evaluation is limited to historical backtesting, one market, and one period; generalization to other markets or to live trading would require further work.
+This paper presented the design and evaluation of a multi-agent decision support system for stock trading on the Warsaw Stock Exchange (WSE), focused on WIG$20$ index constituents. The system combines several technical analysis signal agents (MACD, RSI, ROC, Bollinger Bands, and moving-average trend) with a single decision agent that aggregates their signals and produces buy/sell/hold recommendations with configurable behavior (passive, balanced, or aggressive) and a minimum confidence threshold. We backtested the system on daily data from May 2021 to January 2026 and compared it with buy-and-hold WIG$20$. For the tested period, the best configuration (aggressive behavior, minimum confidence $0.1$) achieved a total return of $88$\% and a steadier equity path than buy-and-hold WIG$20$ ($53$\% total return), with solid risk-adjusted metrics (Sharpe ratio $1.3$, max drawdown $-12$\%). The results support the view that a modular multi-agent design with distinct signal agents and a transparent decision layer can serve as a usable decision support tool in the WIG$20$ setting, provided parameters are validated before deployment. The evaluation is limited to historical backtesting, one market, and one period; generalization to other markets or to live trading would require further work.
 
 This work contributes to IS research on decision support in financial markets by demonstrating that a multi-agent architecture based on well-defined technical indicators can be evaluated in a transparent and reproducible way, and that it can add value relative to a passive benchmark in the Polish equity market. Research on algorithmic trading and decision support has been limited for the Warsaw Stock Exchange; this paper adds evidence from that often overlooked setting. Future work on out-of-sample validation, optimization of runtime, and testing on other markets would strengthen the findings and extend their applicability.
 
