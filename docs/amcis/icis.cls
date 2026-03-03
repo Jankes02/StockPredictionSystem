@@ -137,13 +137,13 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[R]{\changefont\textit{\@shorttitle}}
-\fancyfoot[R]{\changefont\textit{\@conference}\\\textbf{\thepage}}
+\fancyfoot[R]{\changefont\textit{\@conference}\quad\textbf{\thepage}}
 
 % No header on the first page. Only a footer
 \fancypagestyle{plain}{
 	\fancyhf{}
 	\fancyhead[R]{\changefont\textit{\@shorttitle}}
-	\fancyfoot[R]{\changefont\textit{\@conference}\\\textbf{\thepage}}
+	\fancyfoot[R]{\changefont\textit{\@conference}\quad\textbf{\thepage}}
 }
 
 % Get rid of the horizontal rules
