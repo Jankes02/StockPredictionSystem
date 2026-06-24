@@ -6,7 +6,6 @@ symbols:
   - ALE
   - ALR
   - BDX
-  - CCC
   - CDR
   - DNP
   - KGH
@@ -14,6 +13,7 @@ symbols:
   - KTY
   - LPP
   - MBK
+  - MDV
   - OPL
   - PCO
   - PEO
@@ -29,6 +29,15 @@ backtest:
 
 portfolio:
   position_size: 0.1   # fraction of cash per new position
+
+costs:
+  commission_bps: 39   # per-trade commission in basis points (typical WSE retail)
+  slippage_bps: 5      # one-way price slippage in basis points
+
+evaluation:
+  mode: "walk_forward"    # in_sample | walk_forward
+  train_end: "2024-06-30" # anchored split: last date included in train
+  folds: 3                # number of folds for the K-fold anchored walk-forward appendix
 
 decision:
   mode: "aggressive"    # passive | balanced | aggressive

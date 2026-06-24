@@ -80,10 +80,23 @@ def build_decision_agent(cfg: dict) -> DecisionAgent:
 
 
 def get_backtest_options(cfg: dict) -> dict:
-    """Return backtest options: initial_cash, position_size."""
+    """Return backtest options: initial_cash, position_size, commission_bps, slippage_bps."""
     backtest = cfg.get("backtest") or {}
     portfolio = cfg.get("portfolio") or {}
+    costs = cfg.get("costs") or {}
     return {
         "initial_cash": backtest.get("initial_cash", 100_000),
         "position_size": portfolio.get("position_size", 0.1),
+        "commission_bps": costs.get("commission_bps", 0.0),
+        "slippage_bps": costs.get("slippage_bps", 0.0),
+    }
+
+
+def get_evaluation_options(cfg: dict) -> dict:
+    """Return evaluation options: mode, train_end, folds."""
+    ev = cfg.get("evaluation") or {}
+    return {
+        "mode": ev.get("mode", "in_sample"),
+        "train_end": ev.get("train_end", None),
+        "folds": int(ev.get("folds", 3)),
     }

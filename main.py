@@ -65,6 +65,8 @@ if __name__ == "__main__":
         initial_cash=opts["initial_cash"],
         position_size=opts["position_size"],
         decision_agent=decision_agent,
+        commission_bps=opts["commission_bps"],
+        slippage_bps=opts["slippage_bps"],
     )
 
     metrics = MetricsCalculator(
