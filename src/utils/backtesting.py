@@ -53,6 +53,7 @@ def backtest_portfolio_daily(
     decision_agent: Optional[DecisionAgent] = None,
     commission_bps: float = 0.0,
     slippage_bps: float = 0.0,
+    stamp_duty_bps: float = 0.0,
     precomputed_signals: Optional[SignalsBySymbolByDate] = None,
     start_date: Optional[pd.Timestamp] = None,
     end_date: Optional[pd.Timestamp] = None,
@@ -72,6 +73,7 @@ def backtest_portfolio_daily(
         "position_size": position_size,
         "commission_bps": commission_bps,
         "slippage_bps": slippage_bps,
+        "stamp_duty_bps": stamp_duty_bps,
     }
 
     if not data_by_symbol:

@@ -20,7 +20,8 @@ from config import (
     get_backtest_options,
     get_data_dir,
     get_evaluation_options,
-    load_config,
+    get_results_dir,
+    load_config_from_args,
 )
 from main import load_price_data
 from src.utils.walk_forward import (
@@ -51,9 +52,12 @@ def _fold_to_row(f: FoldResult) -> Dict:
 
 
 def main() -> None:
+    global RESULTS_DIR
+
+    cfg = load_config_from_args()
+    RESULTS_DIR = get_results_dir(cfg)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    cfg = load_config()
     data_dir = get_data_dir(cfg)
     symbols = cfg.get("symbols") or []
     agents = build_agents(cfg)
@@ -69,6 +73,7 @@ def main() -> None:
         "position_size": bt["position_size"],
         "commission_bps": bt["commission_bps"],
         "slippage_bps": bt["slippage_bps"],
+        "stamp_duty_bps": bt["stamp_duty_bps"],
     }
 
     evaluator = WalkForwardEvaluator(

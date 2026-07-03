@@ -37,25 +37,26 @@ class RegimeLabels:
         return self.labels.value_counts().to_dict()
 
 
-def label_wig20_regimes(
+def label_index_regimes(
     data_dir: Path,
     *,
+    index_filename: str = WIG20_FILENAME,
     date_col: str = "Date",
 ) -> Optional[RegimeLabels]:
-    """Return per-date regime labels on WIG20 close, or None if data is missing."""
-    path = data_dir / WIG20_FILENAME
+    """Return per-date regime labels on the index close, or None if data is missing."""
+    path = data_dir / index_filename
     if not path.exists():
         return None
 
-    wig = pd.read_csv(path, parse_dates=[date_col])
-    if "Close" not in wig.columns:
+    index = pd.read_csv(path, parse_dates=[date_col])
+    if "Close" not in index.columns:
         return None
-    wig = (
-        wig.dropna(subset=[date_col, "Close"])
+    index = (
+        index.dropna(subset=[date_col, "Close"])
         .set_index(date_col)
         .sort_index()
     )
-    close = wig["Close"].astype(float)
+    close = index["Close"].astype(float)
 
     rolling_high = close.rolling(HIGH_WINDOW, min_periods=HIGH_WINDOW // 2).max()
     drawdown = (close - rolling_high) / rolling_high
@@ -77,6 +78,17 @@ def label_wig20_regimes(
     labels[remaining_mask] = "sideways"
 
     return RegimeLabels(labels=labels)
+
+
+def label_wig20_regimes(
+    data_dir: Path,
+    *,
+    date_col: str = "Date",
+) -> Optional[RegimeLabels]:
+    """Backward-compatible wrapper around `label_index_regimes` for WIG20."""
+    return label_index_regimes(
+        data_dir, index_filename=WIG20_FILENAME, date_col=date_col
+    )
 
 
 def regime_breakdown(

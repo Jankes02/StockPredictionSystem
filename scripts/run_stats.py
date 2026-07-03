@@ -17,9 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 
-from config import get_backtest_options, get_data_dir, load_config
+from config import (
+    get_backtest_options,
+    get_data_dir,
+    get_index_filename,
+    get_results_dir,
+    load_config_from_args,
+)
 from main import load_price_data
-from src.utils.benchmark import build_buy_and_hold_wig20_curve
+from src.utils.benchmark import build_buy_and_hold_curve
 from src.utils.stats import (
     align_returns,
     bootstrap_p_value,
@@ -39,11 +45,15 @@ def _require(path: Path) -> pd.DataFrame:
 
 
 def main() -> None:
+    global RESULTS_DIR
+
+    cfg = load_config_from_args()
+    RESULTS_DIR = get_results_dir(cfg)
+
     headline = _require(RESULTS_DIR / "walk_forward_headline.csv").iloc[0]
     equity_df = _require(RESULTS_DIR / "walk_forward_headline_equity.csv")
     ablation_df = _require(RESULTS_DIR / "ablation.csv")
 
-    cfg = load_config()
     bt = get_backtest_options(cfg)
     initial_cash = bt["initial_cash"]
 
@@ -51,12 +61,12 @@ def main() -> None:
     strategy_curve: List[Dict] = equity_df.to_dict("records")
 
     data_dir = get_data_dir(cfg)
-    bh_curve = build_buy_and_hold_wig20_curve(
-        strategy_curve, data_dir, initial_cash
+    bh_curve = build_buy_and_hold_curve(
+        strategy_curve, data_dir, initial_cash, get_index_filename(cfg)
     )
     if bh_curve is None:
         raise RuntimeError(
-            "Could not build buy-and-hold WIG20 benchmark (wig20.csv missing?)"
+            "Could not build buy-and-hold benchmark (index CSV missing?)"
         )
 
     strategy_returns = equity_to_returns(strategy_curve)

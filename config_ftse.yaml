@@ -1,0 +1,58 @@
+data:
+  daily_dir: "data/daily_ftse100"
+  index_filename: "ftse100.csv"   # FTSE 100 index used for the buy-and-hold benchmark
+
+# FTSE 100 constituents (LSE)
+symbols:
+  - AAL
+  - AZN
+  - BA
+  - BARC
+  - BATS
+  - BP
+  - DGE
+  - GLEN
+  - GSK
+  - HSBA
+  - LLOY
+  - LSEG
+  - NG
+  - PRU
+  - REL
+  - RIO
+  - SHEL
+  - TSCO
+  - ULVR
+  - VOD
+
+backtest:
+  initial_cash: 100000
+  data_frequency: "daily"   # daily
+
+portfolio:
+  position_size: 0.1   # fraction of cash per new position
+
+costs:
+  commission_bps: 5    # per-trade commission in basis points (typical UK retail)
+  slippage_bps: 5      # one-way price slippage in basis points
+  stamp_duty_bps: 50   # buy-side UK Stamp Duty Reserve Tax (0.5%), charged on purchases only
+
+evaluation:
+  mode: "walk_forward"    # in_sample | walk_forward
+  train_end: "2024-06-30" # anchored split: last date included in train
+  folds: 3                # number of folds for the K-fold anchored walk-forward appendix
+
+decision:
+  mode: "aggressive"    # passive | balanced | aggressive
+  min_confidence: 0.1
+  max_positions: null
+
+agents:
+  macd: { fast_period: 8, slow_period: 17, signal_period: 9, confidence_scale: 5 }
+  rsi: { period: 14 }
+  roc: { period: 10, threshold: 0.02 }
+  bollinger: { window: 20, std_mult: 2 }
+  matrend: { fast: 50, slow: 200 }
+
+output:
+  results_dir: "results/ftse"   # keep FTSE results separate from the headline WIG20 run

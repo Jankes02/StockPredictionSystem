@@ -32,12 +32,17 @@ class PortfolioSimulator:
         position_size: float = 0.1,  # How much capital should be invested
         commission_bps: float = 0.0,
         slippage_bps: float = 0.0,
+        stamp_duty_bps: float = 0.0,
     ):
         self.initial_cash = initial_cash
         self.cash = initial_cash
         self.position_size = position_size
         self.commission_bps = commission_bps
         self.slippage_bps = slippage_bps
+        # One-way tax charged on purchases only (e.g. UK Stamp Duty Reserve Tax).
+        # Sells are not charged. Kept separate from commission so the two legs
+        # can carry asymmetric rates.
+        self.stamp_duty_bps = stamp_duty_bps
 
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
@@ -70,11 +75,12 @@ class PortfolioSimulator:
             return
 
         fill_price = price * (1.0 + self.slippage_bps * BPS)
-        commission_rate = self.commission_bps * BPS
+        # Purchases bear commission plus any one-way stamp duty.
+        buy_charge_rate = (self.commission_bps + self.stamp_duty_bps) * BPS
 
-        # Size the position against cash capacity inclusive of commission
+        # Size the position against cash capacity inclusive of entry charges
         allocation = self.cash * self.position_size
-        max_spend = allocation / (1.0 + commission_rate)
+        max_spend = allocation / (1.0 + buy_charge_rate)
         if max_spend <= 0:
             return
 
@@ -83,8 +89,8 @@ class PortfolioSimulator:
             return
 
         notional = quantity * fill_price
-        commission = notional * commission_rate
-        total_cost = notional + commission
+        entry_charge = notional * buy_charge_rate
+        total_cost = notional + entry_charge
         if total_cost > self.cash:
             return
 
@@ -95,7 +101,7 @@ class PortfolioSimulator:
             "quantity": quantity,
             "entry_price": fill_price,
             "entry_date": date,
-            "entry_commission": commission,
+            "entry_commission": entry_charge,
         }
 
         self.trades.append({

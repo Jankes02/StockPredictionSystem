@@ -17,14 +17,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 
-from config import get_backtest_options, get_data_dir, load_config
-from src.utils.benchmark import build_buy_and_hold_wig20_curve
-from src.utils.regime import label_wig20_regimes, regime_breakdown
+from config import (
+    get_backtest_options,
+    get_data_dir,
+    get_index_filename,
+    get_results_dir,
+    load_config_from_args,
+)
+from src.utils.benchmark import build_buy_and_hold_curve
+from src.utils.regime import label_index_regimes, regime_breakdown
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
 
 def main() -> None:
+    global RESULTS_DIR
+
+    cfg = load_config_from_args()
+    RESULTS_DIR = get_results_dir(cfg)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     equity_path = RESULTS_DIR / "walk_forward_headline_equity.csv"
@@ -35,19 +45,19 @@ def main() -> None:
     equity_df["date"] = pd.to_datetime(equity_df["date"])
     strategy_curve: List[Dict] = equity_df.to_dict("records")
 
-    cfg = load_config()
     bt = get_backtest_options(cfg)
     data_dir = get_data_dir(cfg)
+    index_filename = get_index_filename(cfg)
 
-    regimes = label_wig20_regimes(data_dir)
+    regimes = label_index_regimes(data_dir, index_filename=index_filename)
     if regimes is None:
-        raise RuntimeError("Could not label WIG20 regimes (missing wig20.csv?)")
+        raise RuntimeError(f"Could not label regimes (missing {index_filename}?)")
 
-    bh_curve = build_buy_and_hold_wig20_curve(
-        strategy_curve, data_dir, bt["initial_cash"]
+    bh_curve = build_buy_and_hold_curve(
+        strategy_curve, data_dir, bt["initial_cash"], index_filename
     )
     if bh_curve is None:
-        raise RuntimeError("Could not build WIG20 buy-and-hold curve.")
+        raise RuntimeError("Could not build buy-and-hold benchmark curve.")
 
     strat_df = regime_breakdown(strategy_curve, regimes.labels).assign(series="ensemble")
     bh_df = regime_breakdown(bh_curve, regimes.labels).assign(series="buy_and_hold")

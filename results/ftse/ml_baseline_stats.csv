@@ -1,0 +1,5 @@
+comparison,statistic,observed_diff,p_value,n_days
+ensemble_vs_lstm,total_return,0.2041619892295612,0.0016998300169983002,444
+ensemble_vs_lstm,sharpe,1.8364130101203524,0.00039996000399960006,444
+lstm_vs_buy_and_hold,total_return,-0.3095777421510817,0.9998000199980002,444
+lstm_vs_buy_and_hold,sharpe,-1.5881227186815479,1.0,444

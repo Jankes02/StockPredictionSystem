@@ -28,10 +28,12 @@ from config import (
     get_backtest_options,
     get_data_dir,
     get_evaluation_options,
-    load_config,
+    get_index_filename,
+    get_results_dir,
+    load_config_from_args,
 )
 from main import load_price_data
-from src.utils.benchmark import build_buy_and_hold_wig20_curve
+from src.utils.benchmark import build_buy_and_hold_curve
 from src.utils.MetricsCalculator import MetricsCalculator
 from src.utils.risk_metrics import (
     downside_deviation,
@@ -52,6 +54,10 @@ def _fmt(v: float) -> str:
 
 
 def main() -> None:
+    global RESULTS_DIR
+
+    cfg = load_config_from_args()
+    RESULTS_DIR = get_results_dir(cfg)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     headline_path = RESULTS_DIR / "walk_forward_headline.csv"
@@ -69,7 +75,6 @@ def main() -> None:
     equity_df["date"] = pd.to_datetime(equity_df["date"])
     strategy_curve: List[Dict] = equity_df.to_dict("records")
 
-    cfg = load_config()
     bt = get_backtest_options(cfg)
     ev = get_evaluation_options(cfg)
     symbols = cfg.get("symbols") or []
@@ -81,6 +86,7 @@ def main() -> None:
         "position_size": bt["position_size"],
         "commission_bps": bt["commission_bps"],
         "slippage_bps": bt["slippage_bps"],
+        "stamp_duty_bps": bt["stamp_duty_bps"],
     }
 
     # Rebuild training equity to estimate strategy's ex-ante volatility.
@@ -101,11 +107,11 @@ def main() -> None:
     train_returns = equity_to_returns(train_curve)
 
     # Build OOS buy-and-hold benchmark aligned to strategy dates.
-    bh_curve = build_buy_and_hold_wig20_curve(
-        strategy_curve, get_data_dir(cfg), bt["initial_cash"]
+    bh_curve = build_buy_and_hold_curve(
+        strategy_curve, get_data_dir(cfg), bt["initial_cash"], get_index_filename(cfg)
     )
     if bh_curve is None:
-        raise RuntimeError("Could not build WIG20 buy-and-hold curve")
+        raise RuntimeError("Could not build buy-and-hold benchmark curve")
 
     strat_rets, bh_rets, shared_idx = align_returns(strategy_curve, bh_curve)
     strat_metrics = MetricsCalculator(strategy_curve, []).summary()

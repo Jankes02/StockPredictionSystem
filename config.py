@@ -42,8 +42,44 @@ def load_config(config_path: Optional[Path] = None) -> dict:
     data = cfg.get("data", {})
     cfg["data"] = {
         "daily_dir": (base_dir / data.get("daily_dir", "data/daily")).resolve(),
+        "index_filename": data.get("index_filename", "wig20.csv"),
     }
+    cfg["_base_dir"] = base_dir
     return cfg
+
+
+def load_config_from_args() -> dict:
+    """
+    Load the config, honouring an optional `--config <path>` command-line flag.
+
+    Runner scripts call this so the same pipeline can target a different
+    market (e.g. `--config config_ftse.yaml`) without code changes. Unknown
+    arguments are ignored, so scripts may add their own flags on top.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--config", type=str, default=None)
+    args, _ = parser.parse_known_args()
+    return load_config(Path(args.config) if args.config else None)
+
+
+def get_index_filename(cfg: dict) -> str:
+    """Return the filename of the market index used for the buy-and-hold benchmark."""
+    return (cfg.get("data") or {}).get("index_filename", "wig20.csv")
+
+
+def get_results_dir(cfg: dict) -> Path:
+    """
+    Return the directory where result CSVs are written for this config.
+
+    Defaults to `<project>/results`; a config may redirect it (e.g. to
+    `results/ftse`) via the `output.results_dir` key. Relative paths are
+    resolved against the project root (the config file's directory).
+    """
+    base_dir = cfg.get("_base_dir") or Path(__file__).resolve().parent
+    rel = (cfg.get("output") or {}).get("results_dir", "results")
+    return (Path(base_dir) / rel).resolve()
 
 
 def get_data_dir(cfg: dict) -> Path:
@@ -80,7 +116,7 @@ def build_decision_agent(cfg: dict) -> DecisionAgent:
 
 
 def get_backtest_options(cfg: dict) -> dict:
-    """Return backtest options: initial_cash, position_size, commission_bps, slippage_bps."""
+    """Return backtest options: initial_cash, position_size, commission_bps, slippage_bps, stamp_duty_bps."""
     backtest = cfg.get("backtest") or {}
     portfolio = cfg.get("portfolio") or {}
     costs = cfg.get("costs") or {}
@@ -89,6 +125,7 @@ def get_backtest_options(cfg: dict) -> dict:
         "position_size": portfolio.get("position_size", 0.1),
         "commission_bps": costs.get("commission_bps", 0.0),
         "slippage_bps": costs.get("slippage_bps", 0.0),
+        "stamp_duty_bps": costs.get("stamp_duty_bps", 0.0),
     }
 
 
