@@ -1,10 +1,8 @@
 """
-Regenerate the equity-curve and drawdown figures on the held-out test window,
+Regenerate the equity-curve figure (Fig. 2) on the held-out test window,
 using results produced by `scripts/run_walk_forward.py`.
 
-Writes PNGs into `docs/ieee_access/`:
-  - figures/janko2.png (IEEE-style filename; also equity_curves_oos.png for legacy use)
-  - drawdown_oos.png
+Writes `docs/ieee_access/figures/janko2.png`.
 """
 import sys
 from pathlib import Path
@@ -62,26 +60,9 @@ def main() -> None:
     ax.legend()
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "janko2.png", dpi=150)
-    fig.savefig(DOCS_DIR / "equity_curves_oos.png", dpi=150)
     plt.close(fig)
 
-    # Drawdown
-    equity = df["equity"]
-    rolling_max = equity.cummax()
-    drawdown = (equity - rolling_max) / rolling_max
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.fill_between(drawdown.index, drawdown.values, 0.0, alpha=0.3)
-    ax.plot(drawdown.index, drawdown.values, linewidth=1.2)
-    ax.set_title("Drawdown on the held-out test window", fontsize=14)
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Drawdown")
-    ax.grid(True, alpha=0.3)
-    fig.tight_layout()
-    fig.savefig(DOCS_DIR / "drawdown_oos.png", dpi=150)
-    plt.close(fig)
-
-    print(f"Wrote {FIGURES_DIR / 'janko2.png'} and {DOCS_DIR / 'equity_curves_oos.png'}")
-    print(f"Wrote {DOCS_DIR / 'drawdown_oos.png'}")
+    print(f"Wrote {FIGURES_DIR / 'janko2.png'}")
 
 
 if __name__ == "__main__":

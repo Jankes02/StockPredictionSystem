@@ -5,7 +5,7 @@ import pandas as pd
 
 class BollingerAgent(BaseAgent):
     name = "bollinger"
-    kind = "mean_reversion"
+    kind = "volatility"
 
     def __init__(self, window=20, std_mult=2):
         self.window = window

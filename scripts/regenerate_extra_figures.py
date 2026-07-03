@@ -1,20 +1,11 @@
 """
-Generate the three new figures for the expanded paper:
+Generate Figs. 3--5 for the paper (underwater drawdown, rolling Sharpe,
+agent-signal correlation matrix).
 
-  - docs/ieee_access/figures/janko5.png (IEEE-style; also agent_correlation_matrix.png)
-      Pairwise Pearson correlation of per-agent daily cross-sectional
-      signals on the OOS window. Empirical evidence that the ensemble
-      aggregates partially-independent forecasts, as predicted by
-      forecast-combination theory.
-
-  - docs/ieee_access/rolling_sharpe_oos.png
-      Rolling 60-day annualised Sharpe of the ensemble versus WIG20
-      buy-and-hold on the OOS window.
-
-  - docs/ieee_access/figures/janko3.png (IEEE-style; also underwater_oos.png)
-      Underwater (drawdown-from-peak) plot overlaying the ensemble and
-      WIG20 buy-and-hold on a shared axis. Makes the amplitude and
-      duration difference between the two immediately visible.
+Writes into `docs/ieee_access/figures/`:
+  - janko3.png  underwater drawdown overlay (ensemble vs buy-and-hold)
+  - janko4.png  rolling 60-day annualised Sharpe
+  - janko5.png  pairwise agent-signal correlation heatmap
 """
 from __future__ import annotations
 
@@ -113,7 +104,6 @@ def _plot_correlation_matrix(panel: pd.DataFrame) -> None:
     )
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "janko5.png", dpi=150)
-    fig.savefig(DOCS_DIR / "agent_correlation_matrix.png", dpi=150)
     plt.close(fig)
 
     # Persist the matrix for the paper table / macros if needed.
@@ -201,7 +191,6 @@ def main() -> None:
     ax.legend()
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "janko4.png", dpi=150)
-    fig.savefig(DOCS_DIR / "rolling_sharpe_oos.png", dpi=150)
     plt.close(fig)
 
     # ---- Figure 3: overlaid underwater drawdown ----------------------------
@@ -232,18 +221,10 @@ def main() -> None:
     ax.legend(loc="lower left")
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "janko3.png", dpi=150)
-    fig.savefig(DOCS_DIR / "underwater_oos.png", dpi=150)
     plt.close(fig)
 
-    for name in (
-        "figures/janko3.png",
-        "figures/janko4.png",
-        "figures/janko5.png",
-        "underwater_oos.png",
-        "rolling_sharpe_oos.png",
-        "agent_correlation_matrix.png",
-    ):
-        print(f"Wrote {DOCS_DIR / name}")
+    for name in ("janko3.png", "janko4.png", "janko5.png"):
+        print(f"Wrote {FIGURES_DIR / name}")
 
 
 if __name__ == "__main__":
