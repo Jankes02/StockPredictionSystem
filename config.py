@@ -137,3 +137,32 @@ def get_evaluation_options(cfg: dict) -> dict:
         "train_end": ev.get("train_end", None),
         "folds": int(ev.get("folds", 3)),
     }
+
+
+def get_lstm_options(cfg: dict) -> Dict[str, Any]:
+    """
+    Return LSTM baseline hyperparameters from the optional ``lstm`` config section.
+
+    All keys have defaults matching ``LSTMDirectionalModel`` so the block can be
+    omitted entirely.  List-valued grids (``horizons``, ``hold_bands``) are
+    returned as tuples for direct unpacking into the model constructor.
+    """
+    lstm = cfg.get("lstm") or {}
+    horizons = lstm.get("horizons", [1, 3, 5])
+    hold_bands = lstm.get("hold_bands", [0.03, 0.05, 0.08])
+    return {
+        "lookback": int(lstm.get("lookback", 40)),
+        "hidden_size": int(lstm.get("hidden_size", 48)),
+        "num_layers": int(lstm.get("num_layers", 1)),
+        "dropout": float(lstm.get("dropout", 0.3)),
+        "max_epochs": int(lstm.get("max_epochs", 60)),
+        "patience": int(lstm.get("patience", 8)),
+        "batch_size": int(lstm.get("batch_size", 128)),
+        "learning_rate": float(lstm.get("learning_rate", 1e-3)),
+        "val_frac": float(lstm.get("val_frac", 0.20)),
+        "n_seeds": int(lstm.get("n_seeds", 3)),
+        "horizons": tuple(int(h) for h in horizons),
+        "hold_bands": tuple(float(b) for b in hold_bands),
+        "seed": int(lstm.get("seed", 42)),
+        "device": str(lstm.get("device", "cpu")),
+    }
