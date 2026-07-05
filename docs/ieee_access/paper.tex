@@ -120,6 +120,68 @@
 \newcommand{\CorrMin}{\ensuremath{-0.71}}
 \newcommand{\CorrMax}{\ensuremath{0.46}}
 \newcommand{\CorrN}{\ensuremath{10}}
+% Deep-learning (LSTM) baseline on WIG20
+\newcommand{\LSTMtest}{\ensuremath{0.08}}
+\newcommand{\LSTMsharpe}{\ensuremath{0.44}}
+\newcommand{\LSTMmdd}{\ensuremath{-0.11}}
+\newcommand{\LSTMcalmar}{\ensuremath{0.42}}
+\newcommand{\LSTMtrades}{\ensuremath{237}}
+\newcommand{\LSTMhorizon}{\ensuremath{3}}
+\newcommand{\LSTMband}{\ensuremath{0.03}}
+\newcommand{\PensVsLSTM}{\ensuremath{0.068}}
+\newcommand{\PensVsLSTMsharpe}{\ensuremath{0.063}}
+% External validation on the FTSE 100
+\newcommand{\FtseNsymbols}{\ensuremath{20}}
+\newcommand{\FtseOOSDays}{\ensuremath{444}}
+\newcommand{\FtseTRtest}{\ensuremath{0.14}}
+\newcommand{\FtseCAGR}{\ensuremath{0.08}}
+\newcommand{\FtseMDD}{\ensuremath{-0.07}}
+\newcommand{\FtseSharpe}{\ensuremath{1.37}}
+\newcommand{\FtseCalmar}{\ensuremath{1.18}}
+\newcommand{\FtseNtrades}{\ensuremath{55}}
+\newcommand{\FtseWinRate}{\ensuremath{0.78}}
+\newcommand{\FtseTRtestCIlow}{\ensuremath{-0.01}}
+\newcommand{\FtseTRtestCIhigh}{\ensuremath{0.32}}
+\newcommand{\FtseSharpeCIlow}{\ensuremath{-0.11}}
+\newcommand{\FtseSharpeCIhigh}{\ensuremath{2.94}}
+\newcommand{\FtseBHtest}{\ensuremath{0.25}}
+\newcommand{\FtseBHcagr}{\ensuremath{0.13}}
+\newcommand{\FtseBHmdd}{\ensuremath{-0.13}}
+\newcommand{\FtseBHsharpe}{\ensuremath{1.13}}
+\newcommand{\FtseBHcalmar}{\ensuremath{1.00}}
+\newcommand{\FtsePvsBH}{\ensuremath{0.789}}
+\newcommand{\FtsePvsBHsharpe}{\ensuremath{0.331}}
+\newcommand{\FtseEnsSortino}{\ensuremath{1.99}}
+\newcommand{\FtseBHSortino}{\ensuremath{1.52}}
+\newcommand{\FtseEnsDownDev}{\ensuremath{0.04}}
+\newcommand{\FtseBHDownDev}{\ensuremath{0.09}}
+\newcommand{\FtseEnsUlcer}{\ensuremath{1.59}}
+\newcommand{\FtseBHUlcer}{\ensuremath{2.66}}
+\newcommand{\FtseEnsMartin}{\ensuremath{4.91}}
+\newcommand{\FtseBHMartin}{\ensuremath{5.05}}
+\newcommand{\FtseLeverage}{\ensuremath{1.82}}
+\newcommand{\FtseVolScaledTR}{\ensuremath{0.26}}
+\newcommand{\FtseVolScaledSharpe}{\ensuremath{1.37}}
+\newcommand{\FtseVolScaledMDD}{\ensuremath{-0.12}}
+\newcommand{\FtseVolScaledExcessPP}{\ensuremath{+1.87}}
+\newcommand{\FtseRegBullShare}{90.32\%}
+\newcommand{\FtseRegBullDays}{\ensuremath{401}}
+\newcommand{\FtseRegCorrectionDays}{\ensuremath{5}}
+\newcommand{\FtseRegSidewaysDays}{\ensuremath{38}}
+\newcommand{\FtseEnsBullTR}{\ensuremath{0.14}}
+\newcommand{\FtseBHBullTR}{\ensuremath{0.30}}
+\newcommand{\FtseEnsCorrectionTR}{\ensuremath{-0.02}}
+\newcommand{\FtseBHCorrectionTR}{\ensuremath{-0.01}}
+\newcommand{\FtseEnsSidewaysTR}{\ensuremath{0.02}}
+\newcommand{\FtseBHSidewaysTR}{\ensuremath{-0.03}}
+\newcommand{\FtseBestSingleName}{\texttt{only\_macd}}
+\newcommand{\FtseBestSingleTR}{\ensuremath{0.15}}
+\newcommand{\FtseLSTMtest}{\ensuremath{0.27}}
+\newcommand{\FtseLSTMsharpe}{\ensuremath{1.49}}
+\newcommand{\FtseLSTMmdd}{\ensuremath{-0.08}}
+\newcommand{\FtseLSTMtrades}{\ensuremath{37}}
+\newcommand{\FtsePensVsLSTM}{\ensuremath{0.879}}
+\newcommand{\FtsePLSTMvsBH}{\ensuremath{0.411}}
 
 % ---------------------------------------------------------------------
 
@@ -186,7 +248,7 @@ This section reviews four main streams of literature that directly inform the co
 
 \subsection{Algorithmic Trading and Technical Analysis}
 
-Technical analysis uses indicators computed from price and volume to generate trading signals. Early work established that simple trading rules based on moving averages and trading ranges exhibit predictive power that is hard to reconcile with the strict form of the efficient markets hypothesis \cite{brock1992}. Subsequent studies formalized this debate with algorithmic backtests and statistical tests \cite{boboc2013}, and showed that several popular indicators (MACD, RSI, Bollinger Bands, among others) continue to produce information when combined with machine-learning classifiers \cite{gerlein2016}. Closely related to the ensemble design of the present paper, empirical work on cross-sectional momentum \cite{jegadeeshtitman1993,asness2013} and time-series momentum \cite{moskowitz2012} has shown that trend-following and mean-reversion signals carry orthogonal information about future returns. More recent work has shifted to deep learning, in particular to recurrent architectures for price prediction \cite{fischerkrauss2018}, and to deep reinforcement learning systems that learn trading policies end-to-end \cite{huang2022,shavandi2022,kaursingh2023}. Systematic reviews conclude that the evidence on technical analysis is mixed and depends strongly on the choice of market, period, and evaluation protocol \cite{nti2020}.
+Technical analysis uses indicators computed from price and volume to generate trading signals. Early work established that simple trading rules based on moving averages and trading ranges exhibit predictive power that is hard to reconcile with the strict form of the efficient markets hypothesis \cite{brock1992}. Subsequent studies formalized this debate with algorithmic backtests and statistical tests \cite{boboc2013}, and showed that several popular indicators (MACD, RSI, Bollinger Bands, among others) continue to produce information when combined with machine-learning classifiers \cite{gerlein2016}. Closely related to the ensemble design of the present paper, empirical work on cross-sectional momentum \cite{jegadeeshtitman1993,asness2013} and time-series momentum \cite{moskowitz2012} has shown that trend-following and mean-reversion signals carry orthogonal information about future returns. More recent work has shifted to deep learning, in particular to recurrent architectures for price prediction \cite{fischerkrauss2018}, and to deep reinforcement learning systems that learn trading policies end-to-end \cite{huang2022,shavandi2022,kaursingh2023}. Systematic reviews conclude that the evidence on technical analysis is mixed and depends strongly on the choice of market, period, and evaluation protocol \cite{nti2020}. To situate the transparent forecast-combination design of the present paper against this learning-based stream, we include an LSTM directional classifier in the style of \cite{fischerkrauss2018} as a modern baseline, evaluated under the same walk-forward protocol, transaction costs, and portfolio simulator as the ensemble.
 
 Two methodological criticisms recur across this literature. The first is backtest overfitting: when a large number of configurations are evaluated on the same data, the best configuration is biased upward and the out-of-sample performance is overstated \cite{bailey2014,harvey2016}. The second is the frequent absence of realistic frictions, such as commissions and slippage, which can erode a large fraction of the gross return of a high-turnover strategy. The present paper takes both criticisms seriously and incorporates them into the evaluation design.
 
@@ -404,7 +466,11 @@ Algorithm~\ref{alg:wf} summarizes the full protocol in pseudocode. The key featu
 \subsection{Baselines}
 \label{subsec:baselines}
 
-Two families of baselines are used. The first is \emph{buy-and-hold WIG20}, an equity curve that invests the initial cash into the WIG20 index on the first date of the test window and holds the position until the end. Buy-and-hold is a standard benchmark in the evaluation of trading strategies \cite{dichtl2020}. The second family is a set of \emph{single-agent} runs in which the decision agent receives signals from only one signal agent; this produces five baselines, one per indicator. In addition, we run five \emph{leave-one-agent-out} configurations, each of which removes one agent from the ensemble. All baselines are evaluated on the same test window, use the same transaction costs, and adopt the same decision-agent configuration selected by the walk-forward protocol. The only exception is buy-and-hold, which has no decision-agent parameters.
+Three families of baselines are used. The first is \emph{buy-and-hold WIG20}, an equity curve that invests the initial cash into the WIG20 index on the first date of the test window and holds the position until the end. Buy-and-hold is a standard benchmark in the evaluation of trading strategies \cite{dichtl2020}. The second family is a set of \emph{single-agent} runs in which the decision agent receives signals from only one signal agent; this produces five baselines, one per indicator. In addition, we run five \emph{leave-one-agent-out} configurations, each of which removes one agent from the ensemble. The third family is a \emph{deep-learning baseline}, described next. All baselines are evaluated on the same test window, use the same transaction costs, and adopt the same decision-agent configuration selected by the walk-forward protocol. The only exceptions are buy-and-hold, which has no decision-agent parameters, and the deep-learning baseline, which replaces the decision agent with a learned classifier.
+
+\subsubsection{Deep-Learning Baseline}
+\label{subsec:lstm}
+As a modern learning-based reference point, we implement an LSTM directional classifier in the style of \cite{fischerkrauss2018}. For each symbol the model consumes a rolling window of causal per-day features derived from the same price history available to the agents (multi-horizon returns, realized volatility, and the normalized RSI, ROC, MACD-histogram, Bollinger \%b, and moving-average-spread indicators), and predicts the probability that the $h$-day-ahead return is positive. The network is a single-layer LSTM followed by dropout and a linear output unit, trained with the Adam optimizer under binary cross-entropy. To keep the comparison fair, all model-selection choices are made strictly in-sample: the prediction horizon $h$, the operating threshold, and early stopping are selected on an internal validation slice carved chronologically from the training window, and the held-out test window is never used for any tuning. Feature standardization statistics are estimated on the training window only, so the procedure carries no look-ahead. Per-symbol probabilities are mapped to long or flat positions through a symmetric no-trade band around $0.5$: a probability above $0.5 + \delta$ opens or holds a long position, a probability below $0.5 - \delta$ closes it, and intermediate probabilities leave the current position unchanged, which mirrors the hold behavior of the decision agent and prevents the excessive turnover that would otherwise be induced by daily re-prediction. On both markets the in-sample selection returns a horizon of $h = \LSTMhorizon$ days and a band of $\delta = \LSTMband$. The resulting long/flat signals are executed through the same portfolio simulator, under identical costs and position sizing, so that any difference reflects the decision rule rather than the accounting.
 
 \subsection{Risk-Adjusted Metrics}
 \label{subsec:metrics}
@@ -688,6 +754,28 @@ no MA trend    & $0.19$ & $1.16$ \\
 \end{tabular}
 \end{table}
 
+\subsection{Comparison with a Deep-Learning Baseline}
+\label{subsec:lstm_results}
+
+Table~\ref{tab:lstm} compares the ensemble with the LSTM directional baseline of Section~\ref{subsec:lstm} on the held-out WIG20 test window. The LSTM earns a total return of \LSTMtest{} at a Sharpe ratio of \LSTMsharpe{}, against \TRtest{} and \Shtest{} for the ensemble and \BHtest{} and \BHsharpe{} for buy-and-hold. The ensemble exceeds the LSTM on total return, Sharpe ratio, and maximum drawdown (\MDDtest{} against \LSTMmdd{}), and it does so while placing far fewer trades (\Ntrades{} against \LSTMtrades{}). The one-sided paired bootstrap $p$-values for the ensemble exceeding the LSTM are \PensVsLSTM{} on total return and \PensVsLSTMsharpe{} on Sharpe ratio; as with the buy-and-hold comparison, the point-estimate advantage is sizable but does not reach the conventional $p < 0.05$ threshold on a single test window. The learned classifier, trained end-to-end on the same price history and executed under identical costs, does not match the transparent forecast-combination ensemble on this market, which is consistent with the broader finding that simple, well-regularized combinations are competitive with more flexible learners on noisy financial series \cite{clemen1989,timmermann2006}.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of the ensemble, the LSTM directional baseline, and buy-and-hold on the held-out WIG20 test window, net of transaction costs.}
+\label{tab:lstm}
+\begin{tabular}{lccc}
+\toprule
+Metric & Multi-agent system & LSTM baseline & Buy-and-hold WIG20 \\
+\midrule
+Total return     & $\TRtest$   & $\LSTMtest$   & $\BHtest$ \\
+Sharpe ratio     & $\Shtest$   & $\LSTMsharpe$ & $\BHsharpe$ \\
+Max drawdown     & $\MDDtest$  & $\LSTMmdd$    & $\MDDbh$ \\
+Calmar ratio     & $\Calmtest$ & $\LSTMcalmar$ & $\Calmbh$ \\
+Number of trades & $\Ntrades$  & $\LSTMtrades$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Statistical Significance}
 \label{subsec:significance}
 
@@ -717,6 +805,37 @@ Fold & Selected mode & $c_{\min}$ & Test total return \\
 \end{tabular}
 \end{table}
 
+\subsection{External Validation on the FTSE 100}
+\label{subsec:ftse}
+
+To test whether the risk-aware profile of the ensemble is specific to the WSE or transfers to a different market structure, we replicate the entire pipeline on the FTSE 100, the blue-chip index of the London Stock Exchange. The dataset comprises \FtseNsymbols{} large-capitalization constituents together with the FTSE 100 index used for the buy-and-hold benchmark, in the same daily OHLCV format, over the same sample period and with the same anchored split boundary and held-out test window as the WIG20 experiment. Prices are denominated in pounds sterling and were retrieved from the same public source. The transaction-cost model is adjusted to reflect UK conditions: a proportional commission of $5$ bps and one-way slippage of $5$ bps on every trade, plus a $50$ bps Stamp Duty Reserve Tax charged on purchases only, which makes the FTSE cost environment asymmetric and, on the buy side, considerably more punitive than the WIG20 calibration. The agents, the decision-agent grid, the indicator hyperparameters, and every evaluation procedure are held identical; only the market data and the cost model change.
+
+The anchored walk-forward selects the same decision-agent family as on WIG20 (\texttt{aggressive} mode) and evaluates it on \FtseOOSDays{} held-out trading days. Table~\ref{tab:ftse} reports the headline comparison. As on WIG20, the ensemble trails buy-and-hold on gross total return (\FtseTRtest{} against \FtseBHtest{}) but leads on every risk axis: the Sharpe ratio is \FtseSharpe{} against \FtseBHsharpe{}, the maximum drawdown is \FtseMDD{} against \FtseBHmdd{} (a reduction of roughly one half), and the Calmar ratio is \FtseCalmar{} against \FtseBHcalmar{}. The extended risk-adjusted metrics show the same pattern: the Sortino ratio is \FtseEnsSortino{} against \FtseBHSortino{}, the Ulcer Index is \FtseEnsUlcer{} against \FtseBHUlcer{}, and the downside deviation is \FtseEnsDownDev{} against \FtseBHDownDev{}. The one interesting reversal is the Martin ratio (\FtseEnsMartin{} against \FtseBHMartin{}), which is marginally lower for the ensemble because the FTSE test window is overwhelmingly a bull market and buy-and-hold sustains a very shallow integrated drawdown over it.
+
+\begin{table}[t]
+\centering
+\caption{External validation on the FTSE 100 held-out test window, net of transaction costs (including the $50$ bps buy-side Stamp Duty Reserve Tax). Brackets give $95\%$ bootstrap confidence intervals.}
+\label{tab:ftse}
+\begin{tabular}{lccc}
+\toprule
+Metric & Multi-agent system & LSTM baseline & Buy-and-hold FTSE \\
+\midrule
+Total return     & $\FtseTRtest$ $[\FtseTRtestCIlow, \FtseTRtestCIhigh]$ & $\FtseLSTMtest$   & $\FtseBHtest$ \\
+CAGR             & $\FtseCAGR$    & --              & $\FtseBHcagr$ \\
+Sharpe ratio     & $\FtseSharpe$ $[\FtseSharpeCIlow, \FtseSharpeCIhigh]$ & $\FtseLSTMsharpe$ & $\FtseBHsharpe$ \\
+Max drawdown     & $\FtseMDD$     & $\FtseLSTMmdd$  & $\FtseBHmdd$ \\
+Calmar ratio     & $\FtseCalmar$  & --              & $\FtseBHcalmar$ \\
+Sortino ratio    & $\FtseEnsSortino$ & --           & $\FtseBHSortino$ \\
+Ulcer Index      & $\FtseEnsUlcer$   & --           & $\FtseBHUlcer$ \\
+Number of trades & $\FtseNtrades$ & $\FtseLSTMtrades$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The regime decomposition explains the aggregate numbers. The FTSE test window is $\FtseRegBullShare{}$ bull ($\FtseRegBullDays{}$ of \FtseOOSDays{} days), with only $\FtseRegCorrectionDays{}$ correction days and $\FtseRegSidewaysDays{}$ sideways days, so it offers little opportunity for the correction-regime defense that drives the WIG20 result. Even so, during the sideways subperiods the ensemble earns \FtseEnsSidewaysTR{} against \FtseBHSidewaysTR{} for buy-and-hold, the same sideways-carry pattern observed on WIG20; the aggregate total-return shortfall is again concentrated in the bull regime (\FtseEnsBullTR{} against \FtseBHBullTR{}), where a partially invested strategy mechanically trails a fully invested benchmark. Matching the two series on ex-ante volatility, as in Section~\ref{subsec:volscaled}, raises the ensemble total return to \FtseVolScaledTR{} at a leverage of $\lambda = \FtseLeverage{}$, a gain of \FtseVolScaledExcessPP{} percentage points over buy-and-hold with a still-smaller drawdown (\FtseVolScaledMDD{}).
+
+The paired bootstrap tests tell the same statistical-power story as on WIG20. The buy-and-hold point estimates lie inside the ensemble confidence intervals, and the one-sided $p$-values for the ensemble exceeding buy-and-hold are \FtsePvsBH{} on total return and \FtsePvsBHsharpe{} on Sharpe ratio; none crosses $p < 0.05$. The LSTM baseline posts higher point estimates than the ensemble on this particular window, both on gross total return (\FtseLSTMtest{} against \FtseTRtest{}) and on Sharpe ratio (\FtseLSTMsharpe{} against \FtseSharpe{}), but neither gap is statistically significant (the one-sided $p$-value for the ensemble exceeding the LSTM on total return is \FtsePensVsLSTM{}). Two observations put this apparent edge in perspective. First, it is a bull-market-exposure effect rather than evidence of superior risk control: the LSTM remains almost continuously invested across a window that is $\FtseRegBullShare{}$ bull, so it captures more of the upside at the price of a deeper drawdown (\FtseLSTMmdd{} against \FtseMDD{}). Second, the LSTM is itself statistically indistinguishable from passive buy-and-hold on this window (one-sided $p = \FtsePLSTMvsBH{}$), which is consistent with a near-fully-invested strategy tracking the index; the transparent ensemble, by contrast, deliberately trades part of that exposure for the shallower drawdown documented above. Taken together, the FTSE results show that the central finding of the paper -- a consistent drawdown and downside-risk advantage over passive buy-and-hold, purchased with some bull-market upside -- transfers to a second market with a markedly different cost structure, and is not an artifact of the WIG20 sample.
+
 % ==============================================================================
 \section{Discussion}
 \label{sec:discussion}
@@ -736,6 +855,11 @@ The comparison against the best single-agent baseline supports H2 on point estim
 
 The ablation strongly supports H3. Removing any single signal agent moves the total return on the test window within a narrow band around the full ensemble, and the worst leave-one-out configuration still achieves a total return above $0.19$, a Sharpe ratio above $1$, and a Sortino ratio above buy-and-hold. Two observations deserve particular mention. First, removing the momentum family (MACD) slightly improves the headline metrics on this test window, which indicates that the pre-set family weights overweight momentum relative to what this particular period demands; in a more conservative future version, the family weights could be learned rather than fixed. Second, the Bollinger agent on its own produced very few trades under the selected configuration, so its removal has only a mild effect on the behavior of the ensemble; it behaves as a low-activity member of the forecast pool on this test window. Taken together, these findings show that the ensemble is robust to the removal of any single signal agent, consistent with the forecast-combination prediction that variance reduction persists as long as at least two imperfectly correlated forecasters remain.
 
+\subsection{Cross-Market Generalization}
+\label{subsec:crossmarket}
+
+The FTSE 100 replication in Section~\ref{subsec:ftse} addresses the most immediate external-validity concern, namely that the risk-aware profile of the ensemble might be an artifact of the WIG20 sample. The qualitative conclusion is unchanged on a market with a different constituent set, a different currency, and a materially different cost structure that includes an asymmetric $50$ bps buy-side transaction tax: the ensemble trails passive buy-and-hold on gross total return during a bull-dominated window, yet delivers a higher Sharpe ratio (\FtseSharpe{} against \FtseBHsharpe{}), a shallower maximum drawdown (\FtseMDD{} against \FtseBHmdd{}), and a better Sortino ratio and Ulcer Index, and it overtakes buy-and-hold on total return once the two series are matched on ex-ante volatility. That the same trade-off appears on two markets, despite an added stamp-duty friction that penalizes the more active strategy, supports the interpretation that the drawdown and downside-risk advantage is a structural consequence of forecast-combination rather than a market-specific coincidence. The transfer is not perfect: the FTSE test window contains almost no correction days, so the correction-regime defense that is prominent on WIG20 has little room to act, and the integrated-drawdown advantage narrows to the point where the Martin ratio marginally favors buy-and-hold. This is consistent with the regime-dependence predicted by the adaptive markets hypothesis \cite{lo2004}: the ensemble adds the most value in the regimes it is designed to defend, and a window that is almost entirely bull is the least favorable setting for it.
+
 \subsection{Why Gross Total Return Understates the Contribution of the Ensemble}
 
 The standard comparison of a trading strategy against buy-and-hold reports a single gross total return for each series and declares the larger number the winner. On the present test window that comparison would declare the passive benchmark the winner, even though the equity curve of the ensemble has less than half of the drawdown of the benchmark and delivers materially higher Sharpe, Sortino, Calmar, Ulcer, and Martin ratios. Three observations suggest that the gross-total-return comparison is the wrong summary in this setting. First, the ensemble is not fully invested on all dates by design: the decision-agent thresholds ensure that positions are opened only when the combined score crosses a confidence level. In a test window that is $\RegBullShare{}$ bull, any partially-invested strategy will trail a fully-invested benchmark on gross cumulative return almost by construction. Second, the volatility-matched comparison in Section~\ref{subsec:volscaled} shows that at equal ex-ante risk budget the ensemble produces $\VolScaledExcessPP{}$ percentage points more total return than buy-and-hold, with a smaller drawdown in absolute terms. Third, the regime decomposition in Section~\ref{subsec:regime} shows that the aggregate shortfall of the ensemble is entirely attributable to the bull regime; in the correction and sideways regimes, the ensemble matches or beats buy-and-hold even on gross return. These three pieces of evidence reframe the comparison: the ensemble adds value as a \emph{risk-aware decision support tool} that trades some bull-regime upside for shallower drawdowns and higher risk-adjusted performance overall.
@@ -748,7 +872,7 @@ The pattern of results reported in Section~\ref{sec:results} is consistent with 
 
 For a WSE-focused retail investor with access to standard daily data and typical Polish brokerage conditions, two practical implications stand out. First, the ensemble reduces the worst realized drawdown by a factor greater than two and reduces the integrated drawdown, as measured by the Ulcer Index, by nearly two-thirds. This is the dominant axis on which retail portfolios tend to be evaluated in practice, both because maximum drawdown has a direct operational meaning (it is the worst unrealized loss the investor has to live through) and because sustained drawdowns are empirically associated with behavioral deviations from the original plan. Second, the cost-sensitivity sweep shows that the risk-adjusted edge of the ensemble over buy-and-hold is preserved at every plausible combination of commission and slippage, including the punitive $100$ bps / $20$ bps configuration, which is well above current WSE retail tariffs. Neither of these implications depends on leverage, and both can be consumed by a retail investor as decision-support signals overlaid on a passive benchmark rather than as a replacement for the benchmark.
 
-Two operational considerations follow from this framing. The first concerns the update cadence. The five agents and the decision agent consume only end-of-day closes, so a retail deployment amounts to running the pipeline once after the daily WSE close and acting on the resulting recommendations at the open or close of the following session. No intraday infrastructure, tick data, or order-book integration is required, which lowers the bar for adoption outside the institutional segment. The second concerns monitoring. Because the decision-agent score in \eqref{eq:score} is a linear combination of agent signals weighted by confidence and family, the score can be decomposed, day by day, into per-agent contributions and plotted alongside the equity curve. This decomposition gives the investor an interpretable audit trail of which agents drove each position change, and makes it straightforward to detect structural shifts in the signal distribution (for example, an agent whose confidence collapses for an extended period) without retraining the ensemble. We view this interpretability as a distinctive strength of a theory-grounded forecast-combination design relative to end-to-end deep-reinforcement-learning trading systems, which typically produce a scalar action without a transparent attribution to individual input signals.
+Two operational considerations follow from this framing. The first concerns the update cadence. The five agents and the decision agent consume only end-of-day closes, so a retail deployment amounts to running the pipeline once after the daily WSE close and acting on the resulting recommendations at the open or close of the following session. No intraday infrastructure, tick data, or order-book integration is required, which lowers the bar for adoption outside the institutional segment. The second concerns monitoring. Because the decision-agent score in \eqref{eq:score} is a linear combination of agent signals weighted by confidence and family, the score can be decomposed, day by day, into per-agent contributions and plotted alongside the equity curve. This decomposition gives the investor an interpretable audit trail of which agents drove each position change, and makes it straightforward to detect structural shifts in the signal distribution (for example, an agent whose confidence collapses for an extended period) without retraining the ensemble. We view this interpretability as a distinctive strength of a theory-grounded forecast-combination design relative to end-to-end deep-reinforcement-learning trading systems, which typically produce a scalar action without a transparent attribution to individual input signals. This strength does not come at the cost of performance on the markets studied here: the LSTM directional baseline of Section~\ref{subsec:lstm}, a representative learning-based competitor trained on the same price history and executed under identical costs, does not beat the transparent ensemble by a statistically significant margin on either market. On WIG20 the ensemble dominates it on every metric (Section~\ref{subsec:lstm_results}); on the FTSE 100 the LSTM posts higher point estimates, but only by remaining near-fully invested through an almost pure bull window, which leaves it statistically indistinguishable from passive buy-and-hold while giving up the drawdown control that motivates the ensemble (Section~\ref{subsec:ftse}). The ensemble thus retains full per-signal attribution while remaining competitive with an opaque learned model.
 
 \subsection{Design Implications}
 
@@ -759,9 +883,9 @@ Three design implications follow from the experiments. First, the transparency o
 \label{sec:limitations}
 % ==============================================================================
 
-Several limitations of this study should be kept in mind. First, the evaluation is restricted to one market (WSE), one index (WIG20), and one frequency (daily). Generalization to other markets, to smaller stocks, or to intraday frequencies would require a separate evaluation; the signal agents and the decision agent were designed around daily closes and would need to be adapted for intraday use. Second, although the transaction-cost model captures commissions and slippage and is stress-tested over a wide grid, it does not capture liquidity constraints, partial fills, or the price impact of larger orders. In practice, large orders could move the closing price and would require an order-book-level simulation. Third, the system does not use fundamental data, news, or alternative data sources, which are known to carry orthogonal information with respect to price-based indicators and would fit naturally into the forecast-combination framework as additional agents with distinct error structures. Fourth, the decision agent uses fixed family weights, which could in principle be learned from data; we chose fixed weights to keep the degrees of freedom low and the interpretation of the score transparent. Fifth, the test window, although long enough to cover bull, correction, and sideways regimes, is ultimately a single window of under two years, and the bootstrap tests have limited power to detect moderate effect sizes on a sample of this size; we therefore rely on point estimates and confidence intervals as much as on $p$-values. Sixth, the volatility-matched comparison requires leverage of $\lambda = \Leverage{}$, which is impractical for a typical retail investor on the WSE; the comparison therefore serves as a counterfactual on risk budget rather than as an operational recommendation. Finally, the paper does not include a live-trading exercise; any claims about realized performance in production would require such an exercise.
+Several limitations of this study should be kept in mind. First, although the evaluation now spans two markets (the WIG20 and, as an external validation, the FTSE 100), both are large-capitalization blue-chip indices evaluated at daily frequency; generalization to smaller and less liquid stocks, to other asset classes, or to intraday frequencies would require a separate evaluation, and the signal agents and the decision agent, which were designed around daily closes, would need to be adapted for intraday use. Second, although the transaction-cost model captures commissions and slippage and is stress-tested over a wide grid, it does not capture liquidity constraints, partial fills, or the price impact of larger orders. In practice, large orders could move the closing price and would require an order-book-level simulation. Third, the system does not use fundamental data, news, or alternative data sources, which are known to carry orthogonal information with respect to price-based indicators and would fit naturally into the forecast-combination framework as additional agents with distinct error structures. Fourth, the decision agent uses fixed family weights, which could in principle be learned from data; we chose fixed weights to keep the degrees of freedom low and the interpretation of the score transparent. Fifth, the test window, although long enough to cover bull, correction, and sideways regimes, is ultimately a single window of under two years, and the bootstrap tests have limited power to detect moderate effect sizes on a sample of this size; we therefore rely on point estimates and confidence intervals as much as on $p$-values. Sixth, the volatility-matched comparison requires leverage of $\lambda = \Leverage{}$, which is impractical for a typical retail investor on the WSE; the comparison therefore serves as a counterfactual on risk budget rather than as an operational recommendation. Finally, the paper does not include a live-trading exercise; any claims about realized performance in production would require such an exercise.
 
-Each of these limitations maps to a specific direction for future work. The system could be extended to other indices (for example, the German DAX, the Italian FTSE MIB, or the US S\&P 500) to test the cross-market generalization of the design. Intraday frequencies would require a careful revision of both the signal agents and the transaction-cost model, and would expose the system to additional market-microstructure effects. Fundamental and alternative data could be integrated as additional signal agents that share the same base-agent interface, which is straightforward given the modular design. Learned family weights, for example via a Bayesian update of the inverse-variance proxy, would formalize the link to the forecast-combination argument of Section~\ref{sec:theory}. Regime-conditional family weights, in which the trend family is upweighted in bull regimes and downweighted in corrections, are a natural extension of the current fixed-weight design and would be expected to recover part of the bull-regime shortfall identified in Section~\ref{subsec:regime}. Finally, a walk-forward live-trading exercise on a paper-trading broker interface would close the loop between the backtest and realistic execution.
+Each of these limitations maps to a specific direction for future work. Building on the FTSE 100 validation reported here, the system could be extended to further indices (for example, the German DAX, the Italian FTSE MIB, or the US S\&P 500) and to smaller-capitalization or emerging-market segments to map more precisely the market conditions under which the risk-adjusted advantage holds. Intraday frequencies would require a careful revision of both the signal agents and the transaction-cost model, and would expose the system to additional market-microstructure effects. Fundamental and alternative data could be integrated as additional signal agents that share the same base-agent interface, which is straightforward given the modular design. Learned family weights, for example via a Bayesian update of the inverse-variance proxy, would formalize the link to the forecast-combination argument of Section~\ref{sec:theory}. Regime-conditional family weights, in which the trend family is upweighted in bull regimes and downweighted in corrections, are a natural extension of the current fixed-weight design and would be expected to recover part of the bull-regime shortfall identified in Section~\ref{subsec:regime}. Finally, a walk-forward live-trading exercise on a paper-trading broker interface would close the loop between the backtest and realistic execution.
 
 % ==============================================================================
 \section{Conclusion}

@@ -334,6 +334,157 @@ def _correlation_macros(corr: pd.DataFrame) -> Dict[str, str]:
 
 
 # --------------------------------------------------------------------------
+# Deep-learning (LSTM) baseline macros
+# --------------------------------------------------------------------------
+
+
+def _lstm_macros(results_dir: Path, prefix: str = "") -> Dict[str, str]:
+    """
+    Build LSTM-baseline macros from ml_baselines.csv and ml_baseline_stats.csv.
+
+    With prefix="" the macros are \\LSTMtest etc. (WIG20); with prefix="Ftse"
+    they are \\FtseLSTMtest etc. Missing files yield an empty dict so the
+    static placeholder defaults in the .tex preamble are left in place.
+    """
+    ml = _read_if_exists(results_dir / "ml_baselines.csv")
+    st = _read_if_exists(results_dir / "ml_baseline_stats.csv")
+    m: Dict[str, str] = {}
+
+    if not ml.empty and "series" in ml.columns:
+        by = ml.set_index("series")
+        if "lstm_oos" in by.index:
+            lstm = by.loc["lstm_oos"]
+            m[f"{prefix}LSTMtest"] = _ens(_fmt(lstm["total_return"]))
+            m[f"{prefix}LSTMsharpe"] = _ens(_fmt(lstm["sharpe"]))
+            m[f"{prefix}LSTMmdd"] = _ens(_fmt(lstm["max_drawdown"]))
+            m[f"{prefix}LSTMcalmar"] = _ens(_fmt(lstm["calmar_ratio"]))
+            m[f"{prefix}LSTMtrades"] = _ens(str(int(lstm["num_trades"])))
+
+    if not st.empty and "comparison" in st.columns:
+        for _, r in st.iterrows():
+            comparison = str(r["comparison"])
+            statistic = str(r["statistic"])
+            if comparison == "ensemble_vs_lstm" and statistic == "total_return":
+                m[f"{prefix}PensVsLSTM"] = _ens(_fmt(r["p_value"], 3))
+            elif comparison == "ensemble_vs_lstm" and statistic == "sharpe":
+                m[f"{prefix}PensVsLSTMsharpe"] = _ens(_fmt(r["p_value"], 3))
+            elif comparison == "lstm_vs_buy_and_hold" and statistic == "total_return":
+                m[f"{prefix}PLSTMvsBH"] = _ens(_fmt(r["p_value"], 3))
+    return m
+
+
+# --------------------------------------------------------------------------
+# FTSE 100 external-validation macros (all prefixed with "Ftse")
+# --------------------------------------------------------------------------
+
+
+def _ftse_macros(ftse_dir: Path) -> Dict[str, str]:
+    """Build the \\Ftse... macros from the results/ftse pipeline outputs."""
+    headline = _read_if_exists(ftse_dir / "walk_forward_headline.csv")
+    risk = _read_if_exists(ftse_dir / "risk_metrics.csv")
+    stats = _read_if_exists(ftse_dir / "stats.csv")
+    regime = _read_if_exists(ftse_dir / "regime_analysis.csv")
+    ablation = _read_if_exists(ftse_dir / "ablation.csv")
+
+    m: Dict[str, str] = {}
+    if headline.empty:
+        return m
+
+    h = headline.iloc[0]
+    m["FtseTRtest"] = _ens(_fmt(h["test_total_return"]))
+    m["FtseCAGR"] = _ens(_fmt(h["test_cagr"]))
+    m["FtseMDD"] = _ens(_fmt(h["test_max_drawdown"]))
+    m["FtseSharpe"] = _ens(_fmt(h["test_sharpe"]))
+    m["FtseCalmar"] = _ens(_fmt(h["test_calmar_ratio"]))
+    m["FtseNtrades"] = _ens(str(int(h["test_num_trades"])))
+    m["FtseWinRate"] = _ens(_fmt(h["test_win_rate"]))
+
+    # Symbol count from the FTSE config, if available.
+    try:
+        from config import load_config
+
+        cfg = load_config(Path(__file__).resolve().parent.parent / "config_ftse.yaml")
+        n_sym = len(cfg.get("symbols") or [])
+        if n_sym:
+            m["FtseNsymbols"] = _ens(str(n_sym))
+    except (ImportError, FileNotFoundError, ValueError):
+        pass
+
+    if not stats.empty:
+        for _, r in stats.iterrows():
+            cmp = str(r["comparison"])
+            if cmp == "ensemble_total_return_ci":
+                m["FtseTRtestCIlow"] = _ens(_fmt(r["ci_low"]))
+                m["FtseTRtestCIhigh"] = _ens(_fmt(r["ci_high"]))
+            elif cmp == "ensemble_sharpe_ci":
+                m["FtseSharpeCIlow"] = _ens(_fmt(r["ci_low"]))
+                m["FtseSharpeCIhigh"] = _ens(_fmt(r["ci_high"]))
+            elif cmp == "ensemble_vs_bh_total_return":
+                m["FtsePvsBH"] = _ens(_fmt(r["p_value"], 3))
+            elif cmp == "ensemble_vs_bh_sharpe":
+                m["FtsePvsBHsharpe"] = _ens(_fmt(r["p_value"], 3))
+
+    bh_tr = None
+    if not risk.empty and "series" in risk.columns:
+        by = risk.set_index("series")
+        if "ensemble_oos" in by.index:
+            e = by.loc["ensemble_oos"]
+            m["FtseEnsSortino"] = _ens(_fmt(e["sortino"]))
+            m["FtseEnsDownDev"] = _ens(_fmt(e["downside_deviation"]))
+            m["FtseEnsUlcer"] = _ens(_fmt(e["ulcer_index"]))
+            m["FtseEnsMartin"] = _ens(_fmt(e["martin_ratio"]))
+        if "buy_and_hold_oos" in by.index:
+            b = by.loc["buy_and_hold_oos"]
+            bh_tr = float(b["total_return"])
+            m["FtseBHtest"] = _ens(_fmt(b["total_return"]))
+            m["FtseBHcagr"] = _ens(_fmt(b["cagr"]))
+            m["FtseBHmdd"] = _ens(_fmt(b["max_drawdown"]))
+            m["FtseBHsharpe"] = _ens(_fmt(b["sharpe"]))
+            m["FtseBHcalmar"] = _ens(_fmt(b["calmar_ratio"]))
+            m["FtseBHSortino"] = _ens(_fmt(b["sortino"]))
+            m["FtseBHDownDev"] = _ens(_fmt(b["downside_deviation"]))
+            m["FtseBHUlcer"] = _ens(_fmt(b["ulcer_index"]))
+            m["FtseBHMartin"] = _ens(_fmt(b["martin_ratio"]))
+        if "ensemble_oos_vol_scaled" in by.index:
+            v = by.loc["ensemble_oos_vol_scaled"]
+            m["FtseVolScaledTR"] = _ens(_fmt(v["total_return"]))
+            m["FtseVolScaledSharpe"] = _ens(_fmt(v["sharpe"]))
+            m["FtseVolScaledMDD"] = _ens(_fmt(v["max_drawdown"]))
+            m["FtseLeverage"] = _ens(_fmt(v["leverage"]))
+            if bh_tr is not None:
+                excess = (float(v["total_return"]) - bh_tr) * 100.0
+                m["FtseVolScaledExcessPP"] = _ens(f"{excess:+.2f}")
+
+    if not regime.empty:
+        ens = regime[regime["series"] == "ensemble"].set_index("regime")
+        bh = regime[regime["series"] == "buy_and_hold"].set_index("regime")
+        if "all" in ens.index:
+            m["FtseOOSDays"] = _ens(str(int(ens.loc["all", "days"])))
+        for label in ("bull", "correction", "sideways"):
+            if label in ens.index:
+                cap = label.capitalize()
+                m[f"FtseReg{cap}Days"] = _ens(str(int(ens.loc[label, "days"])))
+                m[f"FtseEns{cap}TR"] = _ens(_fmt(ens.loc[label, "total_return"]))
+            if label in bh.index:
+                cap = label.capitalize()
+                m[f"FtseBH{cap}TR"] = _ens(_fmt(bh.loc[label, "total_return"]))
+        if "bull" in ens.index:
+            m["FtseRegBullShare"] = _pct(ens.loc["bull", "share"])
+
+    if not ablation.empty and "variant" in ablation.columns:
+        singles = ablation[ablation["variant"].str.startswith("only_")]
+        if not singles.empty:
+            best = singles.loc[singles["total_return"].idxmax()]
+            m["FtseBestSingleTR"] = _ens(_fmt(best["total_return"]))
+            m["FtseBestSingleName"] = (
+                "\\texttt{" + str(best["variant"]).replace("_", r"\_") + "}"
+            )
+
+    m.update(_lstm_macros(ftse_dir, prefix="Ftse"))
+    return m
+
+
+# --------------------------------------------------------------------------
 # Table filling helpers for tables with variable-length rows
 # --------------------------------------------------------------------------
 
@@ -625,6 +776,8 @@ def main() -> None:
     macros.update(_regime_macros(regime))
     macros.update(_cost_summary_macros(cost))
     macros.update(_correlation_macros(corr))
+    macros.update(_lstm_macros(RESULTS_DIR, prefix=""))
+    macros.update(_ftse_macros(RESULTS_DIR / "ftse"))
 
     for name, value in macros.items():
         src = _replace_macro(src, name, value)
