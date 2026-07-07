@@ -14,6 +14,8 @@
 \@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
 \newlabel{sec:introduction}{{I}{1}{Introduction}{section.1}{}}
 \citation{batesgranger1969,clemen1989,timmermann2006}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:related_work}{{II}{2}{Related Work}{section.2}{}}
 \citation{brock1992}
 \citation{boboc2013}
 \citation{gerlein2016}
@@ -22,15 +24,16 @@
 \citation{fischerkrauss2018}
 \citation{huang2022,shavandi2022,kaursingh2023}
 \citation{nti2020}
-\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
-\newlabel{sec:related_work}{{II}{2}{Related Work}{section.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Algorithmic Trading and Technical Analysis}{2}{subsection.2.1}\protected@file@percent }
+\citation{fischerkrauss2018}
 \citation{bailey2014,harvey2016}
 \citation{lebaron2011,8675280}
 \citation{luo2002,korczak2013,hernes2016,hernes2024}
 \citation{korczak2013,hernes2016}
 \citation{huang2022}
 \citation{shavandi2022}
+\citation{su2025consensus}
+\citation{shi2025consensus}
+\citation{fan2025}
 \citation{batesgranger1969,clemen1989,timmermann2006}
 \citation{czapkiewicz2015}
 \citation{jagric2015}
@@ -40,128 +43,150 @@
 \citation{young1991}
 \citation{martin1989}
 \citation{lo2004}
-\citation{batesgranger1969,clemen1989,timmermann2006}
-\citation{clemen1989,timmermann2006}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Algorithmic Trading and Technical Analysis}{3}{subsection.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Multi-Agent Systems in Finance}{3}{subsection.2.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Algorithmic Trading on Central and Eastern European Markets}{3}{subsection.2.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Risk-Adjusted Performance Evaluation}{3}{subsection.2.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {III}Theoretical Background}{3}{section.3}\protected@file@percent }
-\newlabel{sec:theory}{{III}{3}{Theoretical Background}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Forecast Combination and Variance Reduction}{3}{subsection.3.1}\protected@file@percent }
-\newlabel{eq:combined_variance}{{1}{3}{Forecast Combination and Variance Reduction}{equation.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Mapping to the Trading Problem}{3}{subsection.3.2}\protected@file@percent }
+\citation{batesgranger1969,clemen1989,timmermann2006}
+\citation{clemen1989,timmermann2006}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Theoretical Background}{4}{section.3}\protected@file@percent }
+\newlabel{sec:theory}{{III}{4}{Theoretical Background}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Forecast Combination and Variance Reduction}{4}{subsection.3.1}\protected@file@percent }
+\newlabel{eq:combined_variance}{{1}{4}{Forecast Combination and Variance Reduction}{equation.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Mapping to the Trading Problem}{4}{subsection.3.2}\protected@file@percent }
 \newlabel{eq:score}{{2}{4}{Mapping to the Trading Problem}{equation.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Hypotheses}{4}{subsection.3.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IV}System Design}{4}{section.4}\protected@file@percent }
 \newlabel{sec:system}{{IV}{4}{System Design}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Architecture}{4}{subsection.4.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer.}}{4}{figure.1}\protected@file@percent }
-\newlabel{fig:sys_architecture}{{1}{4}{System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Signal Agents}{4}{subsection.4.2}\protected@file@percent }
-\citation{bailey2014}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer.}}{5}{figure.1}\protected@file@percent }
+\newlabel{fig:sys_architecture}{{1}{5}{System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Signal Agents}{5}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Decision Agent}{5}{subsection.4.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Taxonomy of the five signal agents. Horizon refers to the nominal lookback of the underlying indicator.}}{5}{table.1}\protected@file@percent }
-\newlabel{tab:taxonomy}{{1}{5}{Taxonomy of the five signal agents. Horizon refers to the nominal lookback of the underlying indicator}{table.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Agent Taxonomy}{5}{subsection.4.4}\protected@file@percent }
-\newlabel{subsec:taxonomy}{{\mbox  {IV-D}}{5}{Agent Taxonomy}{subsection.4.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Setup}{5}{section.5}\protected@file@percent }
-\newlabel{sec:setup}{{V}{5}{Experimental Setup}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Dataset}{5}{subsection.5.1}\protected@file@percent }
-\newlabel{subsec:dataset}{{\mbox  {V-A}}{5}{Dataset}{subsection.5.1}{}}
-\citation{dichtl2020}
-\citation{sharpe1966}
-\citation{sortino1994}
-\citation{young1991}
-\citation{martin1989}
-\citation{martin1989}
+\newlabel{subsec:decision}{{\mbox  {IV-C}}{5}{Decision Agent}{subsection.4.3}{}}
+\citation{moskowitz2012,asness2013}
+\citation{bailey2014}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Agent Taxonomy}{6}{subsection.4.4}\protected@file@percent }
+\newlabel{subsec:taxonomy}{{\mbox  {IV-D}}{6}{Agent Taxonomy}{subsection.4.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Taxonomy of the five signal agents. Horizon refers to the nominal lookback of the underlying indicator.}}{6}{table.1}\protected@file@percent }
+\newlabel{tab:taxonomy}{{1}{6}{Taxonomy of the five signal agents. Horizon refers to the nominal lookback of the underlying indicator}{table.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Setup}{6}{section.5}\protected@file@percent }
+\newlabel{sec:setup}{{V}{6}{Experimental Setup}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Dataset}{6}{subsection.5.1}\protected@file@percent }
+\newlabel{subsec:dataset}{{\mbox  {V-A}}{6}{Dataset}{subsection.5.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Transaction-Cost Model}{6}{subsection.5.2}\protected@file@percent }
 \newlabel{subsec:costs}{{\mbox  {V-B}}{6}{Transaction-Cost Model}{subsection.5.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Walk-Forward Protocol}{6}{subsection.5.3}\protected@file@percent }
 \newlabel{subsec:walkforward}{{\mbox  {V-C}}{6}{Walk-Forward Protocol}{subsection.5.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Baselines}{6}{subsection.5.4}\protected@file@percent }
-\newlabel{subsec:baselines}{{\mbox  {V-D}}{6}{Baselines}{subsection.5.4}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Anchored walk-forward with precomputed signals}}{6}{algorithm.1}\protected@file@percent }
-\newlabel{alg:wf}{{1}{6}{Walk-Forward Protocol}{algorithm.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Risk-Adjusted Metrics}{6}{subsection.5.5}\protected@file@percent }
-\newlabel{subsec:metrics}{{\mbox  {V-E}}{6}{Risk-Adjusted Metrics}{subsection.5.5}{}}
-\newlabel{eq:sortino}{{10}{6}{Risk-Adjusted Metrics}{equation.10}{}}
-\newlabel{eq:ulcer}{{11}{6}{Risk-Adjusted Metrics}{equation.11}{}}
+\citation{dichtl2020}
+\citation{fischerkrauss2018}
+\citation{sharpe1966}
+\citation{sortino1994}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Anchored walk-forward with precomputed signals}}{7}{algorithm.1}\protected@file@percent }
+\newlabel{alg:wf}{{1}{7}{Walk-Forward Protocol}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Baselines}{7}{subsection.5.4}\protected@file@percent }
+\newlabel{subsec:baselines}{{\mbox  {V-D}}{7}{Baselines}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-D}1}Deep-Learning Baseline}{7}{subsubsection.5.4.1}\protected@file@percent }
+\newlabel{subsec:lstm}{{\mbox  {V-D}1}{7}{Deep-Learning Baseline}{subsubsection.5.4.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Risk-Adjusted Metrics}{7}{subsection.5.5}\protected@file@percent }
+\newlabel{subsec:metrics}{{\mbox  {V-E}}{7}{Risk-Adjusted Metrics}{subsection.5.5}{}}
+\citation{young1991}
+\citation{martin1989}
+\citation{martin1989}
 \citation{harvey2016}
 \citation{politis1994}
 \citation{bailey2014}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Market-Regime Labeling}{7}{subsection.5.6}\protected@file@percent }
-\newlabel{subsec:regimes}{{\mbox  {V-F}}{7}{Market-Regime Labeling}{subsection.5.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Volatility-Matched Comparison}{7}{subsection.5.7}\protected@file@percent }
-\newlabel{subsec:volmatch}{{\mbox  {V-G}}{7}{Volatility-Matched Comparison}{subsection.5.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Cost-Sensitivity Sweep}{7}{subsection.5.8}\protected@file@percent }
-\newlabel{subsec:costsweep}{{\mbox  {V-H}}{7}{Cost-Sensitivity Sweep}{subsection.5.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Bootstrap Confidence Intervals and Tests}{7}{subsection.5.9}\protected@file@percent }
-\newlabel{subsec:bootstrap}{{\mbox  {V-I}}{7}{Bootstrap Confidence Intervals and Tests}{subsection.5.9}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Results}{7}{section.6}\protected@file@percent }
-\newlabel{sec:results}{{VI}{7}{Results}{section.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Parameter Selection on Training Data}{7}{subsection.6.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces In-sample total return (train window, $2021$--$2024$) by decision-agent mode and minimum confidence. Higher is better. Selected configuration in bold.}}{8}{table.2}\protected@file@percent }
-\newlabel{tab:grid_train}{{2}{8}{In-sample total return (train window, $2021$--$2024$) by decision-agent mode and minimum confidence. Higher is better. Selected configuration in bold}{table.2}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Out-of-sample metrics on the held-out test window, net of transaction costs. Brackets give $95\%$ bootstrap confidence intervals.}}{8}{table.3}\protected@file@percent }
-\newlabel{tab:headline}{{3}{8}{Out-of-sample metrics on the held-out test window, net of transaction costs. Brackets give $95\%$ bootstrap confidence intervals}{table.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Headline Results on Held-Out Data}{8}{subsection.6.2}\protected@file@percent }
-\newlabel{subsec:headline}{{\mbox  {VI-B}}{8}{Headline Results on Held-Out Data}{subsection.6.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Risk-Adjusted Outperformance}{8}{subsection.6.3}\protected@file@percent }
-\newlabel{subsec:risk_adjusted}{{\mbox  {VI-C}}{8}{Risk-Adjusted Outperformance}{subsection.6.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs.}}{8}{figure.2}\protected@file@percent }
-\newlabel{fig:equity_oos}{{2}{8}{Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs}{figure.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the paper.}}{8}{figure.3}\protected@file@percent }
-\newlabel{fig:drawdown_oos}{{3}{8}{Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the paper}{figure.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Volatility-Matched Comparison}{8}{subsection.6.4}\protected@file@percent }
-\newlabel{subsec:volscaled}{{\mbox  {VI-D}}{8}{Volatility-Matched Comparison}{subsection.6.4}{}}
+\newlabel{eq:sortino}{{10}{8}{Risk-Adjusted Metrics}{equation.10}{}}
+\newlabel{eq:ulcer}{{11}{8}{Risk-Adjusted Metrics}{equation.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Market-Regime Labeling}{8}{subsection.5.6}\protected@file@percent }
+\newlabel{subsec:regimes}{{\mbox  {V-F}}{8}{Market-Regime Labeling}{subsection.5.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Volatility-Matched Comparison}{8}{subsection.5.7}\protected@file@percent }
+\newlabel{subsec:volmatch}{{\mbox  {V-G}}{8}{Volatility-Matched Comparison}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Cost-Sensitivity Sweep}{8}{subsection.5.8}\protected@file@percent }
+\newlabel{subsec:costsweep}{{\mbox  {V-H}}{8}{Cost-Sensitivity Sweep}{subsection.5.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Bootstrap Confidence Intervals and Tests}{8}{subsection.5.9}\protected@file@percent }
+\newlabel{subsec:bootstrap}{{\mbox  {V-I}}{8}{Bootstrap Confidence Intervals and Tests}{subsection.5.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces In-sample total return (train window, $2021$--$2024$) by decision-agent mode and minimum confidence. Higher is better. Selected configuration in bold.}}{9}{table.2}\protected@file@percent }
+\newlabel{tab:grid_train}{{2}{9}{In-sample total return (train window, $2021$--$2024$) by decision-agent mode and minimum confidence. Higher is better. Selected configuration in bold}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Results}{9}{section.6}\protected@file@percent }
+\newlabel{sec:results}{{VI}{9}{Results}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Parameter Selection on Training Data}{9}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Headline Results on Held-Out Data}{9}{subsection.6.2}\protected@file@percent }
+\newlabel{subsec:headline}{{\mbox  {VI-B}}{9}{Headline Results on Held-Out Data}{subsection.6.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Out-of-sample metrics on the held-out test window, net of transaction costs. Brackets give $95\%$ bootstrap confidence intervals.}}{9}{table.3}\protected@file@percent }
+\newlabel{tab:headline}{{3}{9}{Out-of-sample metrics on the held-out test window, net of transaction costs. Brackets give $95\%$ bootstrap confidence intervals}{table.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs.}}{9}{figure.2}\protected@file@percent }
+\newlabel{fig:equity_oos}{{2}{9}{Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Risk-Adjusted Comparison}{9}{subsection.6.3}\protected@file@percent }
+\newlabel{subsec:risk_adjusted}{{\mbox  {VI-C}}{9}{Risk-Adjusted Comparison}{subsection.6.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the paper.}}{10}{figure.3}\protected@file@percent }
+\newlabel{fig:drawdown_oos}{{3}{10}{Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the paper}{figure.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Risk-adjusted metrics on the held-out test window, net of transaction costs.}}{10}{table.4}\protected@file@percent }
+\newlabel{tab:risk_adjusted}{{4}{10}{Risk-adjusted metrics on the held-out test window, net of transaction costs}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Volatility-Matched Comparison}{10}{subsection.6.4}\protected@file@percent }
+\newlabel{subsec:volscaled}{{\mbox  {VI-D}}{10}{Volatility-Matched Comparison}{subsection.6.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble exceeds buy-and-hold during correction subperiods and is close to it during the bull leg.}}{10}{figure.4}\protected@file@percent }
+\newlabel{fig:rolling_sharpe}{{4}{10}{Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble exceeds buy-and-hold during correction subperiods and is close to it during the bull leg}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Market-Regime Decomposition}{10}{subsection.6.5}\protected@file@percent }
+\newlabel{subsec:regime}{{\mbox  {VI-E}}{10}{Market-Regime Decomposition}{subsection.6.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Cost-Sensitivity Analysis}{10}{subsection.6.6}\protected@file@percent }
+\newlabel{subsec:cost_sensitivity}{{\mbox  {VI-F}}{10}{Cost-Sensitivity Analysis}{subsection.6.6}{}}
 \citation{pearson1896}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Risk-adjusted metrics on the held-out test window, net of transaction costs.}}{9}{table.4}\protected@file@percent }
-\newlabel{tab:risk_adjusted}{{4}{9}{Risk-adjusted metrics on the held-out test window, net of transaction costs}{table.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble dominates buy-and-hold during correction subperiods and is close to it during the bull leg.}}{9}{figure.4}\protected@file@percent }
-\newlabel{fig:rolling_sharpe}{{4}{9}{Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble dominates buy-and-hold during correction subperiods and is close to it during the bull leg}{figure.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Market-Regime Decomposition}{9}{subsection.6.5}\protected@file@percent }
-\newlabel{subsec:regime}{{\mbox  {VI-E}}{9}{Market-Regime Decomposition}{subsection.6.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Cost-Sensitivity Analysis}{9}{subsection.6.6}\protected@file@percent }
-\newlabel{subsec:cost_sensitivity}{{\mbox  {VI-F}}{9}{Cost-Sensitivity Analysis}{subsection.6.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-G}}Empirical Signal Correlations}{9}{subsection.6.7}\protected@file@percent }
-\newlabel{subsec:correlations}{{\mbox  {VI-G}}{9}{Empirical Signal Correlations}{subsection.6.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-H}}Single-Agent Baselines and Leave-One-Out Ablation}{9}{subsection.6.8}\protected@file@percent }
-\newlabel{subsec:ablation}{{\mbox  {VI-H}}{9}{Single-Agent Baselines and Leave-One-Out Ablation}{subsection.6.8}{}}
-\citation{politis1994,bailey2014}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Volatility-matched out-of-sample metrics. The ensemble is scaled, ex ante, to the buy-and-hold volatility measured on the training window (leverage factor $\lambda = \ensuremath  {2.06}{}$).}}{10}{table.5}\protected@file@percent }
-\newlabel{tab:volmatched}{{5}{10}{Volatility-matched out-of-sample metrics. The ensemble is scaled, ex ante, to the buy-and-hold volatility measured on the training window (leverage factor $\lambda = \Leverage {}$)}{table.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Decomposition of the held-out test window into bull, correction, and sideways subperiods. Shares refer to the fraction of trading days in the test window.}}{10}{table.6}\protected@file@percent }
-\newlabel{tab:regime}{{6}{10}{Decomposition of the held-out test window into bull, correction, and sideways subperiods. Shares refer to the fraction of trading days in the test window}{table.6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Cost sensitivity of the out-of-sample Sharpe ratio. Rows are commission in basis points; columns are one-way slippage in basis points.}}{10}{table.7}\protected@file@percent }
-\newlabel{tab:cost_sensitivity}{{7}{10}{Cost sensitivity of the out-of-sample Sharpe ratio. Rows are commission in basis points; columns are one-way slippage in basis points}{table.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Pearson correlations of the pooled (symbol, date) signed confidence values of the five signal agents, computed on the training window. Upper triangle shown.}}{10}{table.8}\protected@file@percent }
-\newlabel{tab:corr}{{8}{10}{Pearson correlations of the pooled (symbol, date) signed confidence values of the five signal agents, computed on the training window. Upper triangle shown}{table.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-I}}Statistical Significance}{10}{subsection.6.9}\protected@file@percent }
-\newlabel{subsec:significance}{{\mbox  {VI-I}}{10}{Statistical Significance}{subsection.6.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI--ROC and RSI--Bollinger pairs, which is consistent with their shared reliance on overbought/oversold-style rules.}}{10}{figure.5}\protected@file@percent }
-\newlabel{fig:corr_matrix}{{5}{10}{Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI--ROC and RSI--Bollinger pairs, which is consistent with their shared reliance on overbought/oversold-style rules}{figure.5}{}}
+\citation{clemen1989,timmermann2006}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Volatility-matched out-of-sample metrics. The ensemble is scaled, ex ante, to the buy-and-hold volatility measured on the training window (leverage factor $\lambda = \ensuremath  {2.06}{}$).}}{11}{table.5}\protected@file@percent }
+\newlabel{tab:volmatched}{{5}{11}{Volatility-matched out-of-sample metrics. The ensemble is scaled, ex ante, to the buy-and-hold volatility measured on the training window (leverage factor $\lambda = \Leverage {}$)}{table.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Decomposition of the held-out test window into bull, correction, and sideways subperiods. Shares refer to the fraction of trading days in the test window.}}{11}{table.6}\protected@file@percent }
+\newlabel{tab:regime}{{6}{11}{Decomposition of the held-out test window into bull, correction, and sideways subperiods. Shares refer to the fraction of trading days in the test window}{table.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Cost sensitivity of the out-of-sample Sharpe ratio. Rows are commission in basis points; columns are one-way slippage in basis points.}}{11}{table.7}\protected@file@percent }
+\newlabel{tab:cost_sensitivity}{{7}{11}{Cost sensitivity of the out-of-sample Sharpe ratio. Rows are commission in basis points; columns are one-way slippage in basis points}{table.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-G}}Empirical Signal Correlations}{11}{subsection.6.7}\protected@file@percent }
+\newlabel{subsec:correlations}{{\mbox  {VI-G}}{11}{Empirical Signal Correlations}{subsection.6.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Pearson correlations of the pooled (symbol, date) signed confidence values of the five signal agents, computed on the training window. Upper triangle shown.}}{11}{table.8}\protected@file@percent }
+\newlabel{tab:corr}{{8}{11}{Pearson correlations of the pooled (symbol, date) signed confidence values of the five signal agents, computed on the training window. Upper triangle shown}{table.8}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Single-agent baselines on the test window, with the selected mode and minimum confidence. All numbers net of costs.}}{11}{table.9}\protected@file@percent }
 \newlabel{tab:single_agent}{{9}{11}{Single-agent baselines on the test window, with the selected mode and minimum confidence. All numbers net of costs}{table.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Leave-one-agent-out ablation on the test window. The variant column indicates which agent was removed.}}{11}{table.10}\protected@file@percent }
-\newlabel{tab:ablation}{{10}{11}{Leave-one-agent-out ablation on the test window. The variant column indicates which agent was removed}{table.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-J}}Walk-Forward Robustness}{11}{subsection.6.10}\protected@file@percent }
-\newlabel{subsec:kfold}{{\mbox  {VI-J}}{11}{Walk-Forward Robustness}{subsection.6.10}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Discussion}{11}{section.7}\protected@file@percent }
-\newlabel{sec:discussion}{{VII}{11}{Discussion}{section.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}From Forecast-Combination Theory to Empirical Evidence}{11}{subsection.7.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Anchored walk-forward with $K = 3$ folds. Selected mode and minimum confidence per fold, plus the test-window total return of each fold.}}{11}{table.11}\protected@file@percent }
-\newlabel{tab:kfold}{{11}{11}{Anchored walk-forward with $K = 3$ folds. Selected mode and minimum confidence per fold, plus the test-window total return of each fold}{table.11}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Evidence for the Three Hypotheses}{11}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-H}}Single-Agent Baselines and Leave-One-Out Ablation}{11}{subsection.6.8}\protected@file@percent }
+\newlabel{subsec:ablation}{{\mbox  {VI-H}}{11}{Single-Agent Baselines and Leave-One-Out Ablation}{subsection.6.8}{}}
+\citation{politis1994,bailey2014}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI--ROC and RSI--Bollinger pairs, which is consistent with their shared reliance on overbought/oversold-style rules.}}{12}{figure.5}\protected@file@percent }
+\newlabel{fig:corr_matrix}{{5}{12}{Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI--ROC and RSI--Bollinger pairs, which is consistent with their shared reliance on overbought/oversold-style rules}{figure.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Leave-one-agent-out ablation on the test window. The variant column indicates which agent was removed.}}{12}{table.10}\protected@file@percent }
+\newlabel{tab:ablation}{{10}{12}{Leave-one-agent-out ablation on the test window. The variant column indicates which agent was removed}{table.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-I}}Comparison with a Deep-Learning Baseline}{12}{subsection.6.9}\protected@file@percent }
+\newlabel{subsec:lstm_results}{{\mbox  {VI-I}}{12}{Comparison with a Deep-Learning Baseline}{subsection.6.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Comparison of the ensemble, the LSTM directional baseline, and buy-and-hold on the held-out WIG20 test window, net of transaction costs.}}{12}{table.11}\protected@file@percent }
+\newlabel{tab:lstm}{{11}{12}{Comparison of the ensemble, the LSTM directional baseline, and buy-and-hold on the held-out WIG20 test window, net of transaction costs}{table.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-J}}Statistical Significance}{12}{subsection.6.10}\protected@file@percent }
+\newlabel{subsec:significance}{{\mbox  {VI-J}}{12}{Statistical Significance}{subsection.6.10}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Anchored walk-forward with $K = 3$ folds. Selected mode and minimum confidence per fold, plus the test-window total return of each fold.}}{13}{table.12}\protected@file@percent }
+\newlabel{tab:kfold}{{12}{13}{Anchored walk-forward with $K = 3$ folds. Selected mode and minimum confidence per fold, plus the test-window total return of each fold}{table.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-K}}Walk-Forward Robustness}{13}{subsection.6.11}\protected@file@percent }
+\newlabel{subsec:kfold}{{\mbox  {VI-K}}{13}{Walk-Forward Robustness}{subsection.6.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-L}}External Validation on the FTSE 100}{13}{subsection.6.12}\protected@file@percent }
+\newlabel{subsec:ftse}{{\mbox  {VI-L}}{13}{External Validation on the FTSE 100}{subsection.6.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces External validation on the FTSE 100 held-out test window, net of transaction costs (including the $50$ bps buy-side Stamp Duty Reserve Tax). Brackets give $95\%$ bootstrap confidence intervals.}}{13}{table.13}\protected@file@percent }
+\newlabel{tab:ftse}{{13}{13}{External validation on the FTSE 100 held-out test window, net of transaction costs (including the $50$ bps buy-side Stamp Duty Reserve Tax). Brackets give $95\%$ bootstrap confidence intervals}{table.13}{}}
 \citation{bailey2014}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Discussion}{14}{section.7}\protected@file@percent }
+\newlabel{sec:discussion}{{VII}{14}{Discussion}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}From Forecast-Combination Theory to Empirical Evidence}{14}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Evidence for the Three Hypotheses}{14}{subsection.7.2}\protected@file@percent }
+\citation{lo2004}
 \citation{jegadeeshtitman1993,moskowitz2012,asness2013}
 \citation{lo2004}
 \citation{young1991,sortino1994,martin1989}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-C}}Why Gross Total Return Understates the Contribution of the Ensemble}{12}{subsection.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-D}}Connections to the Broader Empirical Literature}{12}{subsection.7.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-E}}Practical Implications for a Retail Investor}{12}{subsection.7.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-F}}Design Implications}{13}{subsection.7.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Limitations and Future Work}{13}{section.8}\protected@file@percent }
-\newlabel{sec:limitations}{{VIII}{13}{Limitations and Future Work}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-C}}Cross-Market Generalization}{15}{subsection.7.3}\protected@file@percent }
+\newlabel{subsec:crossmarket}{{\mbox  {VII-C}}{15}{Cross-Market Generalization}{subsection.7.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-D}}Why Gross Total Return Understates the Contribution of the Ensemble}{15}{subsection.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-E}}Connections to the Broader Empirical Literature}{15}{subsection.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-F}}Practical Implications for a Retail Investor}{15}{subsection.7.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-G}}Deployment and Scalability}{16}{subsection.7.7}\protected@file@percent }
+\newlabel{subsec:deployment}{{\mbox  {VII-G}}{16}{Deployment and Scalability}{subsection.7.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-H}}Design Implications}{16}{subsection.7.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Limitations and Future Work}{17}{section.8}\protected@file@percent }
+\newlabel{sec:limitations}{{VIII}{17}{Limitations and Future Work}{section.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Conclusion}{17}{section.9}\protected@file@percent }
+\newlabel{sec:conclusion}{{IX}{17}{Conclusion}{section.9}{}}
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{hendershott_does_2011}{1}
@@ -192,13 +217,14 @@
 \bibcite{nti2020}{26}
 \bibcite{lebaron2011}{27}
 \bibcite{8675280}{28}
-\bibcite{sharpe1966}{29}
-\bibcite{sortino1994}{30}
-\bibcite{young1991}{31}
-\bibcite{martin1989}{32}
-\bibcite{lo2004}{33}
-\bibcite{pearson1896}{34}
-\@writefile{toc}{\contentsline {section}{\numberline {IX}Conclusion}{14}{section.9}\protected@file@percent }
-\newlabel{sec:conclusion}{{IX}{14}{Conclusion}{section.9}{}}
-\@writefile{toc}{\contentsline {section}{REFERENCES}{14}{section*.1}\protected@file@percent }
-\gdef \@abspage@last{15}
+\bibcite{su2025consensus}{29}
+\bibcite{shi2025consensus}{30}
+\bibcite{fan2025}{31}
+\bibcite{sharpe1966}{32}
+\bibcite{sortino1994}{33}
+\bibcite{young1991}{34}
+\bibcite{martin1989}{35}
+\bibcite{lo2004}{36}
+\bibcite{pearson1896}{37}
+\@writefile{toc}{\contentsline {section}{REFERENCES}{18}{section*.1}\protected@file@percent }
+\gdef \@abspage@last{18}
