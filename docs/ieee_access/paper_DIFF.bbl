@@ -52,10 +52,9 @@ A.~Shavandi and M.~Khedmati, ``A multi-agent deep reinforcement learning
   framework for algorithmic trading in financial markets,'' \emph{Expert
   Systems with Applications}, vol. 208, p. 118124, 2022.
 
-\bibitem{kaursingh2023}
-S.~Kaur and S.~Singh, ``A survey on deep reinforcement learning for algorithmic
-  trading,'' \emph{Expert Systems with Applications}, vol. 219, p. 119600,
-  2023.
+\bibitem{hambly2023}
+B.~Hambly, R.~Xu, and H.~Yang, ``Recent advances in reinforcement learning in
+  finance,'' \emph{Mathematical Finance}, vol.~33, no.~3, pp. 437--503, 2023.
 
 \bibitem{luo2002}
 Y.~Luo, K.~Liu, and D.~N. Davis, ``A multi-agent decision support system for
@@ -96,22 +95,20 @@ D.~N. Politis and J.~P. Romano, ``The stationary bootstrap,'' \emph{Journal of
   the American Statistical Association}, vol.~89, no. 428, pp. 1303--1313,
   1994.
 
-\bibitem{czapkiewicz2015}
-A.~Czapkiewicz, P.~Jamer, and J.~Landmesser, ``Asymmetric conditional
-  correlations and dependence structure of the {CEE} stock markets,''
-  \emph{Central European Journal of Economic Modelling and Econometrics},
-  vol.~7, no.~4, pp. 219--245, 2015.
+\bibitem{czapkiewicz2018}
+A.~Czapkiewicz, P.~Jamer, and J.~Landmesser, ``Effects of macroeconomic
+  indicators on the financial markets interrelations,'' \emph{Czech Journal of
+  Economics and Finance}, vol.~68, no.~3, pp. 268--293, July 2018.
 
-\bibitem{jagric2015}
-T.~Jagri{\v c}, B.~Podobnik, and M.~Kolanovi{\'c}, ``Testing efficient markets
-  hypothesis on {CEE} stock markets using multi-agent simulation,''
-  \emph{Expert Systems with Applications}, vol.~42, no.~7, pp. 3489--3499,
-  2015.
+\bibitem{kompa2009}
+K.~Kompa and A.~Matuszewska-Janica, ``Efficiency of the warsaw stock exchange:
+  Analysis of selected properties,'' \emph{International Advances in Economic
+  Research}, vol.~15, no.~1, pp. 59--70, 2009.
 
-\bibitem{buczynski2021}
-M.~Buczy{\'n}ski, F.~Chleb{\'o}wek, and M.~Fa{\l}dzi{\'n}ski, ``Algorithmic
-  trading on the warsaw stock exchange: Evidence from the {WIG20} index,''
-  \emph{Bank i Kredyt}, vol.~52, no.~5, pp. 447--474, 2021.
+\bibitem{gurgul2025}
+H.~Gurgul and R.~Syrek, ``Algorithmic trading, liquidity and volatility:
+  Evidence from poland,'' \emph{Economics and Business Review}, vol.~11, no.~4,
+  pp. 139--158, 2025.
 
 \bibitem{batesgranger1969}
 J.~M. Bates and C.~W.~J. Granger, ``The combination of forecasts,''
@@ -146,10 +143,23 @@ C.~S. Asness, T.~J. Moskowitz, and L.~H. Pedersen, ``Value and momentum
 T.~J. Moskowitz, Y.~H. Ooi, and L.~H. Pedersen, ``Time series momentum,''
   \emph{Journal of Financial Economics}, vol. 104, no.~2, pp. 228--250, 2012.
 
+\bibitem{anders2024empirical}
+M.~Anders, J.~Zurada, and P.~Weichbroth, ``An empirical study of a dynamic stop
+  loss strategy with deep reinforcement learning on the nasdaq stock market,''
+  in \emph{European Conference on Artificial Intelligence}.\hskip 1em plus
+  0.5em minus 0.4em\relax Springer, 2024, pp. 173--183.
+
 \bibitem{nti2020}
 I.~K. Nti, A.~F. Adekoya, and B.~A. Weyori, ``A systematic review of
   fundamental and technical analysis of stock market predictions,''
   \emph{Artificial Intelligence Review}, vol.~53, no.~4, pp. 3007--3057, 2020.
+
+\bibitem{kruczkowski2026review}
+A.~Kruczkowski and P.~Weichbroth, ``A review of reinforcement learning methods
+  and performance measures in algorithmic stock trading,'' in \emph{IFIP
+  International Workshop on Artificial Intelligence for Knowledge
+  Management}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2026, pp.
+  94--103.
 
 \bibitem{lebaron2011}
 B.~LeBaron, ``Active and passive learning in agent-based financial markets,''
@@ -160,15 +170,17 @@ L.~Cocco, R.~Tonelli, and M.~Marchesi, ``An agent-based artificial market model
   for studying the bitcoin trading,'' \emph{IEEE Access}, vol.~7, pp.
   42\,908--42\,920, 2019.
 
-\bibitem{su2025consensus}
-L.~Su \emph{et~al.}, ``Multiagent consensus tracking control over asynchronous
-  cooperation--competition networks,'' \emph{IEEE Transactions on Cybernetics},
-  2025.
+\bibitem{li2025consensus}
+W.~Li, S.~Yan, L.~Shi, J.~Yue, M.~Shi, B.~Lin, and K.~Qin, ``Multiagent
+  consensus tracking control over asynchronous cooperation–competition
+  networks,'' \emph{IEEE Transactions on Cybernetics}, vol.~55, no.~9, pp.
+  4347--4360, 2025.
 
 \bibitem{shi2025consensus}
 L.~Shi, S.~Yan, and W.~Li, ``Consensus and products of substochastic matrices:
   Convergence rate with communication delays,'' \emph{IEEE Transactions on
-  Systems, Man, and Cybernetics: Systems}, vol.~55, p. 4752, 2025.
+  Systems, Man, and Cybernetics: Systems}, vol.~55, no.~7, pp. 4752--4761,
+  2025.
 
 \bibitem{fan2025}
 D.~Fan, X.~Zhang, and C.~Wen, ``Exponential regulation of uncertain nonlinear
@@ -203,5 +215,11 @@ A.~W. Lo, ``The adaptive markets hypothesis: Market efficiency from an
 K.~Pearson, ``Mathematical contributions to the theory of evolution. iii.
   regression, heredity, and panmixia,'' \emph{Philosophical Transactions of the
   Royal Society of London A}, vol. 187, pp. 253--318, 1896.
+
+\bibitem{tusien2025mining}
+E.~Tusie{\'n}, A.~Kwa{\'s}niewska, and P.~Weichbroth, ``Mining frequent
+  sequences with time constraints from high-frequency data,''
+  \emph{International Journal of Financial Studies}, vol.~13, no.~2, p.~55,
+  2025.
 
 \end{thebibliography}
