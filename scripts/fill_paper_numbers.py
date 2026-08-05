@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -374,6 +374,214 @@ def _lstm_macros(results_dir: Path, prefix: str = "") -> Dict[str, str]:
 
 
 # --------------------------------------------------------------------------
+# GBM baseline macros
+# --------------------------------------------------------------------------
+
+
+def _gbm_macros(results_dir: Path, prefix: str = "") -> Dict[str, str]:
+    """
+    Build GBM-baseline macros from gbm_baselines.csv and gbm_baseline_stats.csv.
+
+    With prefix="" the macros are \\GBMtest etc. (WIG20); with prefix="Ftse"
+    they are \\FtseGBMtest etc.
+    """
+    ml = _read_if_exists(results_dir / "gbm_baselines.csv")
+    st = _read_if_exists(results_dir / "gbm_baseline_stats.csv")
+    m: Dict[str, str] = {}
+
+    if not ml.empty and "series" in ml.columns:
+        by = ml.set_index("series")
+        if "gbm_oos" in by.index:
+            gbm = by.loc["gbm_oos"]
+            m[f"{prefix}GBMtest"] = _ens(_fmt(gbm["total_return"]))
+            m[f"{prefix}GBMsharpe"] = _ens(_fmt(gbm["sharpe"]))
+            m[f"{prefix}GBMmdd"] = _ens(_fmt(gbm["max_drawdown"]))
+            m[f"{prefix}GBMcalmar"] = _ens(_fmt(gbm["calmar_ratio"]))
+            m[f"{prefix}GBMtrades"] = _ens(str(int(gbm["num_trades"])))
+
+    if not st.empty and "comparison" in st.columns:
+        for _, r in st.iterrows():
+            comparison = str(r["comparison"])
+            statistic = str(r["statistic"])
+            if comparison == "ensemble_vs_gbm" and statistic == "total_return":
+                m[f"{prefix}PensVsGBM"] = _ens(_fmt(r["p_value"], 3))
+            elif comparison == "ensemble_vs_gbm" and statistic == "sharpe":
+                m[f"{prefix}PensVsGBMsharpe"] = _ens(_fmt(r["p_value"], 3))
+            elif comparison == "gbm_vs_buy_and_hold" and statistic == "total_return":
+                m[f"{prefix}PGBMvsBH"] = _ens(_fmt(r["p_value"], 3))
+            elif comparison == "gbm_vs_lstm" and statistic == "total_return":
+                m[f"{prefix}PGBMvsLSTM"] = _ens(_fmt(r["p_value"], 3))
+    return m
+
+
+# --------------------------------------------------------------------------
+# Weight-sensitivity macros
+# --------------------------------------------------------------------------
+
+
+def _weight_scheme_macros(row: pd.Series, stem: str) -> Dict[str, str]:
+    """Macros for one named weighting scheme (test metrics plus weights)."""
+    return {
+        f"{stem}TR": _ens(_fmt(row["test_total_return"])),
+        f"{stem}Sharpe": _ens(_fmt(row["test_sharpe"])),
+        f"{stem}MDD": _ens(_fmt(row["test_max_drawdown"])),
+        f"{stem}Wtrend": _ens(_fmt(row["w_trend"])),
+        f"{stem}Wmom": _ens(_fmt(row["w_momentum"])),
+        f"{stem}Wmr": _ens(_fmt(row["w_mean_reversion"])),
+        f"{stem}Wvol": _ens(_fmt(row["w_volatility"])),
+    }
+
+
+def _weight_sensitivity_macros(
+    results_dir: Path, prefix: str = "", bh_sharpe: Optional[float] = None
+) -> Dict[str, str]:
+    """Build \\WS... (or \\FtseWS...) macros from weight_sensitivity.csv."""
+    ws = _read_if_exists(results_dir / "weight_sensitivity.csv")
+    if ws.empty:
+        return {}
+    by_scheme = ws.set_index("scheme")
+    m: Dict[str, str] = {}
+
+    named = {
+        "equal": "Equal",
+        "inverted": "Inverted",
+        "optimized_train": "Opt",
+        "inverse_variance": "Iv",
+    }
+    for scheme, stem in named.items():
+        if scheme in by_scheme.index:
+            m.update(_weight_scheme_macros(
+                by_scheme.loc[scheme], f"{prefix}WS{stem}"
+            ))
+    if "optimized_train" in by_scheme.index:
+        m[f"{prefix}WSOptTrainTR"] = _ens(
+            _fmt(by_scheme.loc["optimized_train", "train_total_return"])
+        )
+
+    perturbed = ws[ws["scheme"].str.contains("_x", regex=False)]
+    if not perturbed.empty:
+        m[f"{prefix}WSPerturbN"] = _ens(str(len(perturbed)))
+        m[f"{prefix}WSPerturbTRMin"] = _ens(_fmt(perturbed["test_total_return"].min()))
+        m[f"{prefix}WSPerturbTRMax"] = _ens(_fmt(perturbed["test_total_return"].max()))
+        m[f"{prefix}WSPerturbSharpeMin"] = _ens(_fmt(perturbed["test_sharpe"].min()))
+        m[f"{prefix}WSPerturbSharpeMax"] = _ens(_fmt(perturbed["test_sharpe"].max()))
+        if bh_sharpe is not None:
+            fixed = ws[ws["scheme"] != "optimized_train"]
+            below = int((fixed["test_sharpe"] < bh_sharpe).sum())
+            m[f"{prefix}WSFixedBelowBH"] = _ens(str(below))
+            m[f"{prefix}WSFixedN"] = _ens(str(len(fixed)))
+    return m
+
+
+# --------------------------------------------------------------------------
+# Confidence-validation macros
+# --------------------------------------------------------------------------
+
+
+def _confidence_macros(results_dir: Path, prefix: str = "") -> Dict[str, str]:
+    """Build \\Conf... (or \\FtseConf...) macros from the summary CSV."""
+    cv = _read_if_exists(results_dir / "confidence_validation_summary.csv")
+    if cv.empty:
+        return {}
+    m: Dict[str, str] = {}
+    agents_h1 = cv[(cv["horizon"] == 1) & (cv["agent"] != "pooled")]
+    pooled_h1 = cv[(cv["horizon"] == 1) & (cv["agent"] == "pooled")]
+    pooled_h5 = cv[(cv["horizon"] == 5) & (cv["agent"] == "pooled")]
+
+    if not agents_h1.empty:
+        m[f"{prefix}ConfRhoMin"] = _ens(_fmt(agents_h1["spearman_rho"].min(), 3))
+        m[f"{prefix}ConfRhoMax"] = _ens(_fmt(agents_h1["spearman_rho"].max(), 3))
+        m[f"{prefix}ConfRhoMaxAbs"] = _ens(
+            _fmt(agents_h1["spearman_rho"].abs().max(), 3)
+        )
+    if not pooled_h1.empty:
+        m[f"{prefix}ConfPooledHit"] = _ens(_fmt(pooled_h1.iloc[0]["hit_rate"], 3))
+        m[f"{prefix}ConfN"] = _ens(f"{int(pooled_h1.iloc[0]['n']):,}".replace(",", "{,}"))
+    if not pooled_h5.empty:
+        m[f"{prefix}ConfPooledHitFive"] = _ens(_fmt(pooled_h5.iloc[0]["hit_rate"], 3))
+    return m
+
+
+def _fill_confidence_table(src: str, cv: pd.DataFrame) -> str:
+    """
+    Fills the per-agent confidence-validation table (horizon = 1). Header:
+
+        \\begin{tabular}{lrccccc}
+        \\toprule
+        Agent & $n$ & Hit rate & $\\rho$ & $p$ & Hit (Q1) & Hit (Q5) \\\\
+        \\midrule
+    """
+    if cv.empty:
+        return src
+    display = {
+        "macd": "MACD",
+        "rsi": "RSI",
+        "roc": "ROC",
+        "bollinger": "Bollinger",
+        "ma_trend": "MA trend",
+        "pooled": "Pooled",
+    }
+    h1 = cv[cv["horizon"] == 1].set_index("agent")
+    rows: List[str] = []
+    for agent in ("macd", "rsi", "roc", "bollinger", "ma_trend", "pooled"):
+        if agent not in h1.index:
+            continue
+        r = h1.loc[agent]
+        n_fmt = f"{int(r['n']):,}".replace(",", "{,}")
+        rows.append(
+            f"{display[agent]} & ${n_fmt}$ & ${_fmt(r['hit_rate'], 3)}$ & "
+            f"${r['spearman_rho']:+.3f}$ & ${_fmt(r['spearman_p'], 3)}$ & "
+            f"${_fmt(r['hit_rate_bottom_quintile'], 3)}$ & "
+            f"${_fmt(r['hit_rate_top_quintile'], 3)}$ \\\\"
+        )
+    rebuilt = "\n".join(rows)
+
+    begin = (
+        "\\begin{tabular}{lrccccc}\n\\toprule\n"
+        "Agent & $n$ & Hit rate & $\\rho$ & $p$ & Hit (Q1) & Hit (Q5) \\\\\n"
+        "\\midrule\n"
+    )
+    start = src.find(begin)
+    if start < 0:
+        return src
+    body_start = start + len(begin)
+    body_end = src.find("\\bottomrule", body_start)
+    if body_end < 0:
+        return src
+    return src[:body_start] + rebuilt + "\n\\bottomrule" + src[body_end + len("\\bottomrule"):]
+
+
+# --------------------------------------------------------------------------
+# Selection-objective macros
+# --------------------------------------------------------------------------
+
+
+def _objective_macros(results_dir: Path, prefix: str = "") -> Dict[str, str]:
+    """Build \\Obj... (or \\FtseObj...) macros from objective_comparison.csv."""
+    oc = _read_if_exists(results_dir / "objective_comparison.csv")
+    if oc.empty:
+        return {}
+    by_obj = oc.set_index("objective")
+    stems = {
+        "total_return": "TR",
+        "sharpe": "Sharpe",
+        "calmar_ratio": "Calmar",
+    }
+    m: Dict[str, str] = {}
+    for objective, stem in stems.items():
+        if objective not in by_obj.index:
+            continue
+        r = by_obj.loc[objective]
+        m[f"{prefix}Obj{stem}Mode"] = "\\texttt{" + str(r["selected_mode"]) + "}"
+        m[f"{prefix}Obj{stem}MinConf"] = _ens(_fmt(r["selected_min_confidence"]))
+        m[f"{prefix}Obj{stem}TR"] = _ens(_fmt(r["test_total_return"]))
+        m[f"{prefix}Obj{stem}Sharpe"] = _ens(_fmt(r["test_sharpe"]))
+        m[f"{prefix}Obj{stem}MDD"] = _ens(_fmt(r["test_max_drawdown"]))
+        m[f"{prefix}Obj{stem}Trades"] = _ens(str(int(r["test_num_trades"])))
+    return m
+
+
+# --------------------------------------------------------------------------
 # FTSE 100 external-validation macros (all prefixed with "Ftse")
 # --------------------------------------------------------------------------
 
@@ -481,6 +689,17 @@ def _ftse_macros(ftse_dir: Path) -> Dict[str, str]:
             )
 
     m.update(_lstm_macros(ftse_dir, prefix="Ftse"))
+    m.update(_gbm_macros(ftse_dir, prefix="Ftse"))
+    ftse_bh_sharpe = None
+    if not risk.empty and "series" in risk.columns:
+        by_series = risk.set_index("series")
+        if "buy_and_hold_oos" in by_series.index:
+            ftse_bh_sharpe = float(by_series.loc["buy_and_hold_oos", "sharpe"])
+    m.update(_weight_sensitivity_macros(
+        ftse_dir, prefix="Ftse", bh_sharpe=ftse_bh_sharpe
+    ))
+    m.update(_confidence_macros(ftse_dir, prefix="Ftse"))
+    m.update(_objective_macros(ftse_dir, prefix="Ftse"))
     return m
 
 
@@ -777,6 +996,12 @@ def main() -> None:
     macros.update(_cost_summary_macros(cost))
     macros.update(_correlation_macros(corr))
     macros.update(_lstm_macros(RESULTS_DIR, prefix=""))
+    macros.update(_gbm_macros(RESULTS_DIR, prefix=""))
+    macros.update(_weight_sensitivity_macros(
+        RESULTS_DIR, prefix="", bh_sharpe=bh.get("sharpe") if bh else None
+    ))
+    macros.update(_confidence_macros(RESULTS_DIR, prefix=""))
+    macros.update(_objective_macros(RESULTS_DIR, prefix=""))
     macros.update(_ftse_macros(RESULTS_DIR / "ftse"))
 
     for name, value in macros.items():
@@ -788,6 +1013,9 @@ def main() -> None:
     src = _fill_cost_sensitivity_table(src, cost)
     src = _fill_correlation_table(src, corr)
     src = _fill_regime_table(src, regime)
+    src = _fill_confidence_table(
+        src, _read_if_exists(RESULTS_DIR / "confidence_validation_summary.csv")
+    )
 
     PAPER_PATH.write_text(src, encoding="utf-8")
     print(f"Filled {len(macros)} macros and result tables in {PAPER_PATH}")

@@ -139,6 +139,35 @@ def get_evaluation_options(cfg: dict) -> dict:
     }
 
 
+def get_gbm_options(cfg: dict) -> Dict[str, Any]:
+    """
+    Return GBM baseline hyperparameters from the optional ``gbm`` config section.
+
+    All keys have defaults matching ``GBMDirectionalModel`` so the block can be
+    omitted entirely. List-valued grids (``horizons``, ``hold_bands``, ``lags``)
+    are returned as tuples for direct unpacking into the model constructor.
+    """
+    gbm = cfg.get("gbm") or {}
+    lags = gbm.get("lags", [1, 2, 3, 5, 10, 20])
+    horizons = gbm.get("horizons", [1, 3, 5])
+    hold_bands = gbm.get("hold_bands", [0.03, 0.05, 0.08])
+    return {
+        "lags": tuple(int(lag) for lag in lags),
+        "n_estimators": int(gbm.get("n_estimators", 300)),
+        "learning_rate": float(gbm.get("learning_rate", 0.05)),
+        "num_leaves": int(gbm.get("num_leaves", 31)),
+        "min_child_samples": int(gbm.get("min_child_samples", 50)),
+        "feature_fraction": float(gbm.get("feature_fraction", 0.8)),
+        "bagging_fraction": float(gbm.get("bagging_fraction", 0.8)),
+        "early_stopping_rounds": int(gbm.get("early_stopping_rounds", 30)),
+        "val_frac": float(gbm.get("val_frac", 0.20)),
+        "n_seeds": int(gbm.get("n_seeds", 3)),
+        "horizons": tuple(int(h) for h in horizons),
+        "hold_bands": tuple(float(b) for b in hold_bands),
+        "seed": int(gbm.get("seed", 42)),
+    }
+
+
 def get_lstm_options(cfg: dict) -> Dict[str, Any]:
     """
     Return LSTM baseline hyperparameters from the optional ``lstm`` config section.

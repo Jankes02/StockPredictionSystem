@@ -233,9 +233,12 @@ class WalkForwardEvaluator:
         start: pd.Timestamp,
         end: pd.Timestamp,
         agent_filter: Optional[Sequence[str]] = None,
+        kind_weights: Optional[Dict[str, float]] = None,
     ) -> PortfolioSimulator:
         """Single backtest with the given decision-agent configuration."""
-        decision_agent = DecisionAgent(mode=mode, min_confidence=min_confidence)
+        decision_agent = DecisionAgent(
+            mode=mode, min_confidence=min_confidence, kind_weights=kind_weights
+        )
         return backtest_portfolio_daily(
             agents=self.agents,
             data_by_symbol=self.data_by_symbol,

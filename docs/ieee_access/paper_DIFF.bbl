@@ -161,6 +161,26 @@ A.~Kruczkowski and P.~Weichbroth, ``A review of reinforcement learning methods
   Management}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2026, pp.
   94--103.
 
+\bibitem{friedman2001}
+J.~H. Friedman, ``Greedy function approximation: A gradient boosting machine,''
+  \emph{The Annals of Statistics}, vol.~29, no.~5, pp. 1189--1232, 2001.
+
+\bibitem{ke2017lightgbm}
+G.~Ke, Q.~Meng, T.~Finley, T.~Wang, W.~Chen, W.~Ma, Q.~Ye, and T.-Y. Liu,
+  ``{LightGBM}: A highly efficient gradient boosting decision tree,'' in
+  \emph{Advances in Neural Information Processing Systems}, vol.~30, 2017, pp.
+  3146--3154.
+
+\bibitem{krauss2017}
+C.~Krauss, X.~A. Do, and N.~Huck, ``Deep neural networks, gradient-boosted
+  trees, random forests: Statistical arbitrage on the {S\&P} 500,''
+  \emph{European Journal of Operational Research}, vol. 259, no.~2, pp.
+  689--702, 2017.
+
+\bibitem{gukellyxiu2020}
+S.~Gu, B.~Kelly, and D.~Xiu, ``Empirical asset pricing via machine learning,''
+  \emph{Review of Financial Studies}, vol.~33, no.~5, pp. 2223--2273, 2020.
+
 \bibitem{lebaron2011}
 B.~LeBaron, ``Active and passive learning in agent-based financial markets,''
   \emph{Eastern Economic Journal}, vol.~37, no.~1, pp. 35--43, 2011.
@@ -211,10 +231,43 @@ A.~W. Lo, ``The adaptive markets hypothesis: Market efficiency from an
   evolutionary perspective,'' \emph{Journal of Portfolio Management}, vol.~30,
   no.~5, pp. 15--29, 2004.
 
+\bibitem{smithwallis2009}
+J.~Smith and K.~F. Wallis, ``A simple explanation of the forecast combination
+  puzzle,'' \emph{Oxford Bulletin of Economics and Statistics}, vol.~71, no.~3,
+  pp. 331--355, 2009.
+
+\bibitem{claeskens2016}
+G.~Claeskens, J.~R. Magnus, A.~L. Vasnev, and W.~Wang, ``The forecast
+  combination puzzle: A simple theoretical explanation,'' \emph{International
+  Journal of Forecasting}, vol.~32, no.~3, pp. 754--762, 2016.
+
+\bibitem{lo2002}
+A.~W. Lo, ``The statistics of sharpe ratios,'' \emph{Financial Analysts
+  Journal}, vol.~58, no.~4, pp. 36--52, 2002.
+
 \bibitem{pearson1896}
 K.~Pearson, ``Mathematical contributions to the theory of evolution. iii.
   regression, heredity, and panmixia,'' \emph{Philosophical Transactions of the
   Royal Society of London A}, vol. 187, pp. 253--318, 1896.
+
+\bibitem{spearman1904}
+C.~Spearman, ``The proof and measurement of association between two things,''
+  \emph{The American Journal of Psychology}, vol.~15, no.~1, pp. 72--101, 1904.
+
+\bibitem{murphywinkler1987}
+A.~H. Murphy and R.~L. Winkler, ``A general framework for forecast
+  verification,'' \emph{Monthly Weather Review}, vol. 115, no.~7, pp.
+  1330--1338, 1987.
+
+\bibitem{parkirwin2007}
+C.-H. Park and S.~H. Irwin, ``What do we know about the profitability of
+  technical analysis?'' \emph{Journal of Economic Surveys}, vol.~21, no.~4, pp.
+  786--826, 2007.
+
+\bibitem{bessembinderchan1995}
+H.~Bessembinder and K.~Chan, ``The profitability of technical trading rules in
+  the {Asian} stock markets,'' \emph{Pacific-Basin Finance Journal}, vol.~3,
+  no. 2--3, pp. 257--284, 1995.
 
 \bibitem{tusien2025mining}
 E.~Tusie{\'n}, A.~Kwa{\'s}niewska, and P.~Weichbroth, ``Mining frequent

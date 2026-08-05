@@ -3,23 +3,27 @@ from collections import defaultdict
 from src.agents.base.Decision import ContributingAgent, Decision
 
 
+DEFAULT_KIND_WEIGHTS: Dict[str, float] = {
+    "trend": 1.3,
+    "momentum": 1.0,
+    "mean_reversion": 0.8,
+    "volatility": 0.5,
+}
+
+
 class DecisionAgent:
     def __init__(
         self,
         mode: Literal["passive", "balanced", "aggressive"] = "balanced",
         min_confidence: float = 0.1,
         max_positions: Optional[int] = None,
+        kind_weights: Optional[Dict[str, float]] = None,
     ):
         self.mode = mode
         self.min_confidence = min_confidence
         self.max_positions = max_positions
 
-        self.kind_weights = {
-            "trend": 1.3,
-            "momentum": 1.0,
-            "mean_reversion": 0.8,
-            "volatility": 0.5,
-        }
+        self.kind_weights = dict(kind_weights) if kind_weights else dict(DEFAULT_KIND_WEIGHTS)
 
         self.thresholds = {
             "passive": {"buy": 1.2, "sell": -1.2},

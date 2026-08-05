@@ -5,4 +5,6 @@ pandas>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
 PyYAML>=6.0
+scipy>=1.10.0         # Spearman test (scripts/run_confidence_validation.py)
 torch>=2.2.0,<3.0.0   # LSTM deep-learning baseline (scripts/run_ml_baselines.py)
+lightgbm>=4.0.0       # GBM directional baseline (scripts/run_gbm_baseline.py)

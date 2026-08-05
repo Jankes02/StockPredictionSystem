@@ -54,5 +54,21 @@ agents:
   bollinger: { window: 20, std_mult: 2 }
   matrend: { fast: 50, slow: 200 }
 
+# GBM directional baseline (scripts/run_gbm_baseline.py); all keys optional
+gbm:
+  lags: [1, 2, 3, 5, 10, 20]
+  n_estimators: 300
+  learning_rate: 0.05
+  num_leaves: 31
+  min_child_samples: 50
+  feature_fraction: 0.8
+  bagging_fraction: 0.8
+  early_stopping_rounds: 30
+  val_frac: 0.20
+  n_seeds: 3
+  horizons: [1, 3, 5]
+  hold_bands: [0.03, 0.05, 0.08]
+  seed: 42
+
 output:
   results_dir: "results/ftse"   # keep FTSE results separate from the headline WIG20 run
