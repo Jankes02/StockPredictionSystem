@@ -1,0 +1,247 @@
+\ProvidesPackage{macra}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PAKIET MAKR FORMATUJĄCYCH PRACE DYPLOMOWE (MAGISTERSKIE I INŻYNIERSKIE)
+% ZGODNIE Z WYMAGANIAMI DLA POLITECHNIKI GDAŃSKIEJ
+% DLA PRAC W JĘZYKU POLSKIM
+% 
+% AUTOR: MAGDALENA GODLEWSKA (maggodle@pg.edu.pl)
+% EDYTOR LATEX: PRZYGOTOWANE DLA OVERLEAF (https://www.overleaf.com/  LUB https://latex-editor.pg.edu.pl/)
+% KOMPILATOR: XELATEX
+% KOREKTA I ZMIANA KOMPILATORA NA XELATEX: SEBASTIAN PIETRAS
+
+%%%%%%%%%%% the LaTeX Project Public License
+%% macra_xelatex.sty
+%% Copyright 2023 Magdalena Godlewska
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   https://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2008 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+%
+% The Current Maintainer of this work is Magdalena Godlewska
+%
+% This work consists of the files: .tex, .sty, .bib, .pdf, .latex, .jpg
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% zmodyfikowałem package, żeby były polskie znaki w xelatexu
+\usepackage{polski}
+% \usepackage[utf8x]{inputenc} % <-- usunąłem kodowanie wejścia, bo chyba nie było potrzebne
+\usepackage{pdfpages}
+
+\usepackage{helvet}
+\usepackage{fontspec} % <-- usunąłem fontenc, żeby go zastąpić przez fontspec (kolejność po helvet ma chyba znaczenie)
+% \usepackage[T1]{fontenc} % usunąłem fontenc
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{graphicx} % <-- usunąłem [pdftex], żeby kompilator nie psioczył
+\usepackage{subfigure} 
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{fancyvrb}
+% \usepackage[pdftex]{color,colortbl}
+
+%\usepackage{ntheorem}
+\usepackage{amsthm}  
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{makeidx}
+
+%formatowanie tytułów rozdziałów 
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\usepackage{titlesec}
+% \usepackage{apptools}
+% \titleformat{\chapter}[hang] 
+% {\normalfont\large\bfseries\MakeUppercase}{\IfAppendix{\appendixname}{} \thechapter.}{0.5em}{}
+\titleformat{\chapter}[hang] 
+{\normalfont\large\bfseries\MakeUppercase}{\thechapter.}{0.5em}{}
+\titlespacing*{\chapter}{0pt}{12pt}{6pt}
+\titleformat{\section}[hang] 
+{\normalfont\bfseries\itshape}{\thesection.}{0.5em}{} 
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titleformat{\subsection}[hang] 
+{\normalfont\itshape}{\thesubsection.}{0.5em}{} 
+\titlespacing*{\subsection}{0pt}{12pt}{6pt}
+
+
+%formatowanie spisu treści
+\usepackage[nottoc]{tocbibind}
+\usepackage[toc,page]{appendix}
+\usepackage[titles]{tocloft}
+\usepackage{titletoc}
+\renewcommand \cftchapdotsep{4.5}
+\renewcommand\cftbeforechapskip{\vskip3pt}
+\renewcommand\cftchapafterpnum{\vskip0pt}
+\renewcommand\cftsecafterpnum{\vskip0pt}
+\renewcommand{\contentsname}{Spis treści}
+\settocbibname{Wykaz literatury}
+\setlotname{Wykaz tabel}
+\setlofname{Wykaz rysunków}
+% \renewcommand\appendixname{Dodatek}
+% \renewcommand\appendixtocname{Dodatek}
+
+% formatowanie bibliografii
+\newlength{\bibitemsep}\setlength{\bibitemsep}{.2\baselineskip plus .05\baselineskip minus .05\baselineskip}
+\newlength{\bibparskip}\setlength{\bibparskip}{0pt}
+\let\oldthebibliography\thebibliography
+\renewcommand\thebibliography[1]{%
+  \oldthebibliography{#1}%
+  \setlength{\parskip}{\bibitemsep}%
+  \setlength{\itemsep}{\bibparskip}%
+}
+
+%formatowanie tabel
+\renewcommand\cftbeforetabskip{-10pt} %odległość w wykazie
+\usepackage{caption}
+\usepackage{tablefootnote} % <-- dodałem tablefootnote, bo akurat były mi potrzebne przypisy w tabelach
+\captionsetup[table]{%
+    singlelinecheck=false,
+    justification=raggedright,
+    font=small,
+    labelfont=bf,
+    skip=0pt}
+
+%formatowanie etykiety dla rysunków
+\renewcommand\cftbeforefigskip{-10pt} %odległość w wykazie
+\renewcommand{\fnum@figure}[1]{\small{rys.~\thefigure. }}
+\captionsetup[figure]{%
+    font=small,
+    aboveskip=6pt,
+    belowskip=-10pt
+}
+
+% HYPERTEXT-Y
+% wybór między linkami w wersji drukowanej a w formacie cyfrowym
+\DeclareGraphicsRule{.pdftex}{pdf}{*}{}
+
+%WERSJA ELEKTRONICZNA
+% \usepackage[bookmarksnumbered,colorlinks,plainpages,backref]{hyperref} 
+% \hypersetup{
+% citecolor=[rgb]{0, 0.5, 0},
+% linkcolor=[rgb]{0.7,0,0},
+% urlcolor=blue}
+%--------------------------------------------
+
+%WERSJA DRUKOWANA
+\usepackage[bookmarksnumbered, colorlinks,plainpages]{hyperref} 
+\hypersetup{
+ citecolor=black,
+ linkcolor=black,
+ urlcolor=black}
+%--------------------------------------------
+
+%wymiary interlinii i marginesów
+\linespread{1.5}
+
+\textwidth\paperwidth \advance\textwidth -60mm
+\textheight\paperheight \advance\textheight -60mm \voffset -20mm
+\hoffset 0mm
+\oddsidemargin 10mm %0in
+\evensidemargin -1mm
+%\topmargin 0in
+\marginparwidth 0mm
+
+\def\@seccntformat#1{\csname the#1\endcsname.\space}
+
+% NUMERACJA STRON
+
+% WERSJA 1
+% styl nagłówka z linią, stronami i tytułami (ładnego)
+% ustaw powyżej \voffset na -15mm
+
+% \pagestyle{fancy}
+% \renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+% \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+% \fancyhf{}
+% \fancyhead[LE, RO]{\small\bfseries\thepage}
+% \fancyhead[LO]{\small\bfseries\rightmark}
+% \fancyhead[RE]{\small\bfseries\leftmark}
+% \renewcommand{\headrulewidth}{0.5pt}
+% \renewcommand{\footrulewidth}{0pt}
+% \addtolength{\headheight}{1.6pt}
+% \fancypagestyle{plain}{%
+% \fancyhead{}
+% \renewcommand{\headrulewidth}{0pt}
+% }
+% --------------------------------------------
+
+% WERSJA 2
+% styl nagłówka ze smutną samotną liczbą na środku strony, na dole
+% ustaw powyżej \voffset na -20mm
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancypagestyle{plain}{%
+\fancyhf{} % clear all header and footer fields
+\fancyfoot[C]{\small\thepage} % WYSRODKOWANY, 9 PT
+\footskip = 60pt
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}}
+\pagestyle{plain}
+% --------------------------------------------
+
+% ustawienia pozwalające na dosyć skuteczną eliminację sierot i wdów
+\tolerance=1500
+\pretolerance=1500
+\hfuzz=1cm
+
+% listy
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep, topsep=0pt}
+\setlist[enumerate]{noitemsep, topsep=0pt}
+\setlist[description]{noitemsep, topsep=0pt}
+
+% definicja otoczenia dla skrotow i oznaczeń
+\newenvironment{abbrev}%
+  {\begin{list}{}{
+%   \setlength{\labelindent}{2cm}
+   \setlength{\leftmargin}{70pt}
+   \setlength{\labelwidth}{50pt}
+   \setlength\labelsep{1em}
+   \setlength{\itemsep}{0pt}%
+    % \setlength{\parskip}{0pt}}%
+   \renewcommand{\makelabel}{\descriptionlabel}}
+   \renewcommand*\descriptionlabel[1]{\bfseries #1 --}
+  }%
+  {\end{list}}
+  
+
+%STYLE UYTKOWE
+%sciezka do katalogu z rozdzialami 
+\newcommand{\chap}[1]{Chapters/#1}
+%\newcommand{\rozdz}[1]{#1}
+
+%cieka do katalogu z grafik 
+\newcommand{\gfx}[1]{Images/#1}
+
+%zwrot angielski - gdy podajemy nazwy po angielsku
+\newcommand{\ang}[1]{(ang.~\textit{#1})}
+
+%czcionka bezszeryfowa dla fragmentów
+\newcommand{\sffont}[1]{\mbox{\sffamily{#1}\rmfamily}}
+
+%odnonik do rysunku
+\newcommand{\zobrys}[1]{(zob. rys. \ref{#1})}
+\newcommand{\rys}[1]{Rys. \ref{#1}}
+
+%odnonik do rozdziau
+\newcommand{\zobrozdz}[1]{(zob. rozdz. \ref{#1})}
+
+
+
+
+
+
+
+
+
+
+

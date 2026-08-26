@@ -1,0 +1,94 @@
+%% ============================================================
+%% Appendix B - Reproduction manual
+%% ============================================================
+\chapter{Reproduction manual}\label{app:reproduction}
+
+This appendix describes how to reproduce every result reported in Chapter~\ref{chap:evaluation}. It is written so that a reader with the project files and a Python installation can regenerate the numbers in the tables and the figures from the raw price data.
+
+\section{Environment}\label{app:environment}
+
+The system requires Python 3.11 or later. The dependencies are declared in \texttt{requirements.txt} and are installed with:
+
+\begin{minted}[frame=single, fontsize=\footnotesize]{text}
+pip install -r requirements.txt
+\end{minted}
+
+\noindent
+The multi-agent system itself needs only pandas, NumPy, Matplotlib, PyYAML and SciPy. PyTorch and LightGBM are required only for the two machine-learning baselines of Section~\ref{subsec:lstm}, and every other experiment runs without them.
+
+\section{Data}\label{app:data}
+
+Price data are placed as one CSV file per instrument in the directory named by the \texttt{data.daily\_dir} key of the configuration file. Each file must contain at least the columns \texttt{Date} and \texttt{Close}, and is named by the lower-case ticker, for example \texttt{pko.csv}. The WIG20 panel lives in \texttt{data/daily} and the FTSE~100 panel in \texttt{data/daily\_ftse100}.
+
+Symbols listed in the configuration without a corresponding file are skipped rather than treated as an error, so the pipeline runs on whatever subset of the roster is present. The script \texttt{prune\_data.py} truncates every series at the common end date, which must be run after any refresh of the data so that all instruments end on the same session.
+
+\section{Configuration}\label{app:configuration}
+
+All runtime parameters are declared in \texttt{config.yaml} at the project root; the FTSE~100 replication uses \texttt{config\_ftse.yaml}, which differs only in the data directory, the symbol roster and the cost calibration. The keys are grouped as follows:
+
+\begin{itemize}
+    \item \texttt{data} and \texttt{symbols} declare the price directory and the traded roster,
+    \item \texttt{backtest} and \texttt{portfolio} declare the initial cash and the fraction of cash allocated per position,
+    \item \texttt{costs} declares the commission and slippage in basis points,
+    \item \texttt{evaluation} declares the anchored split date and the number of walk-forward folds,
+    \item \texttt{decision} declares the decision-agent mode, the minimum confidence and the optional cap on simultaneous positions,
+    \item \texttt{agents} declares which agents are active and their indicator parameters,
+    \item \texttt{lstm} and \texttt{gbm} declare the hyperparameter grids of the two machine-learning baselines.
+\end{itemize}
+
+\noindent
+Disabling a signal agent is a matter of removing its entry from the \texttt{agents} section; no code change is required.
+
+\section{Running a single backtest}\label{app:single_run}
+
+A single backtest under the configured parameters is run from the project root with:
+
+\begin{minted}[frame=single, fontsize=\footnotesize]{text}
+python main.py
+\end{minted}
+
+\noindent
+This loads the configuration, runs the daily backtest over the configured symbols, prints the headline metrics and displays the equity and drawdown plot. It is the quickest way to confirm that the environment and the data directory are set up correctly.
+
+\section{Reproducing the reported experiments}\label{app:experiments}
+
+Each experiment is produced by one script in \texttt{scripts/}, listed in Table~\ref{tab:harness}. Every script writes its output to \texttt{results/} as CSV. The scripts are independent and may be run in any order, except that the figure scripts consume the CSV files produced by the walk-forward and correlation runs and must therefore be run last.
+
+\begin{minted}[frame=single, fontsize=\footnotesize]{text}
+python scripts/run_walk_forward.py
+python scripts/run_risk_metrics.py
+python scripts/run_regime_analysis.py
+python scripts/run_ablation.py
+python scripts/run_weight_sensitivity.py
+python scripts/run_cost_sensitivity.py
+python scripts/run_confidence_validation.py
+python scripts/run_objective_comparison.py
+python scripts/run_stats.py
+python scripts/run_ml_baselines.py
+python scripts/run_gbm_baseline.py
+python scripts/regenerate_figures.py
+python scripts/regenerate_extra_figures.py
+\end{minted}
+
+\noindent
+The FTSE~100 replication is produced by the same scripts against \texttt{config\_ftse.yaml}, and its outputs are written to \texttt{results/ftse}.
+
+\section{From results to the thesis}\label{app:numbers}
+
+Every numerical value quoted in this thesis is stored as a \LaTeX{} macro in the file \texttt{\_macros.tex} rather than being typed into the text. The macro names correspond to the quantities they hold; for example, \verb|\TRtest| is the out-of-sample total return of the ensemble and \verb|\Shtest| its Sharpe ratio.
+
+The macro file is filled from the CSV files in \texttt{results/} by the script \texttt{fill\_paper\_numbers.py}, so a re-run of the experiment battery followed by a re-run of that script propagates new numbers into every table and every sentence that quotes them. This arrangement is what makes the reported figures traceable: each one can be followed back to the file, and from the file to the script that produced it.
+
+\section{Building the document}\label{app:building}
+
+The thesis is compiled with LuaLaTeX, which must be invoked with shell escape enabled because the source listings are highlighted by the external Pygments program. From the directory containing \texttt{main.tex}:
+
+\begin{minted}[frame=single, fontsize=\footnotesize]{text}
+lualatex -shell-escape main.tex
+biber main
+lualatex -shell-escape main.tex
+lualatex -shell-escape main.tex
+\end{minted}
+
+\noindent
+The two final passes resolve the cross-references, the table of contents, and the lists of figures and tables. In Overleaf the same result is obtained by selecting LuaLaTeX as the compiler in the project settings.

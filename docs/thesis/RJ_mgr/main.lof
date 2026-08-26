@@ -1,0 +1,13 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces \xpg@aux {}{english}\ignorespaces System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer.}}{16}{figure.caption.5}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces \xpg@aux {}{english}\ignorespaces Class structure of the signal and decision layers. All five signal agents inherit from the abstract base class and communicate only through the \texttt {AgentSignal} dictionary, so the decision layer is independent of how any individual signal is computed.}}{23}{figure.caption.10}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces \xpg@aux {}{english}\ignorespaces Execution of one trading day. Signals are read from the precomputed table rather than recomputed, which is what makes the parameter and cost sweeps of Chapter~\ref {chap:evaluation} affordable.}}{24}{figure.caption.13}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces \xpg@aux {}{english}\ignorespaces Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs.}}{37}{figure.caption.18}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces \xpg@aux {}{english}\ignorespaces Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the thesis.}}{37}{figure.caption.19}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces \xpg@aux {}{english}\ignorespaces Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble exceeds buy-and-hold during correction subperiods and is close to it during the bull leg.}}{38}{figure.caption.21}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces \xpg@aux {}{english}\ignorespaces Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI-ROC and RSI-Bollinger pairs, which is consistent with their shared reliance on overbought and oversold rules.}}{41}{figure.caption.26}%
+\addvspace {10\p@ }

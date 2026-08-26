@@ -1,0 +1,61 @@
+%% ============================================================
+%% Wykaz ważniejszych oznaczeń i skrótów
+%% ============================================================
+
+%% ------------------ Nagłówek + wpis do spisu treści -------------------
+\chapter*{Wykaz ważniejszych oznaczeń i skrótów}
+\addcontentsline{toc}{chapter}{Wykaz ważniejszych oznaczeń i skrótów}
+
+%% --------- Podstawowe wielkości i operatory ----------
+%% Tabela 4 kolumny: symbol | jednostka | łącznik „--” | opis
+%% Wyrównanie: l r c l (lewo, prawo, środek, lewo)
+\section*{Podstawowe wielkości fizyczne oraz wyrażenia matematyczne}
+\noindent
+\begin{tabular}{l r c l}
+     $j$  &$[\cdot]$  &--&jednostka urojona\\
+	 $\nabla$  &$[\cdot]$  &--&operator nabla\\
+	 $\vec{i}_{x},\vec{i}_{z},\vec{i}_{y} $ &$[\cdot]$  &--& wersory układu współrzędnych kartezjańskich    \\
+	 $\vec{F}$ &$[\text{N}]$  &--& siła \\
+	 $t $ &$[\text{s}]$  &--& czas \\
+	 $m$  &$[\text{kg}]$  &--& masa \\
+	 $R$  &$[\Omega]$  &--&rezystancja\\
+	 $\mathbf{S}$  &$[\cdot]$  &--&macierz rozproszenia\\
+\end{tabular}
+
+%% -------------- Stałe i wartości znane ---------------
+%% Tabela 4 kolumny: symbol/wartość | jednostka | łącznik | opis
+\section*{Stałe fizyczne i matematyczne}
+\noindent
+	 \begin{tabular}{l r c l}
+	$\pi \approx 3.14159 $&$[\cdot]  $ &--& liczba $\pi$\\ 
+	$g \approx 9.80665 $&$[\frac{\text{m}}{\text{s}^2}]  $ &--& przyspieszenie ziemskie\\
+\end{tabular}
+
+%% ---------------- Terminologia użyta w pracy -----------------
+%% Tabela 3 kolumny: komenda | łącznik „--” | objaśnienie
+%% Użyte \verb|...| zabezpiecza zapis komend dosłownie.
+%% \multirow rozszerza opis na kilka wierszy
+\section*{Terminologia użyta w pracy projektowej}
+\noindent
+\begin{tabular}{l c l} 
+\verb|\section{}| &--& tworzy tytuł rozdziału \\
+\verb|\subsection{}|&--&  tworzy tytuł podrozdziału \\
+\verb|\cite{}| &--& odwołanie do pozycji z bibliografii \\
+\verb|\ref{}|&--&  odwołanie do rysunku, tabeli lub wzoru \\
+\verb|\eqref{}| &--& odwołanie do równania (z nawiasem)  \\
+\verb|\begin{figure}| & \multirow{3}{*}{--} & \multirow{3}{*}{wstawienie obiektu graficznego} \\
+... & & \\ 
+\verb|end{figure}| & & \\ 
+\verb|\begin{table}| & \multirow{3}{*}{--} & \multirow{3}{*}{wstawienie tabeli} \\
+... & & \\ 
+\verb|end{table}| & & \\ 
+\verb|\begin{equation}| & \multirow{3}{*}{--} & \multirow{3}{*}{wstawienie wzoru z numeracją} \\
+... & & \\ 
+\verb|end{equation}| & & \\ 
+\verb|\textbf{}| &--& pogrubienie tekstu  \\
+\verb|\emph{}| &--& wyróżnienie kursywą  \\
+\verb|\footnote{}| &--& wstawienie przypisu dolnego \\
+\verb|\includegraphics{}| &--& wstawienie obrazu \\
+\verb|\label{}| &--& etykieta obiektu \\
+\verb|\item| &--& element listy \\
+\end{tabular}

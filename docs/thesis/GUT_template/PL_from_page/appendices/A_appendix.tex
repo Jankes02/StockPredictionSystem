@@ -1,0 +1,23 @@
+% ==========================
+% DODATEK A
+% ==========================
+\chapter{Generowanie funkcji sinus}\label{page:A_appendix}
+W dodatkach zamieszcza się materiały uzupełniające, które nie są niezbędne do zrozumienia głównej treści pracy, lecz stanowią jej wartościowe rozszerzenie. Mogą to być między innymi fragmenty kodów źródłowych, dodatkowe wykresy, zestawienia wyników pomiarów, instrukcje obsługi opracowanego systemu lub dane pomocnicze wykorzystane w analizie.
+
+\section{Kod źródłowy}
+W niniejszym dodatku przedstawiono przykładowy kod źródłowy generujący wykres funkcji \emph{sinus}. Kod może być wykonany w środowisku Python (np. z wykorzystaniem bibliotek \texttt{NumPy} \cite{NumPyGuide2025} oraz \texttt{Matplotlib}). Przykład ilustruje sposób tworzenia prostych wykresów funkcji okresowych, które mogą być użyte do wizualizacji wyników w pracy inżynierskiej.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \inputminted[
+    linenos,
+    frame=single,
+    breaklines,
+    breakanywhere
+  ]{python}{other/sin.py}
+  \caption{Generowanie wykresu funkcji sinus w Pythonie.}
+  \label{lst:sinus_py}
+\end{center}
+
+\subsection{Uwagi dotyczące formatowania kodu}
+Kod źródłowy powinien być umieszczony w środowisku \texttt{lstlisting}, które zachowuje formatowanie, wcięcia oraz podświetla składnię języka. Jeśli kod jest długi, można ograniczyć wstawiany fragment, np.: \verb|\lstinputlisting[firstline=10,lastline=60]{*.py}|. W pracach inżynierskich zaleca się umieszczanie w dodatkach tylko tych fragmentów, które są istotne dla zrozumienia rozwiązania;  dłuższe listingi warto umieścić w repozytorium online, a w treści pracy podać odwołanie (np. \emph{''Kod źródłowy znajduje się w repozytorium \href{https://github.com}{GitHub}''}).

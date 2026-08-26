@@ -1,0 +1,38 @@
+\documentclass[10pt, twoside, a4paper,openany]{book}
+\usepackage{macra_xelatex}
+
+
+\begin{document}
+% strony generowane z moja.pg
+\includepdf{Chapters/Strona_tytulowa.pdf}
+\includepdf{Chapters/Oswiadczenie.pdf}
+
+% streszczenie PL, EN
+\input{Chapters/Streszczenie}
+\input{Chapters/Abstract}
+
+% spis treści
+\tableofcontents
+
+% wykaz skrótów
+\input{Chapters/Wykaz_skrotow}
+
+% rozdziały i podrozdziały numerowane
+\input{Chapters/Wstep}
+\input{Chapters/Dokumenty_elektroniczne}
+\input{Chapters/Jeszcze_jeden_rozdzial}
+\input{Chapters/Podsumowanie}
+
+% bibliografia
+% ieeetr - etykiety numerowane w kolejności wystąpienia w tekście
+\bibliographystyle{ieeetr}
+\bibliography{Chapters/Bibliography}
+
+% wykazy 
+\listoffigures
+\listoftables
+
+% dodatki
+\appendix
+\input{Chapters/DodatekA}  
+\end{document}

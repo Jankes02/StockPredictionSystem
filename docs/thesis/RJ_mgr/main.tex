@@ -1,0 +1,107 @@
+%% ============================================================
+%% Master's thesis - main file
+%% Faculty of Electronics, Telecommunications and Informatics
+%% Gdansk University of Technology
+%%
+%% Author: Rafal Jankowski
+%%
+%% Compiler requirements: LuaLaTeX (TeX Live 2022 or later) with
+%% --shell-escape enabled (minted calls the external Pygments program).
+%%
+%%   lualatex -shell-escape main.tex
+%%   biber main
+%%   lualatex -shell-escape main.tex
+%%   lualatex -shell-escape main.tex
+%% ============================================================
+\documentclass{_formatting}
+
+%% -------------------- Additional packages -------------------
+%% The formatting class stays untouched; packages required by the
+%% content of this thesis are loaded here instead.
+\usepackage{booktabs}    % \toprule / \midrule / \bottomrule in result tables
+\usepackage{algorithm}   % algorithm float
+\usepackage{algorithmic} % pseudocode body
+\usepackage{tikz}        % architecture, class and sequence diagrams
+\usetikzlibrary{shapes.multipart, positioning, arrows.meta, fit, calc}
+
+%% -------------------- Monospace font -------------------------
+%% The class applies TeX ligatures to every font, which rewrites the straight
+%% quotes of reproduced source code as typographic ones and would make the
+%% listings syntactically wrong. Re-declaring the monospace font with the
+%% tlig feature switched off keeps code verbatim.
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase, RawFeature=-tlig]
+
+%% -------------------- Float placement ------------------------
+%% The class sets \raggedbottom, so a float that does not fit leaves the
+%% remainder of the page blank. These parameters let floats share a page
+%% with more text, which avoids the large bottom gaps that the editorial
+%% guidelines ask to eliminate.
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.80}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+
+%% -------------------- Numerical results ---------------------
+%% Headline numbers are kept in macros so that they can be refilled
+%% from results/*.csv instead of being retyped.
+\input{_macros}
+
+%% bibliography: references stored in BibTeX format (file with the .bib extension)
+\addbibresource{_bibliography.bib}
+
+%% -------------------- Document start -----------------------
+\begin{document}
+%% front matter (in order: title page, declaration, abstract, list of symbols)
+%% TODO(MyGUT): generate both pages in the MyGUT (Moja PG) portal, save them as
+%% pages/1_title.pdf and pages/2_statement.pdf, then uncomment the two lines below.
+% \includepdf{pages/1_title.pdf}
+% \includepdf{pages/2_statement.pdf}
+\include{pages/3_abstract_ENG}
+\include{pages/4_abstract_PL}
+\include{pages/5_symbols}
+
+%% -------------------- Table of contents --------------------------
+\renewcommand{\contentsname}{Table of contents}
+\tableofcontents{}\label{page:Table_of_contents}
+\addcontentsline{toc}{chapter}{Table of contents}
+
+%% -------------------- Main chapters ----------------------
+\include{chapters/1_introduction}
+\include{chapters/2_state_of_the_art}
+\include{chapters/3_theory_and_design}
+\include{chapters/4_implementation}
+\include{chapters/5_evaluation}
+\include{chapters/6_summary}
+
+%% -------------------- Bibliography --------------------------
+\printbibliography\label{page:Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography} % entry in the table of contents
+
+%% -------------------- List of figures ------------------------
+\renewcommand{\listfigurename}{List of figures}
+\listoffigures
+\addcontentsline{toc}{chapter}{List of figures} % entry in the table of contents
+
+%% -------------------- List of tables ---------------------------
+\renewcommand{\listtablename}{List of tables}
+\listoftables
+\addcontentsline{toc}{chapter}{List of tables} % entry in the table of contents
+
+%% -------------------- Appendices -------------------------------
+%% TEMPORARILY DISABLED. To restore the appendices, uncomment the five
+%% lines below and the sentence marked TODO(appendices) in
+%% chapters/4_implementation.tex, which is the only text that refers to them.
+%%
+%% formatting settings for appendices (must be before \appendix)
+% \include{appendices/_formatting}
+%
+%% switch to appendix mode; each \include creates the next appendix
+% \appendix
+% \include{appendices/A_source_code}
+% \include{appendices/B_reproduction}
+
+%% -------------------- End of document ----------------------
+\end{document}

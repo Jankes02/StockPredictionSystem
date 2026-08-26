@@ -1,0 +1,61 @@
+%% ============================================================
+%% List of important symbols and abbreviations
+%% ============================================================
+
+%% ------------------ Heading + entry in the Table of Contents -------------------
+\chapter*{List of Important Symbols and Abbreviations}
+\addcontentsline{toc}{chapter}{List of Important Symbols and Abbreviations}
+
+%% --------- Basic quantities and operators ----------
+%% 4-column table: symbol | unit | dash “--” | description
+%% Alignment: l r c l (left, right, centre, left)
+\section*{Basic Physical Quantities and Mathematical Expressions}
+\noindent
+\begin{tabular}{l r c l}
+     $j$  &$[\cdot]$  &--& imaginary unit\\
+	 $\nabla$  &$[\cdot]$  &--& nabla operator\\
+	 $\vec{i}_{x},\vec{i}_{z},\vec{i}_{y}$ &$[\cdot]$  &--& unit vectors of the Cartesian coordinate system\\
+	 $\vec{F}$ &$[\text{N}]$   &--& force \\
+	 $t$ &$[\text{s}]$  &--& time \\
+	 $m$  &$[\text{kg}]$  &--& mass \\
+	 $R$  &$[\Omega]$  &--& resistance\\
+	 $\mathbf{S}$  &$[\cdot]$  &--& scattering matrix\\
+\end{tabular}
+
+%% -------------- Constants and known values ---------------
+%% 4-column table: symbol/value | unit | dash | description
+\section*{Physical and mathematical constants}
+\noindent
+\begin{tabular}{l r c l}
+	$\pi \approx 3.14159$ & $[\cdot]$  &--& number $\pi$\\ 
+	$g \approx 9.80665$ & $[\frac{\text{m}}{\text{s}^2}]$  &--& gravitational acceleration\\
+\end{tabular}
+
+%% ---------- Terminology used in the thesis -----------------
+%% 3-column table: command | dash “--” | explanation
+%% \verb|...| prints commands verbatim.
+%% \multirow spreads the explanation across multiple rows
+\section*{Terminology used in the thesis}
+\noindent
+\begin{tabular}{l c l} 
+\verb|\section{}| &--& creates a chapter title \\
+\verb|\subsection{}| &--& creates a subsection title \\
+\verb|\cite{}| &--& reference to a bibliography item \\
+\verb|\ref{}| &--& reference to a figure, table, or equation \\
+\verb|\eqref{}| &--& reference to an equation (with round bracket) \\
+\verb|\begin{figure}| & \multirow{3}{*}{--} & \multirow{3}{*}{inserting a graphic object} \\
+... & & \\ 
+\verb|end{figure}| & & \\ 
+\verb|\begin{table}| & \multirow{3}{*}{--} & \multirow{3}{*}{inserting a table} \\
+... & & \\ 
+\verb|end{table}| & & \\ 
+\verb|\begin{equation}| & \multirow{3}{*}{--} & \multirow{3}{*}{inserting a numbered equation} \\
+... & & \\ 
+\verb|end{equation}| & & \\ 
+\verb|\textbf{}| &--& boldface text \\
+\verb|\emph{}| &--& italic emphasis \\
+\verb|\footnote{}| &--& insert a footnote \\
+\verb|\includegraphics{}| &--& insert an image \\
+\verb|\label{}| &--& object label \\
+\verb|\item| &--& list item \\
+\end{tabular}

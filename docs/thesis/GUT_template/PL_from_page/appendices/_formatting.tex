@@ -1,0 +1,32 @@
+%% ============================================================
+%% Formatowanie nagłówka: „Dodatek A: Tytuł” 
+%% Automatyczne dodanie do spisu treści
+%% Zawartość pozostaw bez zmian
+%% ============================================================
+
+% zachowujemy domyślne ustawienia \chapter do późniejszego użycia
+\makeatletter
+\let\OrigChapter\chapter
+
+%% stworzenie nowego polecenia \appchapter z numeracją literową
+\NewDocumentCommand{\appchapter}{ m o }{
+  \refstepcounter{chapter}
+  \setcounter{section}{0}
+  \gdef\currentchaptertitle{#1}
+  \OrigChapter*{Dodatek~\thechapter: #1} % dopisanie "Dodatek" do tytułu
+  \chaptermark{#1}
+  \phantomsection
+  \addcontentsline{toc}{chapter}{Dodatek~\thechapter: #1} % dodanie do spisu treści
+  \IfNoValueF{#2}{\label{#2}}
+}
+
+%% po poleceniu \appendix
+%% \chapter{...} korzysta z \appchapter,
+%% \chapter*{...} działa jak dotąd (bez numeru w spisie treści).
+\pretocmd{\appendix}{
+  \let\OrigChapter\chapter
+  \renewcommand{\chapter}{
+    \@ifstar{\OrigChapter*}{\appchapter}
+  }
+}{}{}
+\makeatother

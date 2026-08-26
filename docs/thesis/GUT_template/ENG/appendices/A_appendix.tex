@@ -1,0 +1,23 @@
+% ==========================
+% APPENDIX A
+% ==========================
+\chapter{Generating the Sine Function}\label{page:A_appendix}
+Appendices include supplementary materials that are not essential for understanding the main content of the thesis, but constitute a valuable extension. These may include, among others, fragments of source code, additional plots, summaries of measurement results, user manuals of the developed system, or auxiliary data used in the analysis.
+
+\section{Source Code}
+This appendix presents a sample source code that generates a plot of the \emph{sine} function. The code can be executed in a Python environment (e.g., using the \texttt{NumPy} \cite{NumPyGuide2025} and \texttt{Matplotlib} libraries). The example illustrates how to create simple plots of periodic functions to visualise results in an engineering thesis.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \inputminted[
+    linenos,
+    frame=single,
+    breaklines,
+    breakanywhere
+  ]{python}{other/sin.py}
+  \caption{Generating a plot of the sine function in Python.}
+  \label{lst:sinus_py}
+\end{center}
+
+\subsection{Notes on Code Formatting}
+Source code should be placed in the \texttt{lstlisting} environment, which preserves formatting and indentation and provides syntax highlighting for the language. If the code is extended, the inserted fragment may be limited, e.g.: \verb|\lstinputlisting[firstline=10,lastline=60]{*.py}|. In engineering theses, it is recommended to include in the appendices only those fragments that are essential for understanding the solution; longer listings are best placed in an online repository, with a reference provided in the text (e.g., \emph{''The source code is available in the \href{https://github.com}{GitHub} repository''}).

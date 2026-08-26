@@ -1,0 +1,70 @@
+%% ============================================================
+%% Wersja formatki: 3.0
+%% Data wydania: 25.11.2025 r.
+%% Licencja:  użytek wewnętrzny WETI PG 
+%% Niniejszy szablon i materiały towarzyszące mogą być wykorzystywane, 
+%% kopiowane i modyfikowane wyłącznie na potrzeby dydaktyczne i organizacyjne
+%% Wydziału Elektroniki, Telekomunikacji i Informatyki Politechniki Gdańskiej 
+%% przez studentów i pracowników WETI. Zabronione jest jakiekolwiek publiczne 
+%% udostępnianie (w tym repozytoria publiczne, strony WWW, ogólnodostępne projekty
+%% Overleaf, serwisy w chmurze) oraz przekazywanie osobom trzecim bez zgody 
+%% właściciela praw. W użytku wewnętrznym WETI nie jest wymagane podawanie autorstwa.
+%% ============================================================
+%% Plik główny pracy: wczytuje formatowanie, strony wstępne,
+%% rozdziały, bibliografię, wykazy oraz dodatki. 
+%% Kompiluj ten plik.
+%% Wymagania kompilatora : LuaLaTeX (dystrybucja TeX Live w wersji co najmniej 2022)
+%% %% Uwaga: kompilacja lokalna wymaga włączenia --shell-escape,
+%% np. w TeXstudio: Opcje → Konfiguracja → Komendy → 
+%% lualatex -shell-escape %.tex
+%% (minted potrzebuje zewnętrznego programu Pygments do kolorowania składni)
+%% ============================================================
+\documentclass{_formatting}
+
+%% bibliografia: pozycje literatury zapisane w formacie BibTeX (plik o rozszerzeniu .bib)
+\addbibresource{_bibliography.bib} 
+
+%% -------------------- Start dokumentu -----------------------
+\begin{document}
+%% strony wstępne (kolejno: strona tytułowa, oświadczenie, streszczenie, wykaz symboli)
+\includepdf{pages/1_title.pdf}
+\includepdf{pages/2_statement.pdf}
+\include{pages/3_abstract_PL}
+\include{pages/4_abstract_ENG}
+\include{pages/5_symbols}
+	
+%% -------------------- Spis treśći --------------------------
+\renewcommand{\contentsname}{Spis treści}
+\tableofcontents{}\label{page:Table_of_contents}
+\addcontentsline{toc}{chapter}{Spis treści}
+
+%% -------------------- Rozdziały główne ----------------------
+\include{chapters/1_Introduction}
+\include{chapters/2_Methodology}
+\include{chapters/3_Results}
+\include{chapters/4_Summary}
+
+%% -------------------- Bibliografia --------------------------
+\printbibliography\label{page:Bibliography}
+\addcontentsline{toc}{chapter}{Wykaz literatury} % wpis do spisu treści
+
+%% -------------------- Wykaz rysunków ------------------------
+\renewcommand{\listfigurename}{Wykaz rysunków}
+\listoffigures
+\addcontentsline{toc}{chapter}{Wykaz rysunków} % wpis do spisu treści
+
+%% -------------------- Wykaz tabel ---------------------------
+\renewcommand{\listtablename}{Wykaz tabel}
+\listoftables
+\addcontentsline{toc}{chapter}{Wykaz tabel} % wpis do spisu treści
+
+%% -------------------- Dodatki -------------------------------
+%% ustawienia formatowania dla dodatków (musi być przed \appendix)
+\include{appendices/_formatting}
+
+%% przełączenie na tryb dodatków; każdy \include tworzy kolejny dodatek
+\appendix
+\include{appendices/A_appendix}
+
+%% -------------------- Koniec dokumentu ----------------------
+\end{document}

@@ -1,0 +1,95 @@
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(7407,4434)(1021,-4135)
+\thinlines
+{\color[rgb]{0,0,0}\put(6706,-1501){\line( 0,-1){180}}
+\put(6706,-1681){\line(-1, 0){1710}}
+\put(4996,-1681){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(6706,-1501){\line( 0,-1){180}}
+\put(6706,-1681){\line( 1, 0){1710}}
+\put(8416,-1681){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(4996,-2311){\line( 0,-1){180}}
+\put(4996,-2491){\line(-1, 0){1710}}
+\put(3286,-2491){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(4996,-2311){\line( 0,-1){180}}
+\put(4996,-2491){\line( 1, 0){1710}}
+\put(6706,-2491){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(3286,-3121){\line( 0,-1){180}}
+\put(3286,-3301){\line(-1, 0){1710}}
+\put(1576,-3301){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(3286,-3121){\line( 0,-1){180}}
+\put(3286,-3301){\line( 1, 0){1710}}
+\put(4996,-3301){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(3286, 74){\line( 0,-1){180}}
+\put(3286,-106){\line( 1, 0){1710}}
+\put(4996,-106){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(4996,-691){\line( 0,-1){180}}
+\put(4996,-871){\line(-1, 0){1710}}
+\put(3286,-871){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(4996,-691){\line( 0,-1){180}}
+\put(4996,-871){\line( 1, 0){1710}}
+\put(6706,-871){\line( 0,-1){270}}
+}%
+{\color[rgb]{0,0,0}\put(3286, 74){\line( 0,-1){180}}
+\put(3286,-106){\line(-1, 0){1710}}
+\put(1576,-106){\line( 0,-1){270}}
+}%
+\put(4456,-1096){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\itdefault}{\color[rgb]{0,0,0}reprezentacja}%
+}}}}
+\put(4681,-2716){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\itdefault}{\color[rgb]{0,0,0}składnia}%
+}}}}
+\put(2341,-3526){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\itdefault}{\color[rgb]{0,0,0}semantyka znakowania}%
+}}}}
+\put(6211,-1906){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\itdefault}{\color[rgb]{0,0,0}przetwarzanie}%
+}}}}
+\put(2791,119){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}dokument}%
+}}}}
+\put(6301,-3256){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}kod źrodłowy programów}%
+}}}}
+\put(8101,-2446){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}listy, notatki}%
+}}}}
+\put(1216,-826){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}papierowy}%
+}}}}
+\put(2746,-1636){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}skany, zdjęcia}%
+}}}}
+\put(3016,-331){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\itdefault}{\color[rgb]{0,0,0}nośnik}%
+}}}}
+\put(3781,-2221){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}parsowalny (elektroniczny)}%
+}}}}
+\put(7831,-2221){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}nieparsowalny}%
+}}}}
+\put(1126,-601){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}analogowy}%
+}}}}
+\put(4636,-601){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}cyfrowy}%
+}}}}
+\put(2746,-3031){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}znakowany}%
+}}}}
+\put(6301,-3031){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}formalny}%
+}}}}
+\put(1036,-3841){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}prezentacja}%
+}}}}
+\put(4231,-3841){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}struktura logiczna}%
+}}}}
+\put(1306,-4066){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}HTML}%
+}}}}
+\put(4456,-4066){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tex/Latex, XML}%
+}}}}
+\put(6346,-1411){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}tekstowy}%
+}}}}
+\put(2926,-1411){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}binarny}%
+}}}}
+\end{picture}%

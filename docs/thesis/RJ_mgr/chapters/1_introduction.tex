@@ -1,0 +1,60 @@
+%% ============================================================
+%% Chapter 1 - Introduction
+%% Ported from paper.tex, Section I, and extended with the
+%% statement of own contribution and the structure of the thesis.
+%% ============================================================
+\chapter{Introduction}\label{chap:introduction}
+
+Decision support systems and algorithmic trading occupy a central place in contemporary financial markets. They help both institutional and retail investors process large volumes of market information and translate that information into trading actions \cite{hendershott_does_2011}. Over the last two decades, research on algorithmic trading has expanded from simple rule-based strategies \cite{brock1992} to machine-learning classifiers \cite{gerlein2016,fischerkrauss2018}, and more recently to deep reinforcement learning systems that learn trading policies directly from data \cite{huang2022,shavandi2022,hambly2023}.
+
+In parallel, multi-agent systems (MAS) have been proposed as a natural way to organise this diversity of trading rules and models, so that independent agents can produce signals that a coordinator combines into the final decision \cite{luo2002,korczak2013,hernes2016,hernes2024}. The appeal of the arrangement is that it separates two concerns that are easily confused: what an individual indicator says about the market, and what a portfolio should do about it.
+
+The practical problem that motivates this thesis is narrower than the breadth of that literature suggests. A retail investor on the Warsaw Stock Exchange (WSE) has access to daily price data, a modest brokerage account, and a large menu of published trading rules, but has no reliable way to tell which of those rules, or which combination of them, is worth following. The published evidence is not much help, because a substantial part of it is produced under evaluation protocols that make results look better than they are.
+
+\section{Problem statement}\label{sec:problem}
+
+Four methodological weaknesses recur in empirical studies of trading strategies, and together they undermine the credibility of reported results.
+
+The first is \emph{in-sample parameter selection}. When the best configuration of a strategy is chosen on the same data used to evaluate it, the out-of-sample performance is overstated \cite{bailey2014,harvey2016}. The second is the \emph{omission of realistic frictions}, in particular commissions and slippage, which can erode a noticeable fraction of the gross return of high-turnover configurations.
+
+The third is the \emph{neglect of risk-adjusted performance}. Many studies compare a trading strategy to passive buy-and-hold purely on cumulative profit, without taking into consideration that an active strategy can produce a smoother equity curve at a lower unleveraged return. This weakness is particularly acute during sustained bull markets, where passive exposure mechanically dominates any strategy that is occasionally out of the market \cite{dichtl2020}. The fourth is the \emph{absence of formal significance tests}. Headline metrics are often reported as point estimates without confidence intervals or paired tests against the benchmark, even though trading-strategy metrics are known to be non-Gaussian and path-dependent \cite{politis1994,bailey2014}.
+
+Beyond these methodological issues, the empirical evidence on multi-agent decision support systems is strongly concentrated on major markets in the United States, Western Europe, and Asia. The Warsaw Stock Exchange, the largest exchange in Central and Eastern Europe (CEE) by capitalisation, has received much less attention \cite{czapkiewicz2018,kompa2009,gurgul2025}. A retail investor on that market therefore faces a double difficulty: the available evidence is methodologically fragile, and what evidence exists was gathered elsewhere.
+
+\section{Aim and scope of the thesis}\label{sec:aim}
+
+The aim of this thesis is to design a transparent multi-agent decision support system for trading large-capitalisation stocks on the Warsaw Stock Exchange, and to determine, under an evaluation protocol that addresses the four weaknesses stated above, whether such a system offers a measurable advantage over passive investment.
+
+The scope is defined by four decisions. The system trades daily closing prices of WIG20 index constituents, so intraday behaviour, order-book dynamics, and other asset classes are outside its remit. The signal agents use only price-derived technical indicators, so fundamental and alternative data are excluded. The aggregation rule is a linear, confidence-weighted score, chosen so that the decision layer remains interpretable and its mapping to forecast-combination theory stays transparent, in contrast to opaque end-to-end learners. Finally, all evidence is produced by simulation on historical data, so no live-trading exercise is part of the work.
+
+Three hypotheses, stated formally in Section~\ref{sec:hypotheses} and tested in Chapter~\ref{chap:evaluation}, give the aim its testable form. In summary, they assert that the system matches or exceeds passive buy-and-hold on risk-adjusted metrics even where it does not on gross return (H1), that it outperforms the best single-agent baseline on total return (H2), and that its performance is robust to the removal of any single agent (H3).
+
+The technical assumptions adopted throughout are the following. Positions are opened and closed at the daily closing price. Transaction costs comprise a proportional commission and one-way slippage, calibrated per market. Only decision-agent parameters are tuned, and only on a training window that precedes the evaluation window chronologically; all indicator hyperparameters are fixed at their literature-conventional values. Portfolio capital is allocated as a fixed fraction of available cash per position, without leverage.
+
+\section{Own contribution}\label{sec:own_contribution}
+
+The work reported in this thesis is the author's own. The system, the experiments, and the analysis were designed, implemented, and carried out by the author. Specifically, the author's contribution comprises the following:
+
+\begin{itemize}
+    \item the design and implementation of the complete software system described in Chapter~\ref{chap:implementation}, comprising five signal agents, the decision agent, the portfolio simulator, the metrics calculator, and the experiment harness,
+    \item the design of the evaluation protocol of Chapter~\ref{chap:evaluation}, including the anchored walk-forward procedure, the transaction-cost calibration, the market-regime labelling, the volatility-matched comparison, and the bootstrap testing scheme,
+    \item the implementation and in-sample tuning of the two machine-learning baselines used as reference points,
+    \item the conceptual grounding of the aggregation rule in forecast-combination theory, together with the correlation and confidence-validation experiments that test how far that grounding holds empirically,
+    \item the execution and interpretation of all experiments reported in Chapter~\ref{chap:evaluation}, including the external validation on the FTSE~100.
+\end{itemize}
+
+An earlier version of parts of this material was prepared by the author for publication in a co-authored journal article; the text of this thesis was written by the author for this purpose.
+
+\section{Structure of the thesis}\label{sec:structure}
+
+The thesis is organised into six chapters, whose significance is unequal by design: Chapters~\ref{chap:implementation} and~\ref{chap:evaluation} carry the original work, while the remaining chapters frame it.
+
+Chapter~\ref{sec:related_work} reviews the state of the art in four streams: algorithmic trading and technical analysis, multi-agent systems in finance, algorithmic trading on Central and Eastern European markets, and risk-adjusted performance evaluation. It establishes both the methodological gap and the empirical niche that the thesis addresses.
+
+Chapter~\ref{sec:theory} presents the theoretical background and the system design. It introduces forecast-combination theory and the variance-reduction argument that motivates the architecture, maps that theory onto the trading problem, states the three hypotheses, and then describes the four-layer architecture, the five signal agents, the decision agent, and the agent taxonomy.
+
+Chapter~\ref{chap:implementation} describes the software realisation: the requirements it had to satisfy, the technologies selected and why, the structure of the code, the data preparation pipeline, and the way the implementation was verified.
+
+Chapter~\ref{chap:evaluation} reports the empirical part of the work. It describes the evaluation protocol in full, reports the results on the WIG20 panel, subjects them to a battery of robustness checks and an external validation on the FTSE~100, and interprets the evidence against the three hypotheses.
+
+Chapter~\ref{sec:conclusion} summarises what was achieved, states the conclusions as an organised list, discusses the limitations of the study and the difficulties encountered during the work, and indicates directions for further development.

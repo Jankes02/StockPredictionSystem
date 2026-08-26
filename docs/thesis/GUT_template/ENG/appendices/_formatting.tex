@@ -1,0 +1,32 @@
+%% ============================================================
+%% Header formatting: “Appendix A: Title”
+%% Automatic addition to the table of contents
+%% Leave the content unchanged
+%% ============================================================
+
+% preserve default \chapter settings for later use
+\makeatletter
+\let\OrigChapter\chapter
+
+%% create a new \appchapter command with letter-based numbering
+\NewDocumentCommand{\appchapter}{ m o }{
+  \refstepcounter{chapter}
+  \setcounter{section}{0}
+  \gdef\currentchaptertitle{#1}
+  \OrigChapter*{Appendix~\thechapter: #1} % append Appendix to the title
+  \chaptermark{#1}
+  \phantomsection
+  \addcontentsline{toc}{chapter}{Appendix~\thechapter: #1} % add to the table of contents
+  \IfNoValueF{#2}{\label{#2}}
+}
+
+%% after the \appendix command:
+%% \chapter{...} uses \appchapter,
+%% \chapter*{...} behaves as before (no number in the ToC).
+\pretocmd{\appendix}{
+  \let\OrigChapter\chapter
+  \renewcommand{\chapter}{
+    \@ifstar{\OrigChapter*}{\appchapter}
+  }
+}{}{}
+\makeatother

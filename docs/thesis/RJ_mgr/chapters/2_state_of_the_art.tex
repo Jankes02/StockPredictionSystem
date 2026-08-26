@@ -1,0 +1,63 @@
+%% ============================================================
+%% Chapter 2 - State of the art
+%% Ported from paper.tex, Section II (Related Work).
+%% ============================================================
+\chapter{State of the art}\label{sec:related_work}
+
+This chapter reviews four streams of literature that inform the work reported in this thesis: algorithmic trading and technical analysis, multi-agent systems in finance, algorithmic trading on Central and Eastern European markets, and risk-adjusted performance evaluation. The division into four streams clarifies where the thesis sits in a crowded research landscape, and why the combination of these four angles is the gap it addresses.
+
+%% ------------------------------------------------------------
+%% TODO(author): the systematic literature review is scheduled separately.
+%% Replace the section below with the SLR protocol and its results:
+%%   - research question,
+%%   - databases searched,
+%%   - search strings (synonyms joined with OR, components with AND),
+%%   - source types and inclusion criteria,
+%%   - exclusion criteria,
+%%   - title/abstract screening, full-text screening, duplicate removal,
+%%   - counts at each stage (and, if useful, a selection flow figure).
+%% Any references it adds go into _bibliography.bib.
+%% ------------------------------------------------------------
+\section{Review method}\label{sec:review_method}
+
+\textit{[Placeholder: this section will be replaced by the protocol and results of the systematic literature review.]} The review presented in the remainder of this chapter covers work published between 1966 and 2026, combining the classical contributions that established each stream with recent publications that document its current state.
+
+\section{Algorithmic trading and technical analysis}\label{sec:sota_technical}
+
+Technical analysis uses indicators computed from price and volume to generate trading signals. Early work established that simple trading rules based on moving averages and trading ranges exhibit predictive power that is hard to reconcile with the strict form of the efficient markets hypothesis \cite{brock1992}. Subsequent studies formalised this debate with algorithmic backtests and statistical tests \cite{boboc2013}, and showed that several popular indicators, among them MACD, RSI and Bollinger Bands, continue to produce information when combined with machine-learning classifiers \cite{gerlein2016}.
+
+Closely related to the ensemble design studied here, empirical work on cross-sectional momentum \cite{jegadeeshtitman1993,asness2013} and time-series momentum \cite{moskowitz2012} has shown that trend-following and mean-reversion signals carry orthogonal information about future returns. That orthogonality is the empirical foundation on which the agent taxonomy of Section~\ref{subsec:taxonomy} rests.
+
+More recent work has shifted to deep learning, in particular to recurrent architectures for price prediction \cite{fischerkrauss2018}, and to deep reinforcement learning systems that learn trading policies end-to-end \cite{huang2022,shavandi2022,hambly2023,anders2024empirical}. Systematic reviews conclude that the evidence on technical analysis is mixed, and that it depends strongly on the choice of market, period, and evaluation protocol \cite{nti2020,kruczkowski2026review}.
+
+To situate the transparent forecast-combination design against this learning-based stream, the evaluation includes two learning-based baselines run under the same walk-forward protocol, transaction costs, and portfolio simulator as the ensemble: an LSTM directional classifier in the style of \cite{fischerkrauss2018}, and a gradient-boosted-trees classifier \cite{friedman2001,ke2017lightgbm}. The latter belongs to a model family that large-scale comparisons identify as among the strongest learners on tabular financial features \cite{krauss2017,gukellyxiu2020}.
+
+Two methodological criticisms recur across this literature. The first is backtest overfitting: when a large number of configurations are evaluated on the same data, the best configuration is biased upward and the out-of-sample performance is overstated \cite{bailey2014,harvey2016}. The second is the frequent absence of realistic frictions, such as commissions and slippage, which can erode a large fraction of the gross return of a high-turnover strategy. Both criticisms are taken seriously here and are built into the evaluation design of Section~\ref{sec:setup}.
+
+\section{Multi-agent systems in finance}\label{sec:sota_mas}
+
+Multi-agent systems provide a natural abstraction for trading, because different strategies can be encapsulated as independent agents that communicate through well-defined interfaces. Agent-based artificial markets have been used to study the emergence of liquidity, volatility, and price-discovery patterns from the interaction of heterogeneous traders \cite{lebaron2011,8675280}.
+
+Multi-agent decision support systems for stock and currency markets were proposed as early as two decades ago, typically with specialised agents that generate buy and sell recommendations and a coordinating component that aggregates them \cite{luo2002,korczak2013,hernes2016,hernes2024}. The A-Trader system \cite{korczak2013,hernes2016} is a particularly close ancestor of the design presented here, since it also uses multiple specialised agents and a consensus-based coordinator, but it has been evaluated primarily on FOREX data. Recent work has extended the paradigm with multi-agent reinforcement learning for portfolio management \cite{huang2022} and algorithmic trading \cite{shavandi2022}.
+
+Outside finance, a substantial body of control-theory research studies how interacting agents reach agreement through consensus protocols, including consensus tracking over cooperation-competition networks \cite{li2025consensus}, convergence-rate analysis under communication delays \cite{shi2025consensus}, and logic-based switching schemes for uncertain nonlinear multi-agent dynamics \cite{fan2025}. That literature analyses the dynamical convergence of agent states to a common value over time, whereas the coordinator studied here is a static forecast-combination rule that aggregates heterogeneous directional forecasts at each date. The two notions of agreement are related in spirit but formally distinct.
+
+Relative to this literature, the aggregation mechanism itself is not claimed as novel: combining specialised agents through a weighted score is well established in the systems cited above. The distinction of the present work is twofold. First, it makes the conceptual connection between the aggregator and forecast-combination theory \cite{batesgranger1969,clemen1989,timmermann2006} explicit, interpreting the coordinator score as a weighted sum of heterogeneous directional forecasts. That interpretation is used both in the design of the decision agent and in the motivation of the ablation and correlation experiments, and its limits are tested empirically through the confidence-validation and weight-sensitivity analyses of Sections~\ref{subsec:confvalid} and~\ref{subsec:weights}.
+
+Second, and more importantly, the resulting ensemble is subjected to a rigorous evaluation protocol, described in Section~\ref{sec:setup}, that most prior multi-agent trading studies do not apply in combination. The intended contribution is therefore the theoretical grounding and the evaluation, not the aggregation rule.
+
+\section{Algorithmic trading on Central and Eastern European markets}\label{sec:sota_cee}
+
+Although the Warsaw Stock Exchange is the largest market in Central and Eastern Europe, it is underrepresented in the algorithmic trading literature. Studies of the WSE have focused on the interdependence between the Polish and other stock markets and its macroeconomic drivers \cite{czapkiewicz2018}, on tests of the informational efficiency of the exchange \cite{kompa2009}, and on the interplay between algorithmic trading, liquidity, and volatility for WSE blue-chip stocks \cite{gurgul2025}.
+
+To the best of the author's knowledge, multi-agent decision support systems have not been evaluated on WIG20 under an explicit walk-forward protocol with transaction costs and a risk-adjusted comparison. This gap is the primary empirical niche addressed by the thesis. To test whether the resulting profile is specific to WSE conditions, the full pipeline is additionally replicated on the FTSE~100 under UK-specific transaction costs (Section~\ref{subsec:ftse}).
+
+\section{Risk-adjusted performance evaluation}\label{sec:sota_risk}
+
+A separate literature has developed a rich set of risk-adjusted metrics that go beyond the Sharpe ratio \cite{sharpe1966}. The Sortino ratio \cite{sortino1994} penalises only downside deviation and is therefore closer to how investors experience losses, and the Calmar ratio \cite{young1991} relates annualised return to maximum drawdown, which captures the worst realised loss along the equity path. Drawdown-based measures have been extended by the Ulcer Index and the Martin ratio \cite{martin1989}, which aggregate the full history of drawdowns rather than only the peak-to-trough extremum.
+
+The adaptive markets hypothesis of \cite{lo2004} argues that market efficiency is itself time-varying, which provides a theoretical motivation for evaluating a strategy across different market regimes rather than only on aggregate metrics. In line with this view, the ensemble is evaluated here both on standard risk-adjusted ratios and across distinct market regimes, and its equity curve is compared against the benchmark after matching the two on ex-ante volatility. This risk-aware evaluation protocol is one of the methodological contributions of the thesis.
+
+\section{Chapter summary}\label{sec:sota_summary}
+
+The four streams reviewed above converge on a single observation. Technical trading rules and multi-agent architectures for combining them are both well established, but the empirical evidence about them is fragile, because it is frequently produced under evaluation protocols that select parameters in sample, ignore transaction costs, report only cumulative profit, and omit significance tests. The risk-adjusted evaluation literature supplies the metrics needed to repair the third of these weaknesses, and the forecast-combination literature supplies a theory that explains what a coordinator of heterogeneous agents should be expected to achieve. What is missing is a study that brings these elements together on a market outside the small set of heavily studied exchanges. That is the gap the remainder of this thesis addresses.

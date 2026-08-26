@@ -1,0 +1,69 @@
+%% ============================================================
+%% Chapter 6 - Summary
+%% Ported from paper.tex, Sections VIII (Limitations and Future
+%% Work) and IX (Conclusion).
+%% ============================================================
+\chapter{Summary}\label{sec:conclusion}
+
+The aim of this thesis, stated in Section~\ref{sec:aim}, was to design a transparent multi-agent decision support system for stock trading on the Warsaw Stock Exchange and to evaluate it under a protocol rigorous enough that its results can be trusted. Both parts of that aim were met, and the second turned out to matter more than the first.
+
+The system itself is deliberately simple: five signal agents, each confined to one methodological family, feed a decision agent that combines their signals into a linear, confidence-weighted score and thresholds it into a trading action. The evaluation around it is not simple. It combines anchored walk-forward tuning, calibrated commissions and slippage, five risk-adjusted metrics, a volatility-matched comparison, bootstrap confidence intervals and paired tests, a decomposition into market regimes, a leave-one-agent-out ablation, sensitivity analyses over the family weights and the selection objective, a cost-sensitivity sweep, an audit of the confidence heuristic, two machine-learning baselines, and a full replication on a second market.
+
+What that evaluation established is narrower than what the project set out to find, and more defensible. The ensemble is not a return enhancer. Passive buy-and-hold earned more on both test windows, because both were dominated by bull regimes and a partially invested strategy cannot keep pace with a fully invested one in such conditions. The ensemble is, however, a risk reducer, and consistently so: it halved the maximum drawdown on WIG20, cut the integrated drawdown by nearly two-thirds, led on every risk-adjusted ratio reported, and overtook the benchmark on total return once both series were placed on the same ex-ante risk budget. Section~\ref{sec:hypotheses} stated three hypotheses; the evidence is consistent with all three on point estimates, and with none of them at conventional levels of statistical significance on a single window of under two years.
+
+\section{Conclusions}\label{sec:conclusions}
+
+The work supports the following conclusions:
+
+\begin{enumerate}
+    \item the multi-agent system improves risk-adjusted performance rather than gross return, leading buy-and-hold on Sharpe, Sortino, Calmar, Ulcer, and Martin measures while trailing it on cumulative profit in bull-dominated windows,
+    \item the advantage is concentrated where the design predicts it should be, namely \CorrectionDefencePP{} percentage points of correction-regime defence and \SidewaysExcessPP{} percentage points of sideways-regime carry, paid for by underperformance in the bull phase,
+    \item the profile is not an artefact of any single design choice, since it survives the removal of any one agent, perturbation and re-estimation of the family weights, every plausible cost calibration, a change of selection objective, and a three-fold chronological re-split,
+    \item the profile is not specific to the Warsaw Stock Exchange, since the FTSE~100 replication reproduces it under a different constituent set, currency, and cost regime that includes an asymmetric buy-side transaction tax,
+    \item the transparent ensemble remains competitive with an LSTM and a gradient-boosted-trees classifier evaluated under the identical protocol, both of which achieve their apparent edge on the FTSE window by remaining near-fully invested through a bull market,
+    \item the confidence heuristic does not work as designed, since confidence values carry no measurable information about signal-level accuracy on either market, so the inverse-variance reading of the aggregation rule is a conceptual analogy rather than a calibrated mechanism,
+    \item the mechanism that does operate is error diversity: pooling weakly and negatively correlated signals across methodological families lowers the variance of the aggregate position irrespective of how the pool is weighted,
+    \item none of the observed advantages reaches conventional statistical significance on a single sub-two-year test window, and they are therefore reported as economically meaningful rather than as statistically established.
+\end{enumerate}
+
+The sixth and seventh conclusions are the ones that were not anticipated at the outset, and they are worth stating plainly. The architecture was motivated by the idea that a confidence value could act as a proxy for the reliability of an agent at a given moment, so that the decision agent would perform something close to precision-weighted averaging. The confidence-validation experiment of Section~\ref{subsec:confvalid} shows that this is not what happens. The system works on the risk axis, but for the weaker and more robust of the two reasons that forecast-combination theory offers.
+
+Methodologically, the evaluation pipeline is the more transferable contribution. It closes the four gaps identified in Chapter~\ref{sec:related_work}, and it is reusable as a template for similar studies on smaller equity markets, where capital preservation in turbulent periods may matter more than chasing the next bull leg.
+
+\section{Difficulties and limitations}\label{sec:limitations}
+
+Several limitations of this study should be kept in mind.
+
+First, although the evaluation spans two markets, both are large-capitalisation blue-chip indices evaluated at daily frequency. Generalisation to smaller and less liquid stocks, to other asset classes, or to intraday frequencies would require a separate evaluation, and the signal agents and the decision agent, which were designed around daily closes, would need to be adapted for intraday use.
+
+Second, although the transaction-cost model captures commissions and slippage and is stress-tested over a wide grid, it does not capture liquidity constraints, partial fills, or the price impact of larger orders. In practice, large orders could move the closing price and would require an order-book-level simulation.
+
+Third, the system does not use fundamental data, news, or alternative data sources, which are known to carry orthogonal information with respect to price-based indicators and would fit naturally into the forecast-combination framework as additional agents with distinct error structures.
+
+Fourth, the decision agent uses fixed family weights and heuristic confidence values. The sensitivity analysis of Section~\ref{subsec:weights} shows that the headline conclusions are robust to perturbing, reordering, or re-estimating the weights, and that in-sample optimisation does not reliably improve on the fixed prior. Nevertheless, the weights are static over time, and regime-conditional weighting remains untested. Relatedly, Section~\ref{subsec:confvalid} shows that the confidence values do not predict signal-level accuracy, so the decision layer cannot claim calibrated precision weighting, and the link to classical forecast-combination theory remains conceptual.
+
+Fifth, the test window, although long enough to cover bull, correction, and sideways regimes, is ultimately a single window of under two years, and the bootstrap tests have limited power to detect moderate effect sizes on a sample of this size. Point estimates and confidence intervals therefore carry as much of the argument as $p$-values do.
+
+Sixth, the volatility-matched comparison requires leverage of $\lambda = \Leverage{}$, which is impractical for a typical retail investor on the WSE. That comparison serves as a counterfactual on risk budget rather than as an operational recommendation.
+
+Finally, the study does not include a live-trading exercise. Any claim about realised performance in production would require one.
+
+Beyond these limitations of the study itself, two difficulties shaped the course of the work. The first was computational: the full experiment battery re-runs the backtest hundreds of times across grid points, ablations, weight perturbations, and cost configurations, which was intractable until signal computation was decoupled from portfolio simulation and the agent signals were precomputed once (Algorithm~\ref{alg:wf}). That change reduced the end-to-end runtime by more than an order of magnitude and made the sensitivity analyses affordable.
+
+The second difficulty was interpretive. An early version of the work compared the system against buy-and-hold on cumulative return alone, and on that basis the system looked like a failure. Recognising that the comparison was confounded, because a partially invested strategy was being measured against a fully invested benchmark at roughly twice the volatility, is what motivated the risk-adjusted metric battery, the regime decomposition, and the volatility-matched comparison that now form the core of the evaluation.
+
+\section{The way forward}\label{sec:way_forward}
+
+Each limitation maps to a direction for further work.
+
+Building on the FTSE~100 validation reported here, the system could be extended to further indices, for example the German DAX, the Italian FTSE MIB, or the US S\&P~500, and to smaller-capitalisation or emerging-market segments, in order to map more precisely the market conditions under which the risk-adjusted advantage holds. Intraday frequencies would require a careful revision of both the signal agents and the transaction-cost model, and would expose the system to additional market-microstructure effects \cite{tusien2025mining}.
+
+Fundamental and alternative data could be integrated as additional signal agents that share the same base-agent interface, which is straightforward given the modular design described in Chapter~\ref{chap:implementation}.
+
+Because static in-sample weight optimisation and inverse-variance estimation add little (Section~\ref{subsec:weights}), the more promising weighting extension is regime-conditional family weights, in which the trend family is upweighted in bull regimes and downweighted in corrections. This is a natural evolution of the current fixed-weight design and would be expected to recover part of the bull-regime shortfall identified in Section~\ref{subsec:regime}.
+
+A complementary direction is to replace the heuristic confidence values with calibrated probabilities, for example by isotonic or Platt-type mappings from indicator magnitudes to empirical hit rates estimated on the training window \cite{murphywinkler1987}. Calibrated confidences would let the decision layer implement genuine precision weighting and would upgrade the conceptual link to forecast-combination theory into a testable quantitative one. Given the outcome of Section~\ref{subsec:confvalid}, this is the single most valuable extension of the present design.
+
+Beyond weighting, the fixed roster of agents could be made adaptive through dynamic agent selection, in which the active pool is chosen per regime or per symbol according to recent forecast accuracy, so that agents contribute only where they have demonstrated skill. More ambitiously, the linear confidence-weighted score could be replaced by a learning-based ensembling layer, such as a stacked meta-learner or a gating network that learns the combination function from data. The challenge there is to retain the per-agent attribution and interpretability that motivate the present design while admitting a richer, potentially non-linear combiner.
+
+Finally, a walk-forward live-trading exercise on a paper-trading broker interface would close the loop between the backtest and realistic execution, and would test the operational assumptions, namely end-of-day execution at closing prices without market impact, that the backtest takes for granted.

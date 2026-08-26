@@ -1,0 +1,71 @@
+%% ============================================================
+%% Template version: 3.0
+%% Release date: November 25, 2025
+%% License: internal use only, Faculty of Electronics, Telecommunications and
+%% Informatics, Gdańsk University of Technology. This template and accompanying %%
+%% materials may be used, copied, and modified only for educational and 
+%% organisational purposes of the Faculty of Electronics, Telecommunications and
+%% Informatics, Gdańsk University of Technology, by WETI students and staff. Any
+%% public sharing (including public repositories, websites, publicly accessible
+%% Overleaf projects, or cloud services) and distribution to third parties without
+%% the rights holder’s consent is strictly prohibited. 4d is not required for
+%% internal WETI use.
+%% ============================================================
+%% Main thesis file: loads formatting, front matter,
+%% chapters, bibliography, lists, and appendices.
+%% Compile this file.
+%% Compiler requirements: LuaLaTeX (TeX Live distribution, version 2022 or later)
+%% Note: When compiling locally, you must enable --shell-escape,
+%% e.g. in TeXstudio: Options → Configure TeXstudio →
+%% Commands → lualatex -shell-escape %.tex
+%% (minted uses the external Pygments program for syntax highlighting)
+%% ============================================================
+\documentclass{_formatting}
+
+%% bibliography: references stored in BibTeX format (file with the .bib extension)
+\addbibresource{_bibliography.bib} 
+
+%% -------------------- Document start -----------------------
+\begin{document}
+%% front matter (in order: title page, declaration, abstract, list of symbols)
+\includepdf{pages/1_title.pdf}
+\includepdf{pages/2_statement.pdf}
+\include{pages/3_abstract_ENG}
+\include{pages/4_abstract_PL}
+\include{pages/5_symbols}
+	
+%% -------------------- Table of contents --------------------------
+\renewcommand{\contentsname}{Table of contents}
+\tableofcontents{}\label{page:Table_of_contents}
+\addcontentsline{toc}{chapter}{Table of contents}
+
+%% -------------------- Main chaxwpters ----------------------
+\include{chapters/1_introduction}
+\include{chapters/2_methodology}
+\include{chapters/3_results}
+\include{chapters/4_summary}
+
+%% -------------------- Bibliography --------------------------
+\printbibliography\label{page:Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography} % entry in the table of contents
+
+%% -------------------- List of figures ------------------------
+\renewcommand{\listfigurename}{List of figures}
+\listoffigures
+\addcontentsline{toc}{chapter}{List of figures} % entry in the table of contents
+
+%% -------------------- List of tables ---------------------------
+\renewcommand{\listtablename}{List of tables}
+\listoftables
+\addcontentsline{toc}{chapter}{List of tables} % entry in the table of contents
+
+%% -------------------- Appendices -------------------------------
+%% formatting settings for appendices (must be before \appendix)
+\include{appendices/_formatting}
+
+%% switch to appendix mode; each \include creates the next appendix
+\appendix
+\include{appendices/A_appendix}
+
+%% -------------------- End of document ----------------------
+\end{document}

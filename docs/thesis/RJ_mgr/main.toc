@@ -1,0 +1,90 @@
+\contentsline {chapter}{Abstract}{1}{Doc-Start}%
+\xpg@aux {}{english}
+\contentsline {chapter}{Streszczenie}{2}{chapter*.2}%
+\xpg@aux {}{polish}
+\xpg@aux {}{english}
+\contentsline {chapter}{List of Important Symbols and Abbreviations}{3}{chapter*.3}%
+\contentsline {chapter}{Table of contents}{7}{chapter*.4}%
+\contentsline {chapter}{\numberline {1}Introduction}{8}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problem statement}{8}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Aim and scope of the thesis}{9}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Own contribution}{9}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Structure of the thesis}{10}{section.1.4}%
+\contentsline {chapter}{\numberline {2}State of the art}{11}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Review method}{11}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Algorithmic trading and technical analysis}{11}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Multi-agent systems in finance}{12}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Algorithmic trading on Central and Eastern European markets}{12}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Risk-adjusted performance evaluation}{13}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Chapter summary}{13}{section.2.6}%
+\contentsline {chapter}{\numberline {3}Theoretical background and system design}{14}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Forecast combination and variance reduction}{14}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Mapping to the trading problem}{14}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Hypotheses}{15}{section.3.3}%
+\contentsline {section}{\numberline {3.4}System architecture}{15}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Signal agents}{16}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Decision agent}{18}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Agent taxonomy}{19}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Chapter summary}{19}{section.3.8}%
+\contentsline {chapter}{\numberline {4}Implementation}{20}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Requirements}{20}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Functional requirements}{20}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Non-functional requirements and design constraints}{20}{subsection.4.1.2}%
+\contentsline {section}{\numberline {4.2}Technology stack}{21}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Software architecture}{22}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}The agent contract}{22}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}The decision layer}{22}{subsection.4.3.2}%
+\contentsline {section}{\numberline {4.4}Implementation of the trading pipeline}{23}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Signal precomputation and the absence of look-ahead}{23}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Portfolio accounting}{25}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Metrics}{27}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Data preparation}{27}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Experiment harness}{27}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Verification of the implementation}{27}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Chapter summary}{29}{section.4.8}%
+\contentsline {chapter}{\numberline {5}Evaluation methodology and results}{30}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Experimental setup}{30}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Dataset}{30}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Transaction-cost model}{30}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}Walk-forward protocol}{31}{subsection.5.1.3}%
+\contentsline {subsection}{\numberline {5.1.4}Baselines}{31}{subsection.5.1.4}%
+\contentsline {subsection}{\numberline {5.1.5}Machine-learning baselines}{32}{subsection.5.1.5}%
+\contentsline {subsection}{\numberline {5.1.6}Risk-adjusted metrics}{33}{subsection.5.1.6}%
+\contentsline {subsection}{\numberline {5.1.7}Market-regime labelling}{33}{subsection.5.1.7}%
+\contentsline {subsection}{\numberline {5.1.8}Volatility-matched comparison}{34}{subsection.5.1.8}%
+\contentsline {subsection}{\numberline {5.1.9}Cost-sensitivity sweep}{34}{subsection.5.1.9}%
+\contentsline {subsection}{\numberline {5.1.10}Bootstrap confidence intervals and tests}{35}{subsection.5.1.10}%
+\contentsline {section}{\numberline {5.2}Results on the WIG20 panel}{35}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Parameter selection on training data}{35}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Headline results on held-out data}{35}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Risk-adjusted comparison}{36}{subsection.5.2.3}%
+\contentsline {subsection}{\numberline {5.2.4}Volatility-matched comparison}{38}{subsection.5.2.4}%
+\contentsline {subsection}{\numberline {5.2.5}Market-regime decomposition}{39}{subsection.5.2.5}%
+\contentsline {subsection}{\numberline {5.2.6}Cost-sensitivity analysis}{40}{subsection.5.2.6}%
+\contentsline {subsection}{\numberline {5.2.7}Empirical signal correlations}{40}{subsection.5.2.7}%
+\contentsline {subsection}{\numberline {5.2.8}Validation of the confidence measure}{40}{subsection.5.2.8}%
+\contentsline {section}{\numberline {5.3}Robustness checks and external validation}{42}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Single-agent baselines and leave-one-out ablation}{42}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Weight sensitivity and alternative weighting schemes}{43}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Comparison with machine-learning baselines}{44}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Statistical significance}{45}{subsection.5.3.4}%
+\contentsline {subsection}{\numberline {5.3.5}Walk-forward robustness}{46}{subsection.5.3.5}%
+\contentsline {subsection}{\numberline {5.3.6}Sensitivity to the selection objective}{46}{subsection.5.3.6}%
+\contentsline {subsection}{\numberline {5.3.7}External validation on the FTSE 100}{47}{subsection.5.3.7}%
+\contentsline {section}{\numberline {5.4}Discussion}{48}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}From forecast-combination theory to empirical evidence}{48}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Evidence for the three hypotheses}{49}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Cross-market generalisation}{50}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Why gross total return understates the contribution of the ensemble}{51}{subsection.5.4.4}%
+\contentsline {subsection}{\numberline {5.4.5}Connections to the broader empirical literature}{52}{subsection.5.4.5}%
+\contentsline {subsection}{\numberline {5.4.6}Practical implications for a retail investor}{52}{subsection.5.4.6}%
+\contentsline {subsection}{\numberline {5.4.7}Deployment and scalability}{53}{subsection.5.4.7}%
+\contentsline {subsection}{\numberline {5.4.8}Design implications}{54}{subsection.5.4.8}%
+\contentsline {section}{\numberline {5.5}Chapter summary}{54}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Summary}{56}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Conclusions}{56}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Difficulties and limitations}{57}{section.6.2}%
+\contentsline {section}{\numberline {6.3}The way forward}{58}{section.6.3}%
+\contentsline {chapter}{Bibliography}{63}{chapter*.34}%
+\contentsline {chapter}{List of figures}{64}{chapter*.35}%
+\contentsline {chapter}{List of tables}{65}{chapter*.36}%

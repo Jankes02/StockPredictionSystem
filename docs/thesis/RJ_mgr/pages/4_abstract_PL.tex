@@ -1,0 +1,23 @@
+%% ============================================================
+%% Streszczenie (jezyk polski)
+%% ============================================================
+\chapter*{Streszczenie}
+\addcontentsline{toc}{chapter}{Streszczenie}
+
+\begin{polish}
+\enlargethispage{\baselineskip}
+W pracy przedstawiono wieloagentowy system wspomagania decyzji dla handlu akcjami na Giełdzie Papierów Wartościowych w Warszawie, czyli na rynku Europy Środkowo-Wschodniej rzadko analizowanym w literaturze, oraz poddano go ocenie według protokołu usuwającego cztery słabości powtarzające się w badaniach empirycznych strategii inwestycyjnych: dobór parametrów na danych, na których strategia jest oceniana, pominięcie kosztów transakcyjnych, pominięcie miar skorygowanych o ryzyko oraz brak testów istotności statystycznej.
+
+System składa się z pięciu heterogenicznych agentów analizy technicznej, z których każdy wykorzystuje wyłącznie jedną rodzinę metodologiczną wskaźników, oraz z przejrzystego agenta decyzyjnego, który agreguje ich sygnały z wagami wynikającymi z pewności sygnału. Regułę agregacji osadzono w teorii kombinacji prognoz (ang. \emph{forecast combination}). Ocena łączy strojenie parametrów metodą walidacji kroczącej z zakotwiczonym oknem uczącym (ang. \emph{anchored walk-forward}), skalibrowane koszty transakcyjne, miary skorygowane o ryzyko wraz z indeksem Ulcera, porównanie przy zrównanej zmienności, przedziały ufności i sparowane testy istotności metodą bootstrap, dekompozycję okna testowego na reżimy rynkowe, analizę ablacyjną, analizy wrażliwości oraz empiryczną weryfikację heurystyki pewności sygnału. Dwa modele uczenia maszynowego, klasyfikator kierunkowy LSTM oraz klasyfikator oparty na wzmacnianych gradientowo drzewach decyzyjnych, oceniono według identycznego protokołu.
+
+W okresie \OOSDays{} sesji giełdowych wyłączonych z procesu uczenia system uzyskał dla indeksu WIG20 niższą stopę zwrotu brutto niż pasywna strategia kup i trzymaj w oknie zdominowanym przez trend wzrostowy, poprawił jednak każdą z rozważanych miar skorygowanych o ryzyko, zmniejszył o połowę maksymalne obsunięcie kapitału, ograniczył skumulowane obsunięcie o niemal dwie trzecie oraz przewyższył strategię odniesienia pod względem stopy zwrotu po sprowadzeniu obu szeregów do tej samej zmienności wyznaczonej z góry. Różnice te są istotne ekonomicznie, lecz nie osiągają istotności statystycznej w oknie krótszym niż dwa lata.
+
+Analiza reżimów rynkowych wskazuje, że profil ten wynika z mniejszych strat w okresach korekty i zysków w okresach konsolidacji, okupionych mniejszym udziałem w fazach wzrostowych. Ten sam wzorzec potwierdziła walidacja zewnętrzna na indeksie FTSE 100, a system pozostał konkurencyjny wobec obu modeli uczenia maszynowego. Odrębny eksperyment wykazał, że wartości pewności sygnału nie niosą mierzalnej informacji o trafności pojedynczych sygnałów, zatem mechanizmem działania systemu jest łączenie sygnałów słabo i ujemnie skorelowanych, a nie ważenie precyzją. Wyniki potwierdzają przydatność zespołów agentów jako narzędzia wspomagania decyzji świadomego ryzyka, a nie metody zwiększania stopy zwrotu.
+
+\section*{Słowa kluczowe:}
+\noindent handel algorytmiczny, systemy wspomagania decyzji, systemy wieloagentowe, kombinacja prognoz, efektywność skorygowana o ryzyko, walidacja krocząca, walidacja międzyrynkowa, Giełda Papierów Wartościowych w Warszawie.
+
+%% TODO(author): potwierdzic klasyfikacje OECD przed zlozeniem pracy.
+\section*{Dziedzina nauki i techniki, zgodnie z wymogami OECD:}
+\noindent nauki inżynieryjne i techniczne; elektrotechnika, elektronika, inżynieria informatyczna; nauki o komputerach i informatyka.
+\end{polish}

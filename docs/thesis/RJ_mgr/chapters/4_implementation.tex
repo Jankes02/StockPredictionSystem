@@ -1,0 +1,314 @@
+%% ============================================================
+%% Chapter 4 - Implementation
+%% New material, derived from the source repository:
+%% src/, scripts/, config*.yaml, requirements.txt.
+%% ============================================================
+\chapter{Implementation}\label{chap:implementation}
+
+Chapter~\ref{sec:theory} described the system as a set of interacting abstractions: agents that emit signals, a decision agent that combines them, a simulator that executes the resulting orders. This chapter describes the software that realises those abstractions. It states the requirements the implementation had to satisfy, justifies the selected technologies, presents the structure of the code in UML form, walks through the execution of a single trading day, describes the preparation of the price data, catalogues the experiment harness that produces the results of Chapter~\ref{chap:evaluation}, and explains how the implementation was verified.
+
+The complete system comprises 46 Python modules, of which 16 are experiment scripts.
+%% TODO(appendices): restore this sentence when the appendices are re-enabled in main.tex.
+% Selected listings are reproduced in Appendix~\ref{app:source_code}, and the reproduction procedure is given in Appendix~\ref{app:reproduction}.
+
+\section{Requirements}\label{sec:requirements}
+
+The requirements were derived from the aim stated in Section~\ref{sec:aim} and from the evaluation protocol the system had to support. They are stated here in the form in which they governed the implementation.
+
+\subsection{Functional requirements}\label{subsec:functional_requirements}
+
+Table~\ref{tab:functional_requirements} lists the functional requirements. Requirements F1 to F4 follow from the system design of Chapter~\ref{sec:theory}; F5 to F8 follow from the evaluation protocol, which needs to run the same pipeline hundreds of times under varying configurations.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Functional requirements of the system.}
+\label{tab:functional_requirements}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.06\linewidth}X@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} \\
+\midrule
+F1 & Load daily OHLCV data for a configurable roster of symbols from local CSV files. \\
+F2 & Compute, for each agent, symbol and date, a directional signal, a confidence value and a methodological family, using only data available up to that date. \\
+F3 & Aggregate all signals for a symbol on a date into a single buy, sell or hold decision through the confidence-weighted score of \eqref{eq:score}. \\
+F4 & Simulate the execution of decisions on a cash portfolio, charging commission, slippage and, where applicable, a one-way transaction tax. \\
+F5 & Compute the risk-adjusted metrics of Section~\ref{subsec:metrics} from the resulting equity curve and trade list. \\
+F6 & Run an anchored walk-forward search over decision-agent parameters and evaluate the selected configuration on a held-out window. \\
+F7 & Run ablation, weight-sensitivity, cost-sensitivity, regime, bootstrap and confidence-validation experiments over the same pipeline. \\
+F8 & Export every experiment result to CSV so that the numbers reported in the thesis are traceable to a file. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Non-functional requirements and design constraints}\label{subsec:nonfunctional_requirements}
+
+The non-functional requirements are listed in Table~\ref{tab:nonfunctional_requirements}. Two of them deserve comment, because they shaped the code more than the others.
+
+Requirement N1, the absence of look-ahead, is a correctness property rather than a preference: a single leak invalidates the entire evaluation. It is enforced structurally rather than by convention. Each agent receives a data frame already truncated at the current date, so an agent cannot observe a future bar even if its implementation were careless.
+
+Requirement N3, the separation of signal computation from portfolio accounting, began as a performance concern and became an architectural principle. The experiment battery re-runs the backtest across grid points, ablations, weight perturbations and cost configurations, and recomputing indicator values on every run made the full battery impractically slow. Precomputing the signal table once and passing it into each backtest reduced the end-to-end runtime by more than an order of magnitude.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Non-functional requirements and design constraints.}
+\label{tab:nonfunctional_requirements}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.06\linewidth}X@{}}
+\toprule
+\textbf{ID} & \textbf{Requirement} \\
+\midrule
+N1 & No look-ahead: a signal for date $t$ must depend only on data up to and including $t$. \\
+N2 & Determinism: repeated runs on identical inputs must produce identical outputs, so that reported numbers are reproducible. \\
+N3 & Separation of signal computation from portfolio accounting, so that cost and parameter sweeps do not recompute indicators. \\
+N4 & Extensibility: a new signal agent must be addable without modifying the decision layer or the simulator. \\
+N5 & Configurability: symbols, data paths, costs, decision parameters and agent hyperparameters must be declared outside the code. \\
+N6 & Market portability: switching to another exchange must require only a new data source and cost calibration. \\
+\midrule
+C1 & Every signal agent inherits from \texttt{BaseAgent} and implements a single method. \\
+C2 & Every signal agent uses one internally consistent methodology; mixed-indicator agents are not permitted. \\
+C3 & Signal agents may not make portfolio-level decisions; they only emit signals. \\
+C4 & Every signal carries a confidence value alongside its direction. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Constraints C1 to C4 are architectural rules adopted at the start of the project. C2 is the one with theoretical weight: it is what makes the forecast-combination argument of Section~\ref{sec:forecast_combination} well defined, because an agent mixing several indicator families would not correspond to a single forecaster with an identifiable error profile.
+
+\section{Technology stack}\label{sec:tech_stack}
+
+The system is implemented in Python 3.11. Python was selected because the numerical and machine-learning libraries required by the evaluation are mature and interoperable in that ecosystem, and because the resulting code is readable enough to serve as documentation of the method, which matters for a thesis whose contribution is partly methodological.
+
+Table~\ref{tab:tech_stack} lists the libraries and the role of each. The dependency set is deliberately small: five libraries carry the entire multi-agent system, and the remaining two are needed only for the machine-learning baselines. That asymmetry is itself a result. The ensemble requires no training infrastructure at all, which is the deployment argument made in Section~\ref{subsec:deployment}.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Technologies used in the implementation, with the role of each.}
+\label{tab:tech_stack}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}X@{}}
+\toprule
+\textbf{Component} & \textbf{Version} & \textbf{Role} \\
+\midrule
+Python & 3.11 & Implementation language. \\
+pandas & $\geq 2.0$ & Price panels, rolling-window indicator computation, equity curves. \\
+NumPy & $\geq 1.24$ & Vectorised numerics underlying the metric calculations. \\
+Matplotlib & $\geq 3.7$ & Generation of the figures reported in Chapter~\ref{chap:evaluation}. \\
+PyYAML & $\geq 6.0$ & Declarative configuration of symbols, costs, agents and decision parameters. \\
+SciPy & $\geq 1.10$ & Spearman rank correlation used in the confidence validation of Section~\ref{subsec:confvalid}. \\
+PyTorch & $\geq 2.2$ & LSTM directional baseline of Section~\ref{subsec:lstm}. \\
+LightGBM & $\geq 4.0$ & Gradient-boosted-trees baseline of Section~\ref{subsec:lstm}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two choices merit justification. Rolling-window indicator computation is delegated to pandas rather than implemented manually, because the library implementations are well tested and their treatment of leading undefined values is explicit, which matters for N1. LightGBM was chosen for the second machine-learning baseline in preference to another neural architecture, because a gradient-boosted tree ensemble is structurally different from a recurrent network, so agreement between the two baselines is more informative than agreement between two variants of the same model family.
+
+\section{Software architecture}\label{sec:software_architecture}
+
+The four conceptual layers of Section~\ref{sec:system} map onto Python packages as follows. The data layer is a loader function operating on a directory of CSV files. The signal layer is the package \texttt{src/agents}, containing the five agents and their common base. The decision layer is a single class, \texttt{DecisionAgent}. The presentation layer is the package \texttt{src/utils}, containing the portfolio simulator, the metrics calculator, and the plotting helpers. The experiment harness in \texttt{scripts/} sits above all four.
+
+Fig.~\ref{fig:class_diagram} shows the class structure of the signal and decision layers.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  cls/.style={draw, rectangle split, rectangle split parts=3,
+              rectangle split part align=left, align=left, inner sep=3pt,
+              text width=3.9cm, font=\footnotesize},
+  simple/.style={draw, rectangle split, rectangle split parts=2,
+              rectangle split part align=left, align=left, inner sep=3pt,
+              text width=3.3cm, font=\footnotesize},
+  inherit/.style={-{Triangle[open, length=6pt, width=6pt]}},
+  dep/.style={-{Stealth[length=5pt]}, dashed},
+  node distance=5mm and 8mm
+]
+
+\node[cls] (base) {
+  \textbf{BaseAgent} \textit{(ABC)}
+  \nodepart{two} + name: str \\ + kind: str
+  \nodepart{three} + generate\_signal() \\ \# \_pack() \\ \# \_neutral\_signal()
+};
+
+\node[simple, right=22mm of base] (signal) {
+  \textbf{AgentSignal} \textit{(TypedDict)}
+  \nodepart{two} symbol, agent \\ signal: $\{-1,0,1\}$ \\ confidence: $[0,1]$ \\ kind
+};
+
+\node[cls, below=16mm of base] (agents) {
+  \textbf{MACDAgent, RSIAgent,} \\ \textbf{ROCAgent, BollingerAgent,} \\ \textbf{MATrendAgent}
+  \nodepart{two} + name, kind \\ + indicator parameters
+  \nodepart{three} + generate\_signal()
+};
+
+\node[cls, right=22mm of agents] (decision) {
+  \textbf{DecisionAgent}
+  \nodepart{two} + mode \\ + min\_confidence \\ + kind\_weights \\ + thresholds
+  \nodepart{three} + decide() \\ \# \_decide\_for\_symbol() \\ \# \_trend\_direction()
+};
+
+\node[simple, below=16mm of decision] (dec) {
+  \textbf{Decision} \textit{(TypedDict)}
+  \nodepart{two} symbol, action \\ score, confidence \\ contributing\_agents
+};
+
+\draw[inherit] (agents) -- node[right, font=\footnotesize] {} (base);
+\draw[dep] (base.east) -- node[above, font=\footnotesize] {returns} (signal.west);
+\draw[dep] (agents.east) -- node[above, font=\footnotesize] {signals} (decision.west);
+\draw[dep] (decision.south) -- node[right, font=\footnotesize] {returns} (dec.north);
+
+\end{tikzpicture}
+\caption{Class structure of the signal and decision layers. All five signal agents inherit from the abstract base class and communicate only through the \texttt{AgentSignal} dictionary, so the decision layer is independent of how any individual signal is computed.}
+\label{fig:class_diagram}
+\end{figure}
+
+\subsection{The agent contract}\label{subsec:agent_contract}
+
+The base class is deliberately minimal. It declares two class attributes, \texttt{name} and \texttt{kind}, the latter being the methodological family $\kappa(a)$ of Section~\ref{sec:mapping}; it provides two helpers that construct the return dictionary; and it declares a single abstract method that every agent must implement. Listing~\ref{lst:base_agent} reproduces it in full.
+
+\begin{listing}[!htbp]
+\inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/BaseAgent.py}
+\caption{The abstract base class defining the agent contract.}
+\label{lst:base_agent}
+\end{listing}
+
+Three properties of this contract are worth noting. The \texttt{\_pack} helper clips confidence into $[0,1]$, so no agent can inflate its own weight in the aggregate score by returning an out-of-range value. The \texttt{\_neutral\_signal} helper gives every agent a uniform way to abstain, which agents use when the price history is too short to compute their indicator. And because the only input is a data frame and a symbol, the interface says nothing about portfolio state, which enforces constraint C3 structurally.
+
+Adding a new agent therefore means writing one class with one method, and registering it in the configuration file. Neither the decision agent nor the simulator changes, which satisfies N4.
+
+\subsection{The decision layer}\label{subsec:decision_impl}
+
+\texttt{DecisionAgent} implements \eqref{eq:score} and the thresholding rule \eqref{eq:decision_rule} directly. Its \texttt{decide} method groups the signals of a date by symbol, delegates to a per-symbol routine, discards hold decisions, and applies an optional cap on the number of simultaneous positions. Listing~\ref{lst:decide} shows the per-symbol routine, which is the concrete realisation of the score.
+
+\begin{listing}[!htbp]
+\inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/decide_for_symbol.py}
+\caption{Per-symbol aggregation: the implementation of the confidence-weighted score of \eqref{eq:score} and of the thresholding rule of \eqref{eq:decision_rule}.}
+\label{lst:decide}
+\end{listing}
+
+The correspondence with the theory is close enough to read line by line. The filter on \texttt{min\_confidence} is the threshold $c_{\min}$; the product of signal, confidence and family weight is one term of the sum in \eqref{eq:score}; and the comparison against the mode-dependent thresholds is \eqref{eq:decision_rule}. The additional branch under \emph{passive} mode implements the trend-agreement requirement described in Section~\ref{subsec:decision}.
+
+One implementation detail carries analytical value. Every decision records the list of contributing agents together with their individual signals and confidences. This is what makes the per-agent attribution described in Section~\ref{subsec:practical} possible: the score of any day can be decomposed after the fact into the contribution of each agent, without re-running the pipeline.
+
+\section{Implementation of the trading pipeline}\label{sec:pipeline}
+
+Fig.~\ref{fig:sequence_diagram} shows the execution of a single trading day. The loop over dates is driven by the backtest function, which holds the precomputed signal table and calls the decision agent and the simulator in turn.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[font=\small, >={Stealth[length=5pt]}]
+
+\def\lifeA{0}
+\def\lifeB{3.4}
+\def\lifeC{7.0}
+\def\lifeD{10.6}
+
+\node[draw, fill=gray!8, minimum height=6mm] (a) at (\lifeA,0) {Backtest};
+\node[draw, fill=gray!8, minimum height=6mm] (b) at (\lifeB,0) {Signal table};
+\node[draw, fill=gray!8, minimum height=6mm] (c) at (\lifeC,0) {DecisionAgent};
+\node[draw, fill=gray!8, minimum height=6mm] (d) at (\lifeD,0) {PortfolioSim.};
+
+\foreach \x in {\lifeA, \lifeB, \lifeC, \lifeD}
+  \draw[dashed, gray] (\x,-0.35) -- (\x,-5.2);
+
+\tikzset{msg/.style={above, font=\footnotesize, fill=white, inner sep=1.5pt}}
+\draw[->] (\lifeA,-1.0) -- node[msg] {signals for date $t$} (\lifeB,-1.0);
+\draw[<-] (\lifeA,-1.7) -- node[msg] {list of AgentSignal} (\lifeB,-1.7);
+\draw[->] (\lifeA,-2.4) -- node[msg] {decide(signals)} (\lifeC,-2.4);
+\draw[<-] (\lifeA,-3.1) -- node[msg] {list of Decision} (\lifeC,-3.1);
+\draw[->] (\lifeA,-3.8) -- node[msg] {process\_day(date, prices, decisions)} (\lifeD,-3.8);
+\draw[<-] (\lifeA,-4.5) -- node[msg] {equity point appended} (\lifeD,-4.5);
+
+\end{tikzpicture}
+\caption{Execution of one trading day. Signals are read from the precomputed table rather than recomputed, which is what makes the parameter and cost sweeps of Chapter~\ref{chap:evaluation} affordable.}
+\label{fig:sequence_diagram}
+\end{figure}
+
+\subsection{Signal precomputation and the absence of look-ahead}\label{subsec:precompute}
+
+The signal table is built once by iterating over the dates common to all symbols and, for each date and symbol, calling every agent with the price history truncated at that date. The truncation is the mechanism that enforces N1: an agent is handed \texttt{df.loc[:date]} and therefore cannot observe a future bar.
+
+This construction is safe even though it uses the full price history, because the signal for date $t$ depends only on data up to $t$ by construction. Querying the resulting table over a later sub-window therefore introduces no leakage. That property is what allows the same table to serve the training window, the test window, every ablation and every cost configuration.
+
+\subsection{Portfolio accounting}\label{subsec:portfolio_impl}
+
+The simulator maintains cash, a dictionary of open positions, a trade log and an equity curve. On each day it processes sell decisions before buy decisions, so that capital released by a closing position is available to a new one on the same date, and then records the mark-to-market value of the portfolio.
+
+The cost model of Section~\ref{subsec:costs} is implemented in the fill computation. A purchase fills at $p(1 + s)$ and a sale at $p(1 - s)$, where $s$ is the one-way slippage rate, so the round trip pays slippage twice. Commission is charged on both legs. A one-way transaction tax, used for the UK Stamp Duty Reserve Tax in Section~\ref{subsec:ftse}, is charged on purchases only and is kept as a separate rate so that the two legs can carry asymmetric charges.
+
+Position sizing accounts for entry charges rather than ignoring them. The allocation for a new position is a fixed fraction of current cash, and the affordable notional is that allocation divided by $1 + \gamma + \tau$, where $\gamma$ is the commission rate and $\tau$ the buy-side tax rate. The share count is then the integer floor of the affordable notional divided by the fill price, so the simulator never buys fractional shares and never spends cash it does not hold. Listing~\ref{lst:portfolio_buy} shows the routine.
+
+\begin{listing}[!htbp]
+\inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/portfolio_buy.py}
+\caption{Entry-side accounting in the portfolio simulator, including slippage, commission and the one-way buy tax.}
+\label{lst:portfolio_buy}
+\end{listing}
+
+Realised profit on a closed trade is computed net of both commissions and of the round-trip slippage already embedded in the two fill prices, which is why the entry commission is stored with the position rather than discarded after the purchase.
+
+\subsection{Metrics}\label{subsec:metrics_impl}
+
+\texttt{MetricsCalculator} consumes the equity curve and the trade log and implements the definitions of Section~\ref{subsec:metrics}. Annualisation uses $\sqrt{252}$ for ratio statistics and calendar years, computed as elapsed days divided by $365.25$, for CAGR. Each metric guards against the degenerate inputs that arise during the parameter sweep, in particular an empty trade list and a flat equity curve, and returns zero rather than raising, so that a configuration that never trades is comparable rather than fatal. This is the behaviour that makes the \emph{passive} column of Table~\ref{tab:grid_train} well defined.
+
+\section{Data preparation}\label{sec:data_pipeline}
+
+Price data are daily OHLCV series downloaded from Stooq \cite{stooq} as one CSV file per instrument, with columns \texttt{Date}, \texttt{Open}, \texttt{High}, \texttt{Low}, \texttt{Close} and \texttt{Volume}. Files are named by the lower-case ticker, and the loader skips any symbol declared in the configuration that has no corresponding file, so a partial data directory degrades gracefully rather than failing.
+
+Three preparation steps are applied. First, all series are truncated at the common end date of $2026/03/31$, so that no instrument contributes observations the others cannot. Second, rows with missing values are dropped per symbol. Third, the backtest intersects the date indices of all loaded symbols and iterates only over dates common to every instrument, which guarantees that the portfolio sees a consistent cross-section on every date.
+
+The WIG20 roster comprises nineteen constituents and the index series. \.{Z}abka Group SA. is excluded because its listing on $2024/10/17$ falls inside the test window, so including it would introduce a constituent whose history is absent from the training window. The FTSE~100 panel is prepared identically, with \FtseNsymbols{} constituents and the index series, and is held in a separate directory selected through the configuration file.
+
+\section{Experiment harness}\label{sec:harness}
+
+Each experiment reported in Chapter~\ref{chap:evaluation} is produced by a dedicated script that loads the configuration, builds the agents, runs the relevant sweep and writes a CSV file. Table~\ref{tab:harness} maps the experiments to their scripts and outputs.
+
+\begin{table}[!htbp]
+\centering
+\footnotesize
+\caption{Experiment harness: the script that produces each result reported in Chapter~\ref{chap:evaluation}, and the file it writes.}
+\label{tab:harness}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.34\linewidth}X@{}}
+\toprule
+\textbf{Experiment} & \textbf{Script} & \textbf{Output} \\
+\midrule
+Walk-forward selection and headline metrics & \texttt{run\_walk\_forward.py} & \texttt{walk\_forward\_*.csv} \\
+Leave-one-agent-out ablation & \texttt{run\_ablation.py} & \texttt{ablation.csv} \\
+Cost-sensitivity sweep & \texttt{run\_cost\_sensitivity.py} & \texttt{cost\_sensitivity.csv} \\
+Risk-adjusted and volatility-matched metrics & \texttt{run\_risk\_metrics.py} & \texttt{risk\_metrics*.csv} \\
+Market-regime decomposition & \texttt{run\_regime\_analysis.py} & \texttt{regime\_analysis.csv} \\
+Bootstrap intervals and paired tests & \texttt{run\_stats.py} & \texttt{stats.csv} \\
+Weight sensitivity & \texttt{run\_weight\_sensitivity.py} & \texttt{weight\_sensitivity.csv} \\
+Confidence validation & \texttt{run\_confidence\_validation.py} & \texttt{confidence\_validation\_*.csv} \\
+Selection-objective comparison & \texttt{run\_objective\_comparison.py} & \texttt{objective\_comparison.csv} \\
+LSTM baseline & \texttt{run\_ml\_baselines.py} & \texttt{ml\_baseline*.csv} \\
+GBM baseline & \texttt{run\_gbm\_baseline.py} & \texttt{gbm\_baseline*.csv} \\
+Figures & \texttt{regenerate\_figures.py}, \texttt{regenerate\_extra\_figures.py} & \texttt{img/*.pdf} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All runtime parameters live in a YAML file rather than in code, which satisfies N5. The configuration declares the data directory, the symbol roster, initial cash and position size, the commission and slippage rates, the anchored split date and fold count, the decision-agent mode and minimum confidence, the enabled agents with their indicator parameters, and the hyperparameter grids of the two machine-learning baselines. Disabling an agent is a matter of removing one line.
+
+Market portability, requirement N6, is realised through this file. The FTSE~100 replication of Section~\ref{subsec:ftse} uses a second configuration that differs from the primary one only in the data directory, the symbol roster and the cost calibration. No code path is specific to either market.
+
+\section{Verification of the implementation}\label{sec:verification}
+
+Because the contribution of this work rests on the credibility of its numbers, verification was directed at the properties that would invalidate them if violated, rather than at line coverage.
+
+\emph{Absence of look-ahead.} The critical property, N1, is verified structurally rather than by test. Agents receive a truncated data frame and have no access to the full panel, so a leak would require an agent to reach outside its argument. The precomputation step preserves this property because a signal at date $t$ is a function of data up to $t$ only, which makes the table equivalent to computing signals date by date inside each backtest. This equivalence was checked directly by running a backtest with precomputed signals and one that recomputes signals per date, and confirming that the two produce identical equity curves.
+
+\emph{Determinism.} Requirement N2 is verified by re-running each experiment script and comparing the regenerated CSV against the committed one. The multi-agent pipeline contains no stochastic component, so agreement is exact. The two machine-learning baselines are seeded explicitly and average three seeded models, so their outputs are reproducible given the same library versions.
+
+\emph{Consistency of the accounting.} The portfolio simulator was checked against invariants that must hold for any execution path: cash never becomes negative, because a purchase is rejected when its total cost exceeds available cash; the share count is integral; a position is never opened twice for the same symbol; and the realised profit reported for a closed trade equals the difference in fill prices times the quantity, less both commissions.
+
+\emph{Cross-validation of the metrics.} The metric implementations were verified against independently computed values on the same equity curves, and against the relationships that must hold between them, in particular that the Calmar ratio equals CAGR divided by the absolute maximum drawdown, and that the Sharpe and Sortino ratios coincide when no daily return is negative.
+
+\emph{Verification of the results.} The strongest verification of the implementation is the evaluation itself. The battery reported in Chapter~\ref{chap:evaluation} exercises the same code paths under hundreds of configurations, and the results move in the directions that the design predicts: removing an agent degrades performance modestly rather than catastrophically, raising costs lowers returns monotonically, and the regime decomposition sums back to the aggregate figures. A defect in the aggregation or accounting would be expected to break at least one of these regularities.
+
+The limitation of this approach should be stated plainly: the implementation carries no automated unit-test suite, so the verification described above establishes the properties that matter for the reported results rather than the correctness of every function in isolation. Adding such a suite is a natural piece of further work.
+
+\section{Chapter summary}\label{sec:implementation_summary}
+
+The implementation is small, and deliberately so. Five agents, one decision class, one simulator and one metrics calculator carry the entire system, and the dependency set for that system comprises five widely used libraries with no training infrastructure at all. The complexity that exists lives in the experiment harness rather than in the system under study, which is the appropriate distribution for work whose main claim is about evaluation.
+
+Two implementation decisions had consequences beyond the code. Enforcing one methodological family per agent, constraint C2, is what makes the forecast-combination argument well defined rather than merely suggestive. Separating signal computation from portfolio accounting, requirement N3, is what made the sensitivity analyses of Chapter~\ref{chap:evaluation} affordable, and therefore what made the robustness claims possible at all.

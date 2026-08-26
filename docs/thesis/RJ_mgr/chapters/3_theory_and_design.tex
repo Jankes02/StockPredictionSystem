@@ -1,0 +1,204 @@
+%% ============================================================
+%% Chapter 3 - Theoretical background and system design
+%% Ported from paper.tex, Sections III (Theoretical Background)
+%% and IV (System Design).
+%% ============================================================
+\chapter{Theoretical background and system design}\label{sec:theory}
+
+This chapter establishes the theory that motivates the design of the system and then describes the system itself. Sections~\ref{sec:forecast_combination} to~\ref{sec:hypotheses} introduce forecast-combination theory, map it onto the trading problem, and state the three hypotheses that the experiments test. Sections~\ref{sec:system} to~\ref{subsec:taxonomy} describe the architecture, the five signal agents, the decision agent that aggregates them, and the taxonomy that makes the heterogeneity of the agent pool explicit.
+
+Throughout the thesis, the term \emph{ensemble} denotes the complete five-agent system together with its decision agent, as opposed to the single-agent and leave-one-agent-out variants used as baselines in Chapter~\ref{chap:evaluation}.
+
+\section{Forecast combination and variance reduction}\label{sec:forecast_combination}
+
+The design of the decision agent is motivated by the theory of forecast combination. Let $f_1, \ldots, f_K$ denote $K$ forecasts of an unobserved target $y$. If each $f_k$ has forecast error $e_k = y - f_k$ with variance $\sigma_k^2$ and pairwise correlations $\rho_{kj}$, then for any convex combination with weights $w_k \geq 0$, $\sum_k w_k = 1$, the variance of the combined error
+\begin{equation}
+\mathrm{Var}\!\left( y - \sum_{k=1}^{K} w_k f_k \right)
+= \sum_{k=1}^{K} \sum_{j=1}^{K} w_k w_j \rho_{kj} \sigma_k \sigma_j
+\label{eq:combined_variance}
+\end{equation}
+is generally smaller than the variance of each individual forecast whenever the forecasts are not perfectly correlated \cite{batesgranger1969,clemen1989,timmermann2006}. In the special case of uncorrelated forecasts, the optimal weights are proportional to the inverse variances, $w_k \propto 1/\sigma_k^2$. Extensive empirical work has shown that simple combinations, even equal-weight averages, tend to outperform individual forecasts in a wide variety of settings \cite{clemen1989,timmermann2006}.
+
+Two qualitative implications of \eqref{eq:combined_variance} are particularly relevant for the design of a multi-agent trading system. First, negative pairwise correlations reduce the combined variance below what would be achievable with only non-negative correlations, which motivates the explicit inclusion of methodologically complementary agents. A momentum-family agent and a mean-reversion-family agent, for example, are expected to produce negatively correlated signals in trendless markets.
+
+Second, the variance reduction persists as long as at least two imperfectly correlated forecasters remain in the pool. That property motivates the leave-one-agent-out ablation reported in Section~\ref{subsec:ablation}.
+
+\section{Mapping to the trading problem}\label{sec:mapping}
+
+The trading problem maps onto this framework as follows. At a given date $t$ and symbol $s$, each signal agent $a$ produces a directional signal $\sigma_{a,s}(t) \in \{-1, 0, +1\}$ together with a confidence value $c_{a,s}(t) \in [0, 1]$. The confidence is read as a heuristic, monotone, bounded proxy for the inverse variance of the agent as a forecaster of the next-period directional move: higher confidence means the indicator of the agent is further inside its active region, which the design treats as a sign that the forecast is more reliable at that moment.
+
+The decision agent aggregates these forecasts into a combined score
+\begin{equation}
+\mathrm{score}(t, s) \;=\; \sum_{a} w_{\kappa(a)} \, c_{a,s}(t) \, \sigma_{a,s}(t),
+\label{eq:score}
+\end{equation}
+where $\kappa(a) \in \{\text{trend}, \text{momentum}, \text{mean-reversion}, \text{volatility}\}$ is the methodological family of agent $a$, and $w_{\kappa(a)}$ is a family-level weight that plays the role of a prior on the relative reliability of that family. The family weights and the decision-agent thresholds are defined in Section~\ref{subsec:decision}. The score is then thresholded to produce a buy, sell, or hold decision per symbol.
+
+Two caveats define the status of this mapping and should be kept in mind throughout the thesis. First, the signals and confidence values are heuristic transformations of price history, not statistically calibrated forecasts: no agent estimates a predictive distribution, and no confidence value is fitted to data. The connection to classical forecast-combination theory is therefore \emph{conceptual} rather than literal. Equation~\eqref{eq:combined_variance} motivates the architecture, that is, methodologically heterogeneous agents whose errors are imperfectly correlated, and it motivates the linear form of the score \eqref{eq:score}, but it does not by itself guarantee that $c_{a,s}(t)$ behaves as an inverse-variance estimate.
+
+Second, whether higher confidence in fact identifies more accurate signals is an empirical question, which Section~\ref{subsec:confvalid} tests directly by relating confidence values to realised directional accuracy on the training window. The hypotheses below are deliberately formulated so that they do not depend on the calibration of the confidence heuristic: they concern the risk-adjusted performance of the pooled ensemble, which \eqref{eq:combined_variance} predicts from error diversity alone.
+
+\section{Hypotheses}\label{sec:hypotheses}
+
+This mapping motivates three testable hypotheses. The first frames the ensemble as a \emph{risk-aware} decision support tool, consistent with the prediction of forecast-combination theory that combining imperfect forecasters reduces variance rather than systematically raising the mean.
+
+\begin{itemize}
+\item \textbf{H1.} On held-out data, net of transaction costs, the multi-agent system matches or exceeds buy-and-hold WIG20 on risk-adjusted metrics (Sharpe, Sortino, Calmar, Ulcer, Martin), on maximum drawdown, and on a volatility-matched comparison of equity curves, even if it does not dominate on gross total return.
+\item \textbf{H2.} On held-out data, net of transaction costs, the multi-agent system outperforms the best single-agent baseline on total return. The rationale is that the combined score diversifies across agents with non-identical errors, so it should dominate any single agent except in the degenerate case where one agent is uniformly best.
+\item \textbf{H3.} The performance of the ensemble is robust to the removal of any single signal agent. The rationale is that no single agent carries the whole directional signal, and forecast-combination theory predicts that variance reduction persists as long as at least two imperfectly correlated forecasters remain.
+\end{itemize}
+
+H1 is stated against buy-and-hold WIG20, because that is the primary panel; Section~\ref{subsec:ftse} replicates the same risk-adjusted comparisons on the FTSE~100 as supplementary external evidence. H2 and H3 are evaluated on WIG20 only. Chapter~\ref{chap:evaluation} reports the evidence for each hypothesis and discusses the degree to which it is consistent with the theoretical predictions.
+
+\section{System architecture}\label{sec:system}
+
+The system is organised into four layers, as shown in Fig.~\ref{fig:sys_architecture}. The \emph{data layer} loads daily closing prices for the WIG20 constituents into a common panel format and handles missing values by dropping incomplete rows. The \emph{signal layer} hosts the five independent signal agents. Each agent receives the history of a single symbol up to and including the current date and returns a triple: a directional signal in $\{-1, 0, +1\}$, a confidence value in $[0, 1]$, and a methodological family (trend, momentum, mean-reversion, or volatility).
+
+The \emph{decision layer} is a single decision agent that aggregates all per-symbol signals received on a given date and produces a buy, sell, or hold recommendation per symbol. The \emph{presentation layer} contains a portfolio simulator, which applies the recommendations at the daily closing price, maintains cash and positions net of commissions and slippage, and records the equity curve; and a metrics calculator, which computes the risk-adjusted metrics reported in Section~\ref{subsec:metrics}.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  layer/.style={draw, rounded corners=2pt, align=center, text width=10.4cm,
+                minimum height=9mm, fill=gray!6},
+  box/.style={draw, align=center, text width=2.1cm, minimum height=8mm, fill=white},
+  flow/.style={-{Stealth[length=5pt]}, thick},
+  node distance=7mm
+]
+
+\node[layer] (data) {\textbf{Data layer} \\[1pt] daily OHLCV panels, missing-value handling, common date index};
+
+\node[layer, below=of data, minimum height=15mm] (signalbox) {};
+\node[anchor=north west, font=\small\bfseries] at ([shift={(2mm,-1mm)}]signalbox.north west) {Signal layer};
+\node[box, minimum height=6mm, text width=1.5cm] (macd) at ([shift={(-4.1cm,-2mm)}]signalbox.center) {MACD};
+\node[box, minimum height=6mm, text width=1.5cm, right=2mm of macd] (rsi) {RSI};
+\node[box, minimum height=6mm, text width=1.5cm, right=2mm of rsi] (roc) {ROC};
+\node[box, minimum height=6mm, text width=1.5cm, right=2mm of roc] (boll) {Bollinger};
+\node[box, minimum height=6mm, text width=1.5cm, right=2mm of boll] (matr) {MA trend};
+
+\node[layer, below=of signalbox] (decision) {\textbf{Decision layer} \\[1pt] confidence-weighted score \eqref{eq:score}, thresholding into BUY / SELL / HOLD};
+
+\node[layer, below=of decision, minimum height=13mm] (pres) {\textbf{Presentation layer} \\[1pt] portfolio simulator (cash, positions, costs, equity curve) \\ metrics calculator (risk-adjusted metrics)};
+
+\draw[flow] (data) -- (signalbox);
+\draw[flow] (signalbox) -- node[right, font=\footnotesize] {$(\sigma_{a,s}, c_{a,s}, \kappa)$} (decision);
+\draw[flow] (decision) -- node[right, font=\footnotesize] {decisions} (pres);
+
+\end{tikzpicture}
+\caption{System architecture. The four layers communicate through well-defined interfaces, so that new signal agents can be added without changing the decision layer.}
+\label{fig:sys_architecture}
+\end{figure}
+
+All signal agents inherit from a common base class that guarantees a uniform interface. Following the principle of methodological consistency, each agent uses a single family of indicators with no mixed rules. This makes the aggregation argument of Section~\ref{sec:forecast_combination} well defined: each agent corresponds to a distinct forecaster $f_k$ with its own bias-variance profile. The software realisation of these layers is described in Chapter~\ref{chap:implementation}.
+
+\section{Signal agents}\label{sec:agents}
+
+Each signal agent acts as an independent and imperfect forecaster of the next-period directional move for a single symbol. To make the forecast-combination argument of Section~\ref{sec:forecast_combination} well defined, every agent is confined to a single methodological family, so that its forecast errors are as distinct as possible from those of the other agents.
+
+For each agent, both its computation and its forecasting role are stated below, that is, the market behaviour it is designed to detect and the conditions under which its forecast tends to be wrong. In all cases, the agent returns a neutral (hold) signal when the history is too short to compute the indicator, and the confidence value is zero outside the active signal band.
+
+\textbf{MACD (moving-average convergence-divergence).} The MACD line is the difference between a fast and a slow exponential moving average (EMA) of the closing price (default spans $8$ and $17$), and the signal line is an EMA of the MACD line (default span $9$). The agent emits $+1$ on an upward crossover of the two lines and $-1$ on a downward crossover, with confidence
+\begin{equation}
+\mathrm{confidence} = \tanh\!\left(\frac{|h|}{2\sigma}\right),
+\label{eq:macd_confidence}
+\end{equation}
+where $h$ is the current histogram value and $\sigma$ its standard deviation over the last $50$ bars. Role: as a momentum forecaster, the agent reports the persistence of recent directional moves; its forecast errors concentrate around trend reversals, where the crossover lags the turning point. Methodological family: momentum.
+
+\textbf{RSI (relative strength index).} The agent computes the average gain and the average loss over a rolling window (default $14$ days), and defines $\mathrm{RSI} = 100 - 100/(1 + \mathrm{RS})$ with $\mathrm{RS} = \mathrm{avg\_gain}/\mathrm{avg\_loss}$. The action rule is
+\begin{equation}
+\mathrm{action} =
+\begin{cases}
+\mathrm{buy}, & \mathrm{RSI} < 30, \\
+\mathrm{sell}, & \mathrm{RSI} > 70, \\
+\mathrm{hold}, & \mathrm{otherwise},
+\end{cases}
+\label{eq:rsi_rule}
+\end{equation}
+with confidence equal to the normalised distance of the RSI from the nearest threshold. Role: as a mean-reversion forecaster, the agent bets against recent price extremes; its forecast errors are largest in strong trends, where the index can remain overbought or oversold for extended periods. Methodological family: mean-reversion.
+
+\textbf{ROC (rate of change).} The rate of change is the percentage change in the closing price over a fixed number of days (default $10$). The action rule is
+\begin{equation}
+\mathrm{action} =
+\begin{cases}
+\mathrm{buy}, & \mathrm{ROC} > \tau, \\
+\mathrm{sell}, & \mathrm{ROC} < -\tau, \\
+\mathrm{hold}, & \mathrm{otherwise},
+\end{cases}
+\label{eq:roc_rule}
+\end{equation}
+where $\tau$ is a configurable threshold (default $0.02$). Confidence equals $|\mathrm{ROC}|$, clipped to $[0, 1]$. Role: as a momentum forecaster on a shorter horizon than MACD, the agent responds to the raw speed of price change; its forecast errors arise when a fast move reverses abruptly. Methodological family: momentum.
+
+\textbf{Bollinger Bands.} The agent computes a simple moving average (SMA) of the closing price over a window (default $20$) as the middle band, and upper and lower bands $U = \mathrm{middle} + m\sigma$, $L = \mathrm{middle} - m\sigma$, where $m$ is a configurable multiplier (default $2$). The action rule is
+\begin{equation}
+\mathrm{action} =
+\begin{cases}
+\mathrm{buy}, & \mathrm{close} < L, \\
+\mathrm{sell}, & \mathrm{close} > U, \\
+\mathrm{hold}, & \mathrm{otherwise}.
+\end{cases}
+\label{eq:bollinger_rule}
+\end{equation}
+Confidence is the normalised distance of the close from the nearest band. Role: as a volatility forecaster, the agent measures how far the price has stretched from its mean in units of the standard deviation and signals a reversion when the close pierces a band; its forecast errors occur when a band breakout develops into a sustained move instead of reverting. Because the bands respond to dispersion rather than to direction, the agent carries the least directional information of the five, which is reflected in its family weight (Section~\ref{subsec:decision}). Methodological family: volatility.
+
+\textbf{MA trend.} The agent uses two SMAs: fast (default $50$) and slow (default $200$). A buy signal is emitted when the slow SMA exceeds the fast SMA, and a sell signal is emitted in the opposite case. Confidence equals the absolute difference between the two SMAs divided by the latest close. Role: as a long-horizon trend forecaster, the agent identifies the prevailing market regime from the relation between a short and a long average; its forecast errors occur in choppy, trendless markets where the two averages cross repeatedly. Methodological family: trend.
+
+\section{Decision agent}\label{subsec:decision}
+
+The decision agent receives the list of signals produced on a given date and groups them by symbol. Signals with confidence below a global minimum confidence $c_{\min}$ are discarded. The remaining signals are aggregated into the score defined in \eqref{eq:score}. The family weights $w_\kappa$ are fixed at
+\begin{equation}
+\begin{aligned}
+w_\mathrm{trend} &= 1.3, & w_\mathrm{momentum} &= 1.0, \\
+w_\mathrm{mean\text{-}rev.} &= 0.8, & w_\mathrm{volatility} &= 0.5.
+\end{aligned}
+\label{eq:family_weights}
+\end{equation}
+
+The weights encode a fixed prior on the relative directional reliability of each methodological family, and their ordering follows directly from the empirical literature rather than from any in-sample search. Trend-following receives the largest weight because time-series momentum is among the most robust and persistent return predictors documented across equity markets and horizons \cite{moskowitz2012,asness2013}, and daily index constituents such as the WIG20 blue chips tend to exhibit sustained directional regimes. Momentum on a shorter horizon receives a unit weight as the reference family. Mean reversion is weighted below momentum because overbought and oversold rules are informative mainly in range-bound phases and are frequently wrong during strong trends. Volatility receives the smallest weight because band-based signals respond to dispersion rather than to direction, and therefore carry the least directional information of the four families.
+
+The four levels are intentionally coarse, equally spaced multiples that keep the weights interpretable and the degrees of freedom low. They are held fixed across every symbol, regime, and evaluation window, and are never tuned on the test data. Retaining a fixed prior instead of estimating the weights is additionally supported by the forecast-combination literature, in which simple fixed weights are notoriously difficult to beat with estimated ones, because weight-estimation error tends to consume the gains it promises. That phenomenon is known as the \emph{forecast combination puzzle} \cite{smithwallis2009,claeskens2016}.
+
+The sensitivity of the results to this fixed scheme is examined empirically in Section~\ref{subsec:weights}, where each family weight is perturbed by up to $\pm 50\%$ and the whole vector is replaced by equal, inverted, in-sample-optimised, and inverse-variance-estimated alternatives. The leave-one-agent-out ablation in Section~\ref{subsec:ablation} covers the limiting case of removing an agent entirely, and regime-conditional weighting is discussed as future work in Section~\ref{sec:limitations}.
+
+The score is then compared against mode-dependent thresholds to produce the final decision:
+\begin{equation}
+\mathrm{action} =
+\begin{cases}
+\mathrm{BUY}, & \mathrm{score} \geq \theta_\text{buy}, \\
+\mathrm{SELL}, & \mathrm{score} \leq \theta_\text{sell}, \\
+\mathrm{HOLD}, & \mathrm{otherwise}.
+\end{cases}
+\label{eq:decision_rule}
+\end{equation}
+The thresholds are $\theta_\text{buy} = -\theta_\text{sell} = 1.2$ in \emph{passive} mode, $0.7$ in \emph{balanced} mode, and $0.3$ in \emph{aggressive} mode. In \emph{passive} mode the decision agent additionally requires the sign of the score to agree with the dominant trend direction, which is defined as the sign-weighted sum of confidences of the trend-family agents.
+
+The decision-agent parameters are the mode $m \in \{\text{passive}, \text{balanced}, \text{aggressive}\}$ and the minimum confidence threshold $c_{\min}$. These are the only parameters tuned during walk-forward evaluation. All indicator hyperparameters remain fixed at their literature-conventional defaults throughout.
+
+\section{Agent taxonomy}\label{subsec:taxonomy}
+
+Table~\ref{tab:taxonomy} summarises the five signal agents along three dimensions: methodological family, signal type (crossover versus threshold), and the horizon of the underlying indicator. The forecasting rationale of each family is given with the agent descriptions in Section~\ref{sec:agents}.
+
+The taxonomy makes the heterogeneity of the ensemble explicit and motivates the family-level weights $w_\kappa$: agents that are expected to produce the most distinct forecast errors are pooled across families with different weights, consistent with the variance-reduction argument of Section~\ref{sec:forecast_combination}. The empirical correlations of the agent signals, reported in Section~\ref{subsec:correlations}, support the taxonomy: cross-family pairs, for example RSI versus ROC, or Bollinger versus ROC, exhibit the largest absolute correlations with opposing signs, consistent with their opposite interpretations of the same raw price data.
+
+\begin{table}[!htbp]
+\centering
+\caption{Taxonomy of the five signal agents. Horizon refers to the nominal lookback of the underlying indicator.}
+\label{tab:taxonomy}
+\begin{tabular}{lllc}
+\toprule
+\textbf{Agent} & \textbf{Family} & \textbf{Signal type} & \textbf{Horizon} \\
+\midrule
+MACD          & momentum       & crossover & $17$ d \\
+RSI           & mean-reversion & threshold & $14$ d \\
+ROC           & momentum       & threshold & $10$ d \\
+Bollinger     & volatility     & threshold & $20$ d \\
+MA trend      & trend          & crossover & $200$ d \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Chapter summary}\label{sec:design_summary}
+
+Forecast-combination theory predicts that pooling imperfectly correlated forecasters reduces the variance of the combined forecast, and that the reduction is largest when the pooled forecasters make errors of different kinds. The system described in this chapter is built to instantiate that prediction: five agents, each confined to a single methodological family, feed a decision agent that combines their signals into the linear, confidence-weighted score of \eqref{eq:score} and thresholds it into a trading action.
+
+Two design choices deserve emphasis, because the evaluation returns to both. The family weights are a fixed prior taken from the empirical literature rather than an estimated quantity, which trades potential in-sample fit for robustness. The confidence values are heuristics rather than calibrated probabilities, which means the inverse-variance reading of the score is an analogy to be tested, not an established property. Chapter~\ref{chap:evaluation} tests both, along with the three hypotheses stated in Section~\ref{sec:hypotheses}.

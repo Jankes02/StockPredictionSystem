@@ -1,0 +1,90 @@
+%% ============================================================
+%% List of important symbols and abbreviations
+%% ============================================================
+\chapter*{List of Important Symbols and Abbreviations}
+\addcontentsline{toc}{chapter}{List of Important Symbols and Abbreviations}
+
+\section*{Symbols of the forecast-combination model}
+\noindent
+\begin{tabular}{l r c l}
+    $f_k$        & $[\cdot]$ &--& forecast produced by the $k$-th forecaster \\
+    $e_k$        & $[\cdot]$ &--& forecast error of the $k$-th forecaster, $e_k = y - f_k$ \\
+    $\sigma_k^2$ & $[\cdot]$ &--& variance of the forecast error of the $k$-th forecaster \\
+    $\rho_{kj}$  & $[\cdot]$ &--& correlation between the errors of forecasters $k$ and $j$ \\
+    $w_k$        & $[\cdot]$ &--& weight assigned to the $k$-th forecaster in the combination \\
+    $K$          & $[\cdot]$ &--& number of forecasters in the pool \\
+    $y$          & $[\cdot]$ &--& unobserved target of the forecast \\
+\end{tabular}
+
+\section*{Symbols of the decision layer}
+\noindent
+\begin{tabular}{l r c l}
+    $\sigma_{a,s}(t)$ & $[\cdot]$ &--& directional signal of agent $a$ for symbol $s$ at date $t$, $\in \{-1,0,+1\}$ \\
+    $c_{a,s}(t)$      & $[\cdot]$ &--& confidence of agent $a$ for symbol $s$ at date $t$, $\in [0,1]$ \\
+    $\kappa(a)$       & $[\cdot]$ &--& methodological family of agent $a$ \\
+    $w_\kappa$        & $[\cdot]$ &--& family-level weight of family $\kappa$ \\
+    $c_{\min}$        & $[\cdot]$ &--& minimum confidence below which a signal is discarded \\
+    $\theta_\text{buy}$, $\theta_\text{sell}$ & $[\cdot]$ &--& decision thresholds of the decision agent \\
+    $m$               & $[\cdot]$ &--& decision-agent mode: passive, balanced or aggressive \\
+\end{tabular}
+
+\section*{Symbols of the indicators}
+\noindent
+\begin{tabular}{l r c l}
+    $h$      & $[\cdot]$ &--& value of the MACD histogram \\
+    $\sigma$ & $[\cdot]$ &--& standard deviation over a rolling window \\
+    $\tau$   & $[\cdot]$ &--& threshold of the rate-of-change rule \\
+    $U$, $L$ & $[\cdot]$ &--& upper and lower Bollinger band \\
+    $m$      & $[\cdot]$ &--& Bollinger band multiplier \\
+    $\mathrm{RS}$ & $[\cdot]$ &--& relative strength, the ratio of average gain to average loss \\
+\end{tabular}
+
+\section*{Symbols of the evaluation}
+\noindent
+\begin{tabular}{l r c l}
+    $r_t$        & $[\cdot]$ &--& portfolio return on day $t$ \\
+    $\bar{r}$    & $[\cdot]$ &--& mean daily return \\
+    $N$          & $[\cdot]$ &--& number of observations in the evaluation window \\
+    $\mathrm{dd}_t$ & $[\cdot]$ &--& running drawdown of the equity curve at date $t$ \\
+    $\lambda$    & $[\cdot]$ &--& ex-ante leverage factor of the volatility-matched comparison \\
+    $\sigma^{\text{target}}$ & $[\cdot]$ &--& target annualised volatility of the benchmark \\
+    $\sigma^{\text{strat}}$  & $[\cdot]$ &--& annualised volatility of the strategy on the training window \\
+    $\gamma$     & $[\text{bps}]$ &--& proportional commission rate \\
+    $s$          & $[\text{bps}]$ &--& one-way slippage rate \\
+    $T_\text{tr}$, $T_\text{te}$ & $[\cdot]$ &--& training and test windows \\
+    $\rho$       & $[\cdot]$ &--& Spearman rank correlation coefficient \\
+    $\delta$     & $[\cdot]$ &--& half-width of the no-trade band of a machine-learning baseline \\
+    $h$          & $[\text{d}]$ &--& prediction horizon of a machine-learning baseline \\
+    $n$          & $[\cdot]$ &--& number of pooled signal observations \\
+\end{tabular}
+
+\section*{Abbreviations used in the thesis}
+\noindent
+\begin{tabular}{l c l}
+    B\&H   &--& buy-and-hold, the passive benchmark strategy \\
+    bps    &--& basis point, one hundredth of a percentage point \\
+    CAGR   &--& compound annual growth rate \\
+    CEE    &--& Central and Eastern Europe \\
+    CI     &--& confidence interval \\
+    CSV    &--& comma-separated values, the price-data file format \\
+    DSS    &--& decision support system \\
+    EMA    &--& exponential moving average \\
+    FTSE~100 &--& Financial Times Stock Exchange 100 Index (London Stock Exchange) \\
+    GBM    &--& gradient boosting machine, the gradient-boosted-trees baseline \\
+    LSTM   &--& long short-term memory, a recurrent neural-network architecture \\
+    MACD   &--& moving-average convergence-divergence \\
+    MAS    &--& multi-agent system \\
+    MDD    &--& maximum drawdown \\
+    OHLCV  &--& open, high, low, close and volume price data \\
+    ROC    &--& rate of change \\
+    RSI    &--& relative strength index \\
+    SDRT   &--& Stamp Duty Reserve Tax, the UK buy-side transaction tax \\
+    SLR    &--& systematic literature review \\
+    SMA    &--& simple moving average \\
+    TR     &--& total return \\
+    UI     &--& Ulcer Index \\
+    UML    &--& unified modeling language \\
+    WIG20  &--& Warszawski Indeks Gie\l dowy 20, the WSE blue-chip index \\
+    WSE    &--& Warsaw Stock Exchange \\
+    YAML   &--& YAML Ain't Markup Language, the configuration file format \\
+\end{tabular}

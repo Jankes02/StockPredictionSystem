@@ -1,0 +1,62 @@
+%% ============================================================
+%% Appendix A - Source code
+%% The listings are non-floating, following the pattern used by the
+%% GUT template: a float cannot break across pages, so a long source
+%% file placed inside one would be silently truncated.
+%% ============================================================
+\chapter{Source code}\label{app:source_code}
+
+This appendix reproduces the parts of the implementation that are essential for understanding the system described in Chapter~\ref{chap:implementation}: the data structures exchanged between layers, one complete signal agent, the decision agent, and the portfolio simulator. The remaining modules, in particular the experiment harness and the machine-learning baselines, are not reproduced here; they are available in the project repository together with the data-preparation scripts and the result files.
+
+The listings are verbatim copies of the source files, and the line numbering is that of the original files.
+
+\section{Data structures}\label{app:data_structures}
+
+The two dictionaries below are the entire interface between the layers of the system. A signal agent returns an \texttt{AgentSignal}; the decision agent consumes a list of them and returns a list of \texttt{Decision} records. Because both are declared as typed dictionaries, the contract is checkable statically while remaining a plain dictionary at runtime.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \captionof{listing}{The signal record returned by every signal agent.}
+  \label{lst:agent_signal}
+  \inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/AgentSignal.py}
+\end{center}
+
+\begin{center}
+  \captionsetup{type=listing}
+  \captionof{listing}{The decision record returned by the decision agent, including the per-agent attribution used in Section~\ref{subsec:practical}.}
+  \label{lst:decision}
+  \inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/Decision.py}
+\end{center}
+
+\section{A signal agent}\label{app:signal_agent}
+
+Listing~\ref{lst:macd_agent} shows the MACD agent in full. It is representative of all five: a class attribute declaring the methodological family, a constructor taking the indicator parameters, and a single method that computes the indicator, maps it to a direction and a confidence, and returns the packed record. The neutral return in the guard clause is the abstention mechanism described in Section~\ref{subsec:agent_contract}.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \captionof{listing}{The MACD signal agent, an implementation of the momentum-family rule of Section~\ref{sec:agents}.}
+  \label{lst:macd_agent}
+  \inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/MACDAgent.py}
+\end{center}
+
+\section{The decision agent}\label{app:decision_agent}
+
+Listing~\ref{lst:decision_agent} reproduces the decision agent in full. The family weights of \eqref{eq:family_weights} appear as the module-level default, and the mode-dependent thresholds of \eqref{eq:decision_rule} as the dictionary built in the constructor.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \captionof{listing}{The decision agent, implementing the confidence-weighted score and the thresholding rule.}
+  \label{lst:decision_agent}
+  \inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/DecisionAgent.py}
+\end{center}
+
+\section{The portfolio simulator}\label{app:portfolio_simulator}
+
+Listing~\ref{lst:portfolio_simulator} reproduces the portfolio simulator, which implements the transaction-cost model of Section~\ref{subsec:costs} and produces the equity curve on which every metric in Chapter~\ref{chap:evaluation} is computed.
+
+\begin{center}
+  \captionsetup{type=listing}
+  \captionof{listing}{The portfolio simulator: cash and position accounting net of commission, slippage and the one-way buy tax.}
+  \label{lst:portfolio_simulator}
+  \inputminted[linenos, frame=single, breaklines, fontsize=\footnotesize]{python}{other/PortfolioSimulator.py}
+\end{center}

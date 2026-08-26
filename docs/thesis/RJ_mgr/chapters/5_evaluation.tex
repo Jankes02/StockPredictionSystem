@@ -1,0 +1,686 @@
+%% ============================================================
+%% Chapter 5 - Evaluation methodology and results
+%% Ported from paper.tex, Sections V (Experimental Setup),
+%% VI (Results) and VII (Discussion).
+%% ============================================================
+\chapter{Evaluation methodology and results}\label{chap:evaluation}
+
+This chapter reports the empirical part of the thesis. Section~\ref{sec:setup} describes the evaluation protocol: the datasets, the transaction-cost model, the anchored walk-forward procedure, the baselines, the risk-adjusted metrics, the regime labelling, the volatility-matched comparison, the cost-sensitivity sweep, and the bootstrap tests. Sections~\ref{sec:results} and~\ref{sec:robustness} report the results on the WIG20 panel and the robustness checks together with the external validation on the FTSE~100. Section~\ref{sec:discussion} interprets the evidence against the three hypotheses of Section~\ref{sec:hypotheses}, and Section~\ref{sec:evaluation_summary} closes the chapter.
+
+The protocol described here is the element of the work that addresses the four methodological weaknesses identified in Chapter~\ref{sec:related_work}, and the stage that the template calls testing and verification of results: every headline number is produced on data that was never used to select a parameter, net of realistic frictions, accompanied by confidence intervals, and stress-tested against ablations, weight perturbations, cost grids, and a second market.
+
+\section{Experimental setup}\label{sec:setup}
+
+\subsection{Dataset}\label{subsec:dataset}
+
+Both experiments use daily OHLCV panels from the public repository Stooq \cite{stooq}. On each market, the ensemble, the buy-and-hold index benchmark, and the machine-learning baselines trade the same fixed roster of constituents; incomplete rows are dropped per symbol.
+
+The primary panel covers the WIG20 index and nineteen WIG20 stocks on the Warsaw Stock Exchange, excluding \.{Z}abka Group SA., whose listing on $2024/10/17$ is much more recent than that of the remaining constituents. The period covers $2021/05/26$ to $2026/03/31$, roughly $1{,}220$ trading days. Values are denominated in PLN.
+
+External validation uses \FtseNsymbols{} liquid FTSE~100 constituents and the FTSE~100 index on the London Stock Exchange over the same calendar window in GBP. The anchored split is identical on both markets, with training through $2024/06/30$ and testing from $2024/07/01$ through $2026/03/31$. Agents, hyperparameters, and evaluation procedures are unchanged; only the price panels, index series, and transaction-cost calibration differ (Sections~\ref{subsec:costs} and~\ref{subsec:ftse}). The preparation of both panels is described in Section~\ref{sec:data_pipeline}.
+
+\subsection{Transaction-cost model}\label{subsec:costs}
+
+All backtests include a proportional commission of $39$ basis points (bps) of notional per trade and a one-way slippage of $5$ bps applied to the executed price. These values are in the typical range of Polish retail brokerages for WSE-listed equities. The commission is deducted from cash both on entry and on exit. Slippage raises the effective buy price and lowers the effective sell price by the quoted amount. Realised profit or loss is reported net of the commissions on both legs and of the round-trip slippage.
+
+This choice is conservative for a retail investor and significantly reduces the headline gross return of high-turnover configurations, which is one of the methodological concerns raised in the literature on backtest reliability \cite{bailey2014}. A full sensitivity sweep over commission and slippage is reported in Section~\ref{subsec:cost_sensitivity}.
+
+\subsection{Walk-forward protocol}\label{subsec:walkforward}
+
+The evaluation follows an anchored walk-forward protocol. The full period is split into a training window that spans $2021/05/26$ to $2024/06/30$ and a held-out test window that spans $2024/07/01$ to $2026/03/31$. On the training window a grid search is performed over the decision-agent parameters
+\begin{equation}
+\begin{aligned}
+\mathrm{mode} &\in \{\text{passive}, \text{balanced}, \text{aggressive}\}, \\
+c_{\min} &\in \{0, 0.05, 0.10, \ldots, 0.30\},
+\end{aligned}
+\label{eq:wf_grid}
+\end{equation}
+and the configuration that maximises the in-sample total return is selected. The selected configuration is then evaluated untouched on the test window. The indicator hyperparameters are not part of the grid and remain fixed throughout. This design keeps the number of degrees of freedom low and matches the way technical-analysis rules are treated in most of the cited literature.
+
+Total return is deliberately retained as the selection objective, even though the strategy is evaluated primarily on risk-adjusted metrics. The reason is statistical rather than conceptual. On a low-dimensional grid of $21$ configurations, in-sample total return is a simple, low-variance ranking criterion, whereas ratio statistics such as the Sharpe ratio carry substantial estimation error on samples of this length \cite{lo2002} and become degenerate for configurations that trade rarely. The \emph{passive} mode produces no trades at any threshold (Table~\ref{tab:grid_train}), so its in-sample Sharpe ratio is undefined rather than merely low, and a risk-adjusted objective would have to break such ties arbitrarily. To verify that this choice is not load-bearing, Section~\ref{subsec:objective} re-runs the selection under Sharpe-ratio and Calmar-ratio objectives on the identical grid and shows that the selected configuration, and therefore every out-of-sample number in the thesis, is unchanged on both markets.
+
+As a robustness check, the results of an anchored, expanding walk-forward with three folds are additionally reported. For each fold $k \in \{1, 2, 3\}$, the test slice is one of three roughly equal chronological slices of the held-out window, and the training window spans $2021/05/26$ up to the day before the test slice begins. A fresh grid search is performed on each fold and the winning configuration is evaluated on the test slice of that fold. The objective of this exercise is to show that the headline configuration is not an artefact of a particular single split.
+
+Algorithm~\ref{alg:wf} summarises the full protocol in pseudocode. Its key feature is that signals are precomputed once outside all grid-search and ablation loops. This decouples the decision-agent grid search from signal computation, reduces the end-to-end runtime by more than an order of magnitude, and makes the cost-sensitivity sweep of Section~\ref{subsec:costsweep} cheap, because changing costs does not require recomputing any agent signal.
+
+\begin{algorithm}[!htbp]
+\caption{Anchored walk-forward with precomputed signals}
+\label{alg:wf}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} prices $P$; agent set $\mathcal{A}$; modes $\mathcal{M}$; thresholds $\mathcal{C}$; train/test split $(T_\text{tr}, T_\text{te})$; costs $(\gamma, s)$.
+\STATE \textbf{Output:} selected $(m^\star, c^\star)$; test-window metrics.
+\STATE $S \gets \mathtt{PrecomputeSignals}(P, \mathcal{A})$ \COMMENT{all dates, all symbols}
+\STATE best $\gets -\infty$
+\FORALL{$m \in \mathcal{M}$, $c \in \mathcal{C}$}
+  \STATE $E_\text{tr} \gets \mathtt{Backtest}(S, T_\text{tr}, m, c, \gamma, s)$
+  \STATE $r \gets \mathtt{TotalReturn}(E_\text{tr})$
+  \IF{$r > \text{best}$}
+    \STATE best $\gets r$; $(m^\star, c^\star) \gets (m, c)$
+  \ENDIF
+\ENDFOR
+\STATE $E_\text{te} \gets \mathtt{Backtest}(S, T_\text{te}, m^\star, c^\star, \gamma, s)$
+\RETURN $(m^\star, c^\star)$, $\mathtt{Metrics}(E_\text{te})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Baselines}\label{subsec:baselines}
+
+Three families of baselines are used. The first is \emph{index buy-and-hold}: on WIG20 the benchmark invests the initial cash into the WIG20 index on the first date of the test window and holds the position until the end; on the FTSE replication the same rule applies to the FTSE~100 index. Buy-and-hold is a standard benchmark in the evaluation of trading strategies \cite{dichtl2020}.
+
+The second family is a set of \emph{single-agent} runs in which the decision agent receives signals from only one signal agent, which produces five baselines, one per indicator. In addition, five \emph{leave-one-agent-out} configurations are run, each of which removes one agent from the ensemble. The third family comprises two \emph{machine-learning baselines}, described in Section~\ref{subsec:lstm}.
+
+All baselines are evaluated on the same test window on each market, use the market-specific transaction costs described in Sections~\ref{subsec:costs} and~\ref{subsec:ftse}, and adopt the same decision-agent configuration selected by the walk-forward protocol. The only exceptions are buy-and-hold, which has no decision-agent parameters, and the machine-learning baselines, which replace the decision agent with a learned classifier.
+
+\subsection{Machine-learning baselines}\label{subsec:lstm}
+
+As a modern learning-based reference point, an LSTM directional classifier in the style of \cite{fischerkrauss2018} is implemented. For each symbol the model consumes a rolling window of causal per-day features derived from the same price history available to the agents: multi-horizon returns, realised volatility, and the normalised RSI, ROC, MACD-histogram, Bollinger \%b, and moving-average-spread indicators. It predicts the probability that the $h$-day-ahead return is positive. The network is a single-layer LSTM followed by dropout and a linear output unit, trained with the Adam optimiser under binary cross-entropy.
+
+To keep the comparison fair, all model-selection choices are made strictly in sample: the prediction horizon $h$, the operating threshold, and early stopping are selected on an internal validation slice carved chronologically from the training window, and the held-out test window is never used for any tuning. Feature standardisation statistics are estimated on the training window only, so the procedure carries no look-ahead.
+
+Per-symbol probabilities are mapped to long or flat positions through a symmetric no-trade band around $0.5$: a probability above $0.5 + \delta$ opens or holds a long position, a probability below $0.5 - \delta$ closes it, and intermediate probabilities leave the current position unchanged. This mirrors the hold behaviour of the decision agent and prevents the excessive turnover that would otherwise be induced by daily re-prediction. On both markets the in-sample selection returns a horizon of $h = \LSTMhorizon$ days and a band of $\delta = \LSTMband$. The resulting long and flat signals are executed through the same portfolio simulator, under identical costs and position sizing, so that any difference reflects the decision rule rather than the accounting.
+
+The second machine-learning baseline is a gradient-boosted-trees (GBM) directional classifier \cite{friedman2001}, implemented with LightGBM \cite{ke2017lightgbm}. Gradient-boosted trees are consistently among the strongest learners on tabular financial features in large-scale empirical comparisons \cite{krauss2017,gukellyxiu2020}, which makes them a natural, structurally different complement to the recurrent LSTM.
+
+For each symbol and day the GBM model consumes the same causal per-day features as the LSTM, augmented with lagged copies of each feature at lags of up to $20$ trading days, so that the flat feature vector carries a temporal context comparable to the LSTM lookback window. Training pools feature rows across symbols, splits them chronologically into training and validation slices, applies early stopping on validation log-loss, and averages three differently seeded models. Exactly as for the LSTM, the prediction horizon and the no-trade band are selected strictly in sample by the net-of-cost Sharpe ratio of a validation-slice portfolio simulation, and the resulting long and flat signals are executed through the same portfolio simulator under identical costs. The in-sample selection returns $h = \GBMhorizon$ and $\delta = \GBMband$ on WIG20, and $h = \FtseGBMhorizon$ and $\delta = \FtseGBMband$ on the FTSE~100.
+
+\subsection{Risk-adjusted metrics}\label{subsec:metrics}
+
+The following metrics are computed on the equity curve and on the list of closed trades. \textbf{Total return} is the percentage change in portfolio value from the first to the last date of the evaluation window. \textbf{CAGR} (compound annual growth rate) is the annualised return over the same window. \textbf{Max drawdown} is the largest peak-to-trough decline, reported as a negative fraction. \textbf{Sharpe ratio} \cite{sharpe1966} is the annualised ratio of excess return over standard deviation, using a factor of $\sqrt{252}$ and a risk-free rate of zero.
+
+\textbf{Sortino ratio} \cite{sortino1994} replaces the denominator with downside deviation, which penalises only below-target returns:
+\begin{equation}
+\mathrm{Sortino} = \frac{\sqrt{252}\,\bar{r}}{\sqrt{\tfrac{1}{N}\sum_{t=1}^{N}\min(r_t, 0)^2}},
+\label{eq:sortino}
+\end{equation}
+where $\bar{r}$ is the mean daily return and the denominator is the downside deviation. \textbf{Calmar ratio} \cite{young1991} is CAGR divided by the absolute value of the maximum drawdown. \textbf{Ulcer Index} \cite{martin1989} aggregates the full drawdown path:
+\begin{equation}
+\mathrm{UI} = 100 \cdot \sqrt{\tfrac{1}{N}\sum_{t=1}^{N} \mathrm{dd}_t^{\,2}},
+\label{eq:ulcer}
+\end{equation}
+where $\mathrm{dd}_t$ is the running drawdown of the equity curve at date $t$. \textbf{Martin ratio} \cite{martin1989} is the annualised excess return divided by the Ulcer Index.
+
+The Ulcer and Martin statistics are more sensitive to prolonged drawdowns than the peak-to-trough maximum, and they are used here as tie-breakers whenever two strategies have similar peak drawdowns but different drawdown profiles. \textbf{Number of trades} is the count of closed trades, and \textbf{win rate} is the fraction of closed trades with positive realised profit.
+
+\subsection{Market-regime labelling}\label{subsec:regimes}
+
+To avoid comparing the ensemble and buy-and-hold only on pooled aggregates, each trading day of the test window is labelled as belonging to one of three regimes: \emph{bull}, \emph{correction}, or \emph{sideways}. The labelling uses only information available up to date $t$ from the WIG20 index itself, so it does not peek at future prices.
+
+Let $\mathrm{high}_t$ be the rolling $252$-day maximum of the WIG20 closing price at $t$, and let $\mathrm{ret}_t$ be the price relative $\mathrm{close}_t / \mathrm{high}_t$. A day is labelled \emph{correction} when $\mathrm{ret}_t < 1 - 0.10$, that is, the index is at least ten percent below its trailing one-year high. A day is labelled \emph{bull} when $\mathrm{ret}_t \geq 1 - 0.05$, that is, within five percent of the trailing high, and the $50$-day SMA exceeds the $200$-day SMA of the WIG20 index. All other days are labelled \emph{sideways}.
+
+These thresholds are standard in the practitioner literature on market regimes and are not tuned on the training data. Applying the labelling to the test window produces \RegBullShare{} bull days, \RegCorrectionShare{} correction days, and \RegSidewaysShare{} sideways days (Table~\ref{tab:regime}), which means the test window covers all three regimes and the ensemble is evaluated under each of them.
+
+\subsection{Volatility-matched comparison}\label{subsec:volmatch}
+
+The volatility-matched comparison is an analytical normalisation, not a directly implementable trading result; its purpose is to place the ensemble and the benchmark on the same risk budget so that their returns can be compared on equal terms. The intuition is straightforward. Because the ensemble is out of the market on many days, it runs at a lower volatility than the fully invested benchmark, and a raw comparison of cumulative returns therefore penalises the ensemble for taking less risk. To remove this confound, the ensemble returns are multiplied by a single constant chosen so that the strategy and the benchmark have the same ex-ante volatility, after which the two equity curves are compared.
+
+The formal construction is as follows. A standard criticism of the Sharpe ratio is that it is scale-invariant: it evaluates return per unit risk, but not the absolute level of risk \cite{harvey2016}. A strategy with a Sharpe ratio of $1.0$ and a realised annualised volatility of $10\%$ produces a smaller cumulative return than a strategy with a Sharpe ratio of $1.0$ and a realised volatility of $20\%$, simply because the second strategy takes more risk.
+
+To remove this confound, the equity curve of the ensemble is scaled, ex ante, to the realised volatility of buy-and-hold WIG20 on the training window. The target volatility is the annualised standard deviation of WIG20 daily returns over the training window, $\sigma^{\text{target}} = \sqrt{252}\, \mathrm{std}(r^{\text{WIG20}}_\text{train}) = \BHOosVol{}$. The strategy volatility on the training window is $\sigma^{\text{strat}} = \sqrt{252}\,\mathrm{std}(r^{\text{ensemble}}_\text{train}) = \StrategyTrainVol{}$. The leverage factor applied to the out-of-sample ensemble return is $\lambda = \sigma^{\text{target}} / \sigma^{\text{strat}} = \Leverage{}$, constant over the test window. Because $\lambda$ is computed purely from training-window data, the volatility-matched comparison is genuinely ex ante and does not peek at out-of-sample returns.
+
+Two cautions apply to this comparison. First, the unleveraged ensemble remains the primary finding; the volatility-matched figures are a risk-budget counterfactual, not a recommendation to trade with leverage. Second, the required leverage factor of $\lambda = \Leverage{}$ is above the level that most retail investors on the WSE can realistically access or would prudently use, so the volatility-matched results should be read as an analytical upper bound on the risk-normalised return of the strategy rather than as an attainable outcome. The scaled equity curve and its metrics are reported in Section~\ref{subsec:volscaled}.
+
+\subsection{Cost-sensitivity sweep}\label{subsec:costsweep}
+
+In addition to the baseline calibration of $39$ bps commission and $5$ bps slippage, the transaction-cost parameters are swept over a grid
+\begin{equation}
+\begin{aligned}
+\mathrm{commission} &\in \{0, 10, 20, 39, 60, 80, 100\}\;\text{bps}, \\
+\mathrm{slippage} &\in \{0, 5, 10, 20\}\;\text{bps},
+\end{aligned}
+\label{eq:cost_grid}
+\end{equation}
+and the walk-forward backtest is re-run at each grid point. Crucially, the agent signals are precomputed once and passed into each backtest, so that the cost sweep changes only the portfolio-level accounting. The purpose of this experiment is to quantify how much of the risk-adjusted edge of the ensemble over buy-and-hold comes from the specific cost calibration. Section~\ref{subsec:cost_sensitivity} reports the full grid.
+
+\subsection{Bootstrap confidence intervals and tests}\label{subsec:bootstrap}
+
+In intuitive terms, a bootstrap repeatedly redraws the observed daily returns at random with replacement, recomputes the metric of interest on each redrawn series, and uses the spread of the resulting values to quantify how much the metric could have varied by chance. This procedure makes no assumption that returns follow a normal distribution.
+
+Point estimates of total return and Sharpe ratio are accompanied by a $95\%$ percentile bootstrap confidence interval. The bootstrap is computed on the vector of daily returns of the equity curve, with $10{,}000$ resamples drawn with replacement. For the comparison against the local index buy-and-hold benchmark, against the best single-agent baseline, and against the machine-learning baselines of Section~\ref{subsec:lstm}, a paired bootstrap test is performed: at each resample, the same set of dates is used for both series, the difference of the statistic of interest is computed, and the one-sided $p$-value reports the fraction of resamples with a non-positive difference. A $p$-value below $0.05$ is treated as evidence that the strategy dominates the baseline on the test window.
+
+The bootstrap is a natural choice here because the distribution of trading-strategy metrics is known to be non-Gaussian and path-dependent, and bootstrap methods have been advocated for this setting in prior work \cite{politis1994}. As is standard in the literature on trading-strategy evaluation, the bootstrap tests are not expected to be powered to detect moderate effect sizes on a single test window of just under two years \cite{bailey2014}. The $p$-values are therefore reported alongside point estimates and confidence intervals rather than relied upon as the sole arbiter of performance.
+
+\section{Results on the WIG20 panel}\label{sec:results}
+
+This section reports the results obtained on the primary panel. It begins with the parameter selection performed on the training window, then reports the headline and risk-adjusted comparisons against buy-and-hold on the held-out window, decomposes them by market regime, and closes with two experiments that examine the internal mechanism of the ensemble: the empirical correlations between agent signals, and an audit of the confidence heuristic.
+
+\subsection{Parameter selection on training data}\label{subsec:grid}
+
+Table~\ref{tab:grid_train} reports the in-sample total return of every combination of decision-agent mode and minimum confidence on the training window. The \emph{passive} mode rarely reaches its high buy and sell thresholds, and for every value of minimum confidence it produces no trades. The \emph{balanced} mode trades moderately, with positive but small total return across all thresholds. The \emph{aggressive} mode produces the highest total returns overall, and the best configuration on the training window is (\emph{aggressive}, $c_{\min} = \BestMinConf{}$), which is the configuration selected for out-of-sample evaluation.
+
+The result is consistent with the well-known observation that moderate signal tolerance on a trend-rich daily dataset tends to maximise gross return, although net return is reduced noticeably by the transaction-cost model of Section~\ref{subsec:costs}.
+
+\begin{table}[!htbp]
+\centering
+\caption{In-sample total return (train window, $2021$-$2024$) by decision-agent mode and minimum confidence. Higher is better. Selected configuration in bold.}
+\label{tab:grid_train}
+\begin{tabular}{lccc}
+\toprule
+\textbf{$c_{\min}$} & \textbf{passive} & \textbf{balanced} & \textbf{aggressive} \\
+\midrule
+$0.00$ & 0.00 & 0.05 & 0.48 \\
+$0.05$ & 0.00 & 0.09 & \textbf{0.55} \\
+$0.10$ & 0.00 & 0.09 & 0.49 \\
+$0.15$ & 0.00 & 0.11 & 0.40 \\
+$0.20$ & 0.00 & 0.23 & 0.28 \\
+$0.25$ & 0.00 & 0.16 & 0.25 \\
+$0.30$ & 0.00 & 0.28 & 0.23 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Headline results on held-out data}\label{subsec:headline}
+
+Table~\ref{tab:headline} reports the headline metrics on the held-out test window for the selected configuration and for buy-and-hold WIG20. All numbers are net of the transaction costs described in Section~\ref{subsec:costs}.
+
+On gross total return, buy-and-hold leads: it earns \BHtest{} over \OOSDays{} trading days, whereas the ensemble earns \TRtest{} (CI $[\TRtestCIlow, \TRtestCIhigh]$), and the one-sided bootstrap $p$-value for the hypothesis that the ensemble exceeds buy-and-hold on total return is \PvsBH{}.
+
+Once the comparison moves to the risk axis, the picture reverses. The Sharpe ratio of the ensemble is \Shtest{} (CI $[\ShtestCIlow, \ShtestCIhigh]$), compared with \BHsharpe{} for buy-and-hold, and the $p$-value on Sharpe is \PvsBHsharpe{}. The maximum drawdown is \MDDtest{} against \MDDbh{}, a reduction of more than a factor of two. The Calmar ratio is \Calmtest{} against \Calmbh{} for buy-and-hold, more than twice as large. Fig.~\ref{fig:equity_oos} shows the two equity curves, and Fig.~\ref{fig:drawdown_oos} overlays the underwater (drawdown) curves of the two series.
+
+\begin{table}[!htbp]
+\centering
+\caption{Out-of-sample metrics on the held-out test window, net of transaction costs. Brackets give $95\%$ bootstrap confidence intervals.}
+\label{tab:headline}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Multi-agent system} & \textbf{Buy-and-hold WIG20} \\
+\midrule
+Total return     & $\TRtest$ $[\TRtestCIlow, \TRtestCIhigh]$ & $\BHtest$ \\
+CAGR             & $\CAGRtest$ & $\CAGRbh$ \\
+Max drawdown     & $\MDDtest$  & $\MDDbh$ \\
+Sharpe ratio     & $\Shtest$ $[\ShtestCIlow, \ShtestCIhigh]$ & $\BHsharpe$ \\
+Calmar ratio     & $\Calmtest$ & $\Calmbh$ \\
+Number of trades & $\Ntrades$  & -- \\
+Win rate         & $\WinRate$  & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/fig_equity_oos.pdf}
+    \caption{Equity curves on the held-out test window for the multi-agent system (selected configuration) and for buy-and-hold WIG20. Both series start at the same initial cash and are net of transaction costs.}
+    \label{fig:equity_oos}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/fig_drawdown_oos.pdf}
+    \caption{Underwater (drawdown) curves for the ensemble and for buy-and-hold WIG20 on the held-out test window. The drawdowns of the ensemble are both shallower and shorter, which is the central risk-adjusted finding of the thesis.}
+    \label{fig:drawdown_oos}
+\end{figure}
+
+\subsection{Risk-adjusted comparison}\label{subsec:risk_adjusted}
+
+The reversal of the comparison on the risk axis is reinforced by the extended risk-adjusted metrics reported in Table~\ref{tab:risk_adjusted}. The downside deviation of the ensemble is \EnsDownDev{} against \BHDownDev{} for buy-and-hold, a reduction of more than forty percent. Consequently, the Sortino ratio rises from \BHSortino{} for buy-and-hold to \EnsSortino{} for the ensemble.
+
+The Ulcer Index, which captures the integrated depth and persistence of drawdowns rather than only their peak, is \EnsUlcer{} for the ensemble against \BHUlcer{} for buy-and-hold, a reduction of nearly two-thirds. The Martin ratio rises from \BHMartin{} to \EnsMartin{}, more than a factor of two. Fig.~\ref{fig:rolling_sharpe} plots the rolling $60$-day Sharpe of both series and shows that the rolling Sharpe of the ensemble is above the buy-and-hold rolling Sharpe for most of the test window, and in particular during the correction subperiods.
+
+\begin{table}[!htbp]
+\centering
+\caption{Risk-adjusted metrics on the held-out test window, net of transaction costs.}
+\label{tab:risk_adjusted}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Multi-agent system} & \textbf{Buy-and-hold WIG20} \\
+\midrule
+Sharpe ratio         & $\Shtest$     & $\BHsharpe$ \\
+Sortino ratio        & $\EnsSortino$ & $\BHSortino$ \\
+Downside deviation   & $\EnsDownDev$ & $\BHDownDev$ \\
+Calmar ratio         & $\Calmtest$   & $\Calmbh$ \\
+Max drawdown         & $\MDDtest$    & $\MDDbh$ \\
+Ulcer Index          & $\EnsUlcer$   & $\BHUlcer$ \\
+Martin ratio         & $\EnsMartin$  & $\BHMartin$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/fig_rolling_sharpe.pdf}
+    \caption{Rolling $60$-day Sharpe ratio of the ensemble and of buy-and-hold WIG20 on the held-out test window. The rolling Sharpe of the ensemble exceeds buy-and-hold during correction subperiods and is close to it during the bull leg.}
+    \label{fig:rolling_sharpe}
+\end{figure}
+
+\subsection{Volatility-matched comparison}\label{subsec:volscaled}
+
+The headline comparison on gross total return is systematically biased against the ensemble, because the two series run at very different volatilities. On the training window, the annualised volatility of the ensemble is $\StrategyTrainVol{}$, whereas that of buy-and-hold WIG20 is $\BHOosVol{}$. To put the two series on the same risk budget, the out-of-sample daily returns of the ensemble are scaled by the ex-ante leverage factor $\lambda = \Leverage{}$ defined in Section~\ref{subsec:volmatch}.
+
+Table~\ref{tab:volmatched} reports the resulting metrics. On the volatility-matched basis, the total return of the ensemble rises to \VolScaledTR{}, compared with \BHtest{} for buy-and-hold, a gain of \VolScaledExcessPP{} percentage points. The Sharpe ratio is unchanged by construction (\VolScaledSharpe{}), because Sharpe is scale-invariant in the leverage factor when cash reserves are ignored; the Sortino ratio is \VolScaledSortino{}, against \BHSortino{}; and the Calmar ratio is \VolScaledCalmar{}, against \Calmbh{}. The volatility-matched maximum drawdown is \VolScaledMDD{}, which is still materially smaller than the buy-and-hold drawdown of \MDDbh{} despite the much higher leverage, because the correction-regime drawdown of the ensemble is structurally shallower (Section~\ref{subsec:regime}).
+
+These volatility-matched figures are analytical rather than directly implementable: leverage of magnitude $\lambda = \Leverage{}$ is impractical for a typical retail investor on the WSE, so Table~\ref{tab:volmatched} should be read as a risk-normalised counterfactual and not as an attainable trading outcome. Its role is to correct for the fact that comparing a partially invested strategy at its natural volatility against a fully invested benchmark at roughly twice that volatility understates the risk-per-unit-of-return advantage of the strategy.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Volatility-matched out-of-sample metrics. The ensemble is scaled, ex ante, to the buy-and-hold volatility measured on the training window (leverage factor $\lambda = \Leverage{}$).}
+\label{tab:volmatched}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Ensemble} & \textbf{Ensemble} & \textbf{Buy-and-hold} \\
+                & \textbf{(unleveraged)} & \textbf{(vol-matched)} & \textbf{WIG20} \\
+\midrule
+Total return     & $\TRtest$     & $\VolScaledTR$      & $\BHtest$ \\
+CAGR             & $\CAGRtest$   & $\VolScaledCAGR$    & $\CAGRbh$ \\
+Sharpe ratio     & $\Shtest$     & $\VolScaledSharpe$  & $\BHsharpe$ \\
+Sortino ratio    & $\EnsSortino$ & $\VolScaledSortino$ & $\BHSortino$ \\
+Max drawdown     & $\MDDtest$    & $\VolScaledMDD$     & $\MDDbh$ \\
+Calmar ratio     & $\Calmtest$   & $\VolScaledCalmar$  & $\Calmbh$ \\
+Ulcer Index      & $\EnsUlcer$   & $\VolScaledUlcer$   & $\BHUlcer$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Market-regime decomposition}\label{subsec:regime}
+
+The aggregate metrics in Table~\ref{tab:headline} mix three very different market regimes within the test window. Using the labelling described in Section~\ref{subsec:regimes}, the test window contains \RegBullDays{} bull days ($\RegBullShare{}$ of the window), \RegCorrectionDays{} correction days ($\RegCorrectionShare{}$), and \RegSidewaysDays{} sideways days ($\RegSidewaysShare{}$). Table~\ref{tab:regime} decomposes the total return and the Sharpe ratio of both the ensemble and buy-and-hold WIG20 by regime.
+
+The ensemble loses $\EnsCorrectionTR{}$ during the correction subperiods, whereas buy-and-hold loses $\BHCorrectionTR{}$: the correction-regime defence of the ensemble is \CorrectionDefencePP{} percentage points. During the sideways subperiods, the ensemble earns $\EnsSidewaysTR{}$, whereas buy-and-hold earns $\BHSidewaysTR{}$: the sideways-regime excess of the ensemble is \SidewaysExcessPP{} percentage points. During the bull subperiods, the ensemble earns $\EnsBullTR{}$ against $\BHBullTR{}$ for buy-and-hold: the bull-regime shortfall is \BullShortfallPP{} percentage points.
+
+The decomposition reconciles the aggregate numbers in Table~\ref{tab:headline}. Buy-and-hold is fully exposed to the bull leg and captures most of its upside, while the ensemble, by design, reduces exposure during the correction and sideways regimes and thereby gives up some of the bull-regime upside. In a test window that is dominated by a bull regime, the aggregate total return will mechanically favour the fully invested benchmark; in a test window with a larger correction share, the aggregate comparison would favour the ensemble.
+
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Decomposition of the held-out test window into bull, correction, and sideways subperiods. Shares refer to the fraction of trading days in the test window.}
+\label{tab:regime}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Regime} & \textbf{Days} & \textbf{Share} & \textbf{Ens. TR} & \textbf{Ens. Sharpe} & \textbf{B\&H TR} & \textbf{B\&H Sharpe} \\
+\midrule
+Bull & 230 & 52.9\% & $0.26$ & $2.47$ & $0.63$ & $2.76$ \\
+Correction & 93 & 21.4\% & $-0.07$ & $-1.34$ & $-0.20$ & $-2.41$ \\
+Sideways & 112 & 25.7\% & $0.05$ & $0.93$ & $-0.00$ & $0.11$ \\
+All & 435 & 100.0\% & $0.23$ & $1.06$ & $0.31$ & $0.82$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cost-sensitivity analysis}\label{subsec:cost_sensitivity}
+
+Table~\ref{tab:cost_sensitivity} reports the out-of-sample Sharpe ratio over the cost grid defined in Section~\ref{subsec:costsweep}. At zero costs the Sharpe is \CostZeroSharpe{}; at the baseline calibration of $39$ bps commission and $5$ bps slippage the Sharpe is \CostBaseSharpe{}; at the most punitive configuration of $100$ bps commission and $20$ bps slippage the Sharpe drops to \CostWorstSharpe{}. Over the entire grid, the minimum Sharpe of \CostMinSharpe{} exceeds the buy-and-hold Sharpe of \BHsharpe{}.
+
+The total-return column, omitted from the table for brevity but computed along with Sharpe, shows the same qualitative pattern: the ensemble trails buy-and-hold on gross total return at every grid point, and at every grid point it achieves a higher Sharpe, higher Sortino, and smaller drawdown. This indicates that the risk-adjusted edge of the ensemble is not an artefact of the specific cost calibration; it is a stable property of the strategy over a plausible range of retail brokerage fees.
+
+\begin{table}[!htbp]
+\centering
+\caption{Cost sensitivity of the out-of-sample Sharpe ratio. Rows are commission in basis points; columns are one-way slippage in basis points.}
+\label{tab:cost_sensitivity}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Commission (bps)} & \textbf{0 bp} & \textbf{5 bp} & \textbf{10 bp} & \textbf{20 bp} \\
+\midrule
+0 & 1.15 & 1.14 & 1.13 & 1.11 \\
+10 & 1.13 & 1.12 & 1.11 & 1.09 \\
+20 & 1.11 & 1.10 & 1.09 & 1.07 \\
+39 & 1.07 & 1.06 & 1.05 & 1.03 \\
+60 & 1.03 & 1.02 & 1.02 & 0.99 \\
+80 & 0.99 & 0.99 & 0.98 & 0.96 \\
+100 & 0.96 & 0.95 & 0.94 & 0.92 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Empirical signal correlations}\label{subsec:correlations}
+
+The variance-reduction argument of Section~\ref{sec:forecast_combination} rests on the claim that the five agents produce signals with imperfectly correlated errors. Table~\ref{tab:corr} reports the pairwise Pearson correlations \cite{pearson1896} of the signed confidence values produced by the agents, computed across all pooled (symbol, date) observations in the training window.
+
+The mean absolute off-diagonal correlation is \CorrMeanAbs{} across \CorrN{} distinct pairs, with extremes of \CorrMin{} (RSI versus ROC) and \CorrMax{} (RSI versus Bollinger). In particular, the momentum family (MACD, ROC) and the mean-reversion family (RSI) exhibit negative correlations, as expected from their opposite interpretations of the same raw price input; the trend agent (MA trend) is nearly uncorrelated with all other agents, as expected from its long horizon.
+
+Fig.~\ref{fig:corr_matrix} renders the correlation matrix as a heatmap. These empirical correlations directly instantiate the non-identical-errors assumption of \eqref{eq:combined_variance}, and Section~\ref{sec:discussion} returns to them to explain why the ensemble achieves most of its variance reduction from the interaction between the momentum and mean-reversion families rather than from the trend agent on its own.
+
+\begin{table}[!htbp]
+\centering
+\caption{Pearson correlations of the pooled (symbol, date) signed confidence values of the five signal agents, computed on the training window. Upper triangle shown.}
+\label{tab:corr}
+\begin{tabular}{lccccc}
+\toprule
+ & \textbf{MACD} & \textbf{RSI} & \textbf{ROC} & \textbf{Bollinger} & \textbf{MA trend} \\
+\midrule
+MACD & \textbf{1.00} & -0.01 & +0.04 & -0.34 & -0.04 \\
+RSI &  & \textbf{1.00} & -0.71 & +0.46 & +0.12 \\
+ROC &  &  & \textbf{1.00} & -0.55 & -0.12 \\
+Bollinger &  &  &  & \textbf{1.00} & +0.09 \\
+MA trend &  &  &  &  & \textbf{1.00} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{img/fig_corr_matrix.pdf}
+    \caption{Heatmap of the pairwise Pearson correlations of the agent signed-confidence signals on the training window. Blue cells mark negative correlations, red cells mark positive ones. The largest absolute correlations appear in the RSI-ROC and RSI-Bollinger pairs, which is consistent with their shared reliance on overbought and oversold rules.}
+    \label{fig:corr_matrix}
+\end{figure}
+
+\subsection{Validation of the confidence measure}\label{subsec:confvalid}
+
+Section~\ref{sec:mapping} motivates the score \eqref{eq:score} by reading the per-signal confidence as a heuristic proxy for inverse forecast variance. If that reading were literally correct, higher-confidence signals should be directionally right more often than lower-confidence ones.
+
+Table~\ref{tab:confvalid} tests this implication on the training window, so that no test-window information is used. For every agent, all active (non-hold) signals are pooled across symbols and dates, the directional hit rate against the next-day move is computed, and the association between confidence and correctness is measured both by a Spearman rank correlation \cite{spearman1904} and by comparing the hit rates of the bottom and top confidence quintiles, in the spirit of the reliability analysis of \cite{murphywinkler1987}. A rank correlation is the appropriate statistic here because correctness is binary and the confidence distributions are strongly skewed towards zero, so no linearity assumption is warranted. This complements the Pearson correlations of Section~\ref{subsec:correlations} \cite{pearson1896}, which measure the association \emph{between} agents rather than between the confidence of an agent and its own accuracy.
+
+\begin{table}[!htbp]
+\centering
+\setlength{\tabcolsep}{4pt}
+\small
+\caption{Confidence validation on the WIG20 training window at the one-day horizon. $\rho$ is the Spearman rank correlation between confidence and directional correctness, with its $p$-value; Hit (Q1) and Hit (Q5) are hit rates in the bottom and top confidence quintiles.}
+\label{tab:confvalid}
+\begin{tabular}{lrccccc}
+\toprule
+\textbf{Agent} & \textbf{$n$} & \textbf{Hit rate} & \textbf{$\rho$} & \textbf{$p$} & \textbf{Hit (Q1)} & \textbf{Hit (Q5)} \\
+\midrule
+MACD & $1{,}405$ & $0.472$ & $+0.002$ & $0.955$ & $0.470$ & $0.484$ \\
+RSI & $3{,}847$ & $0.497$ & $-0.035$ & $0.031$ & $0.525$ & $0.497$ \\
+ROC & $11{,}155$ & $0.498$ & $+0.016$ & $0.082$ & $0.494$ & $0.520$ \\
+Bollinger & $1{,}674$ & $0.483$ & $-0.004$ & $0.867$ & $0.478$ & $0.481$ \\
+MA trend & $10{,}982$ & $0.505$ & $-0.004$ & $0.690$ & $0.503$ & $0.500$ \\
+Pooled & $29{,}063$ & $0.498$ & $+0.003$ & $0.578$ & $0.493$ & $0.495$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The outcome is unambiguous: the confidence values carry no usable information about signal-level accuracy. Across \ConfN{} pooled training-window signals the hit rate is \ConfPooledHit{}, the per-agent rank correlations span $[\ConfRhoMin{}, \ConfRhoMax{}]$ with none exceeding $|\rho| = \ConfRhoMaxAbs{}$, and the top confidence quintile is not systematically more accurate than the bottom one.
+
+The only nominally significant entry in Table~\ref{tab:confvalid} (RSI, $p = 0.031$) is negative, meaning that higher confidence associates with marginally \emph{worse} calls. It explains well under one percent of the variance in correctness, and it does not survive a multiple-testing correction across the ten agent-horizon combinations tested, so it argues against rather than for the inverse-variance reading. The picture is unchanged at a five-day horizon (pooled hit rate \ConfPooledHitFive{}), and the FTSE~100 training window reproduces it (largest per-agent $|\rho| = \FtseConfRhoMaxAbs{}$, pooled hit rate \FtseConfPooledHit{}).
+
+Two consequences follow. First, the inverse-variance reading of the confidence values is a conceptual analogy, not an empirically calibrated property: at the level of individual signals the agents are close to uninformed forecasters at short horizons, and the magnitude of their confidence does not separate good calls from bad ones. This is consistent with the low tuned threshold ($c_{\min} = \BestMinConf{}$), which in practice acts as a mild noise filter rather than as a precision weight.
+
+Second, the risk-adjusted performance documented in the preceding subsections cannot be attributed to precision-weighted averaging. The operative mechanism is the pooling of weakly and negatively correlated signals across methodological families (Table~\ref{tab:corr}), which lowers the variance of the aggregate position irrespective of whether the individual confidence magnitudes are informative, together with the regime exposure profile that the thresholded score induces (Table~\ref{tab:regime}). Section~\ref{sec:discussion} returns to the implications of this finding for the theoretical framing of the thesis.
+
+\section{Robustness checks and external validation}\label{sec:robustness}
+
+The results of Section~\ref{sec:results} rest on one configuration, one weighting scheme, one chronological split, and one market. This section removes each of those supports in turn. It reports the single-agent and leave-one-agent-out baselines, the sensitivity of the results to the family weights, the comparison against the two machine-learning baselines, the significance analysis, the three-fold walk-forward, the sensitivity to the selection objective, and the full replication of the pipeline on the FTSE~100.
+
+\subsection{Single-agent baselines and leave-one-out ablation}\label{subsec:ablation}
+
+Table~\ref{tab:single_agent} reports the test-window total return and Sharpe ratio of the five single-agent baselines and of the full ensemble. The best single agent is \BestSingleName{} with a total return of \BestSingleTR{}. The one-sided bootstrap $p$-value for the hypothesis that the ensemble beats the best single-agent baseline on total return is \PvsBestSingle{}. These numbers are the primary evidence for H2.
+
+\begin{table}[!htbp]
+\centering
+\caption{Single-agent baselines on the test window, with the selected mode and minimum confidence. All numbers net of costs.}
+\label{tab:single_agent}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Agent used} & \textbf{Total return} & \textbf{Sharpe ratio} \\
+\midrule
+MACD only        & $0.15$ & $0.86$ \\
+RSI only         & $0.16$ & $1.03$ \\
+ROC only         & $0.00$ & $0.13$ \\
+Bollinger only   & $0.00$ & $0.00$ \\
+MA trend only    & $-0.00$ & $0.03$ \\
+Full ensemble    & $\TRtest$ & $\Shtest$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ablation} reports the effect of removing each signal agent from the ensemble. No single agent can be removed without some effect on the headline metrics, but in all cases the ensemble without that agent still leads buy-and-hold WIG20 on Sharpe ratio and maximum drawdown on point estimates. This is the primary evidence for H3.
+
+\begin{table}[!htbp]
+\centering
+\caption{Leave-one-agent-out ablation on the test window. The variant column indicates which agent was removed.}
+\label{tab:ablation}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Variant} & \textbf{Total return} & \textbf{Sharpe ratio} \\
+\midrule
+Full ensemble & $\TRtest$ & $\Shtest$ \\
+no MACD        & $0.28$ & $1.28$ \\
+no RSI         & $0.23$ & $0.92$ \\
+no ROC         & $0.26$ & $1.17$ \\
+no Bollinger   & $0.23$ & $1.06$ \\
+no MA trend    & $0.19$ & $1.16$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Weight sensitivity and alternative weighting schemes}\label{subsec:weights}
+
+The family weights $w_\kappa$ are the only fixed prior in the decision layer, so the dependence of the headline results on them is quantified here. Every experiment in this subsection holds the walk-forward-selected configuration (\BestMode{}, $c_{\min} = \BestMinConf{}$) fixed and varies only the weights, so that any difference is attributable to the weighting scheme alone.
+
+Three families of alternatives are evaluated on the held-out window. First, each family weight is perturbed one at a time by $\pm 25\%$ and $\pm 50\%$, giving \WSPerturbN{} perturbed configurations. Second, two fixed alternatives discard the ordering rationale of Section~\ref{subsec:decision} entirely: equal weights, and a fully inverted ordering in which volatility receives the largest weight and trend the smallest. Third, two data-driven schemes are estimated on the training window only: \emph{optimised} weights, selected by an exhaustive grid over the four family weights under the same in-sample total-return objective as the headline protocol, and \emph{inverse-variance} weights, proportional to the inverse of the directional error variance of each family estimated from training-window signal outcomes, which operationalises the classical prescription of \cite{batesgranger1969}. Table~\ref{tab:weights} reports the named schemes on WIG20.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Alternative weighting schemes on the WIG20 test window, with (mode, $c_{\min}$) fixed at the walk-forward selection. Weights are listed as (trend, momentum, mean-reversion, volatility).}
+\label{tab:weights}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Scheme} & \textbf{Weights} & \textbf{TR} & \textbf{Sharpe} & \textbf{MDD} \\
+\midrule
+Baseline & $(1.3, 1.0, 0.8, 0.5)$ & $\TRtest$ & $\Shtest$ & $\MDDtest$ \\
+Equal & $(1.0, 1.0, 1.0, 1.0)$ & $\WSEqualTR$ & $\WSEqualSharpe$ & $\WSEqualMDD$ \\
+Inverted & $(0.5, 0.8, 1.0, 1.3)$ & $\WSInvertedTR$ & $\WSInvertedSharpe$ & $\WSInvertedMDD$ \\
+Optimised & $(\WSOptWtrend, \WSOptWmom, \WSOptWmr, \WSOptWvol)$ & $\WSOptTR$ & $\WSOptSharpe$ & $\WSOptMDD$ \\
+Inv.-variance & $(\WSIvWtrend, \WSIvWmom, \WSIvWmr, \WSIvWvol)$ & $\WSIvTR$ & $\WSIvSharpe$ & $\WSIvMDD$ \\
+Buy-and-hold & -- & $\BHtest$ & $\BHsharpe$ & $\MDDbh$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results support three conclusions. The first is that the risk-adjusted profile is robust to the weights. Across the \WSPerturbN{} perturbations the out-of-sample Sharpe ratio spans $[\WSPerturbSharpeMin{}, \WSPerturbSharpeMax{}]$ and total return spans $[\WSPerturbTRMin{}, \WSPerturbTRMax{}]$, and only \WSFixedBelowBH{} of the \WSFixedN{} fixed and theory-implied schemes fall below the buy-and-hold Sharpe ratio of \BHsharpe{}. The four volatility-weight perturbations leave every metric exactly unchanged, because the Bollinger agent is essentially inactive under the selected configuration.
+
+The baseline is not the best configuration in hindsight: moderately downweighting the momentum-family agents would have improved this particular window, consistent with the ablation finding that removing MACD helps. The two schemes below the benchmark Sharpe ratio do surrender that part of the risk-adjusted advantage, but even they keep the maximum drawdown markedly shallower than the buy-and-hold \MDDbh{}. The drawdown-reduction profile, which is the central risk-adjusted finding of the thesis, therefore survives every weighting scheme even where the Sharpe advantage does not.
+
+The second conclusion is that in-sample optimisation adds little. The grid-optimised weights land almost exactly on the fixed prior, since only the momentum weight moves, from $1.0$ to $\WSOptWmom{}$, and their out-of-sample total return of \WSOptTR{} is within about two percentage points of the baseline. On the FTSE~100 the optimised weights actually \emph{underperform} the fixed prior out of sample (\FtseWSOptTR{} against \FtseTRtest{} total return), a direct instance of the forecast combination puzzle, in which the estimation error of fitted weights consumes the gains they promise \cite{smithwallis2009,claeskens2016}.
+
+The third conclusion is that the inverse-variance prescription is uninformative here. Because the per-family directional hit rates are nearly identical (Section~\ref{subsec:confvalid}), the estimated weights come out close to equal ($\WSIvWtrend{}$, $\WSIvWmom{}$, $\WSIvWmr{}$, $\WSIvWvol{}$ for trend, momentum, mean reversion, and volatility), and the resulting performance is practically identical to the equal-weight scheme.
+
+The FTSE~100 replication of the full experiment shows the same qualitative pattern, with perturbation Sharpe ratios spanning $[\FtseWSPerturbSharpeMin{}, \FtseWSPerturbSharpeMax{}]$ and \FtseWSFixedBelowBH{} of \FtseWSFixedN{} fixed schemes below the buy-and-hold Sharpe ratio. Together with the leave-one-agent-out ablation, these results indicate that the contribution of the ensemble does not hinge on the particular weight values, and that the coarse fixed prior is defensible against perturbed, reordered, optimised, and theory-implied alternatives.
+
+\subsection{Comparison with machine-learning baselines}\label{subsec:lstm_results}
+
+Table~\ref{tab:lstm} compares the ensemble with the two machine-learning baselines of Section~\ref{subsec:lstm} on the held-out WIG20 test window. The LSTM earns a total return of \LSTMtest{} at a Sharpe ratio of \LSTMsharpe{}, against \TRtest{} and \Shtest{} for the ensemble and \BHtest{} and \BHsharpe{} for buy-and-hold. The ensemble exceeds the LSTM on total return, Sharpe ratio, and maximum drawdown (\MDDtest{} against \LSTMmdd{}), and it does so while placing far fewer trades (\Ntrades{} against \LSTMtrades{}). The one-sided paired bootstrap $p$-values for the ensemble exceeding the LSTM are \PensVsLSTM{} on total return and \PensVsLSTMsharpe{} on Sharpe ratio; as with the buy-and-hold comparison, the point-estimate advantage is sizable but does not reach the conventional $p < 0.05$ threshold on a single test window.
+
+The GBM baseline behaves similarly. It earns \GBMtest{} at a Sharpe ratio of \GBMsharpe{} over \GBMtrades{} closed trades; its equity path is statistically indistinguishable from that of the LSTM (paired one-sided $p = \PGBMvsLSTM{}$ on total return), and the ensemble leads it on total return, Sharpe ratio, and Calmar ratio (one-sided $p = \PensVsGBM{}$ on total return and $p = \PensVsGBMsharpe{}$ on Sharpe ratio).
+
+The single metric on which the GBM edges ahead is the maximum drawdown (\GBMmdd{} against \MDDtest{}), but this reflects an almost flat equity curve rather than better risk control: the model takes very little risk and earns correspondingly little, which is exactly what the Calmar ratio registers (\GBMcalmar{} against \Calmtest{}). The fact that two structurally different learners, a recurrent neural network and a gradient-boosted tree ensemble, each tuned strictly in sample under the identical protocol, arrive at similarly modest out-of-sample results on this market strengthens the earlier reading. The WIG20 test window offers little exploitable signal to flexible learners, and the transparent forecast-combination ensemble remains competitive without any training at all, consistent with the broader finding that simple, well-regularised combinations are competitive with more flexible learners on noisy financial series \cite{clemen1989,timmermann2006}.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Comparison of the ensemble, the LSTM and GBM directional baselines, and buy-and-hold on the held-out WIG20 test window, net of transaction costs.}
+\label{tab:lstm}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{Multi-agent} & \textbf{LSTM} & \textbf{GBM} & \textbf{Buy-and-hold} \\
+\midrule
+Total return     & $\TRtest$   & $\LSTMtest$   & $\GBMtest$   & $\BHtest$ \\
+Sharpe ratio     & $\Shtest$   & $\LSTMsharpe$ & $\GBMsharpe$ & $\BHsharpe$ \\
+Max drawdown     & $\MDDtest$  & $\LSTMmdd$    & $\GBMmdd$    & $\MDDbh$ \\
+Calmar ratio     & $\Calmtest$ & $\LSTMcalmar$ & $\GBMcalmar$ & $\Calmbh$ \\
+Number of trades & $\Ntrades$  & $\LSTMtrades$ & $\GBMtrades$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Statistical significance}\label{subsec:significance}
+
+The bootstrap significance tests attach two kinds of evidence to the point estimates discussed above. First, the $95\%$ percentile confidence intervals around the headline metrics reflect the sampling uncertainty inherent in a test window of \OOSDays{} trading days. The total-return confidence interval for the ensemble spans $[\TRtestCIlow, \TRtestCIhigh]$ and the Sharpe-ratio interval spans $[\ShtestCIlow, \ShtestCIhigh]$. The buy-and-hold point estimates for total return (\BHtest{}) and Sharpe ratio (\BHsharpe{}) both lie strictly inside these intervals, which is a statistical way of saying that one cannot reject the hypothesis that the two series share the same underlying mean return and Sharpe ratio on the test window.
+
+Second, the paired bootstrap tests yield one-sided $p$-values of \PvsBH{} for the total-return comparison against buy-and-hold and \PvsBHsharpe{} for the Sharpe comparison. Neither test crosses the conventional $p < 0.05$ threshold.
+
+These results admit two readings. The test-window point estimates on the risk axis (drawdown, Sortino, Ulcer, Martin) are consistently favourable to the ensemble by margins that are economically large and reasonably stable across the ablation and cost grids, but the null hypothesis of equal mean performance is hard to reject on a single window of under two years, because trading-strategy return distributions are heavy-tailed and path-dependent \cite{politis1994,bailey2014}. Consistent with standard practice in the literature, point estimates, confidence intervals, and $p$-values are therefore reported together, and $p$-values are not treated as the sole arbiter. In addition, the fact that the buy-and-hold point estimates lie inside the bootstrap confidence intervals of the ensemble supports the interpretation that, on gross total return, the two series are statistically indistinguishable, whereas the large and consistent gap on drawdown-based and downside-based metrics supports the risk-aware interpretation of the contribution of the ensemble (Section~\ref{sec:discussion}).
+
+Two points deserve emphasis for the correct reading of these results. The first concerns the width of the confidence intervals. The total-return interval $[\TRtestCIlow, \TRtestCIhigh]$ and the Sharpe interval $[\ShtestCIlow, \ShtestCIhigh]$ are wide because a held-out window of \OOSDays{} trading days contains relatively few independent realisations of the estimated quantities, and because heavy-tailed and serially dependent returns inflate the variance of the resampled statistics. With a sample of this length the paired bootstrap test has limited power: even a genuine moderate edge would frequently fail to reach the conventional $p < 0.05$ threshold. The non-significant $p$-values should therefore be read as a consequence of limited statistical power on a short out-of-sample window, not as positive evidence that the two strategies are equivalent.
+
+The second point concerns the distinction between practical and statistical significance. The advantages of the ensemble on the drawdown-based and downside-based metrics are practically significant, in the sense that they are economically large and stable across the ablation, cost, and regime analyses, even though they are not statistically significant in the formal sense of rejecting a null hypothesis on this single window. Accordingly, the contribution of the ensemble is framed throughout the thesis in terms of consistent and practically meaningful risk reduction, and no claim of statistical dominance over buy-and-hold is made.
+
+\subsection{Walk-forward robustness}\label{subsec:kfold}
+
+Table~\ref{tab:kfold} reports the results of the anchored, three-fold walk-forward. For each fold the selected configuration on the training window and the test-window total return are reported. The selected configuration is stable across folds, which indicates that the headline configuration is not an artefact of a single chronological split.
+
+\begin{table}[!htbp]
+\centering
+\caption{Anchored walk-forward with $K = 3$ folds. Selected mode and minimum confidence per fold, plus the test-window total return of each fold.}
+\label{tab:kfold}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Fold} & \textbf{Selected mode} & \textbf{$c_{\min}$} & \textbf{Test total return} \\
+\midrule
+1 & \texttt{aggressive} & $0.05$ & $0.05$ \\
+2 & \texttt{aggressive} & $0.05$ & $0.09$ \\
+3 & \texttt{aggressive} & $0.10$ & $0.08$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sensitivity to the selection objective}\label{subsec:objective}
+
+The headline protocol selects $(m^\star, c^\star)$ by in-sample total return (Section~\ref{subsec:walkforward}), which invites the question whether a risk-adjusted objective would have selected a different configuration. To answer it, the identical training-window grid is re-ranked under two risk-adjusted objectives, the Sharpe ratio and the Calmar ratio, and the winning configuration of each is evaluated untouched on the held-out window.
+
+On WIG20, all three objectives select the same configuration, (\ObjSharpeMode{}, $c_{\min} = \ObjSharpeMinConf{}$), and the FTSE~100 replication behaves identically, selecting (\FtseObjSharpeMode{}, $c_{\min} = \FtseObjSharpeMinConf{}$) under every objective. Every out-of-sample number reported in this thesis is therefore invariant to replacing the total-return objective with a risk-adjusted one on both markets.
+
+The mechanism is visible in Table~\ref{tab:grid_train}: the \emph{passive} configurations never trade and the \emph{balanced} configurations trade too rarely to compete on either cumulative return or ratio statistics, so the argmax falls inside the \emph{aggressive} column under every objective. This invariance cannot be assumed in general, since it may fail on grids with more degrees of freedom or on longer menus of modes, but on the present design it confirms that the choice of a simple, low-variance selection objective (Section~\ref{subsec:walkforward}) is not load-bearing, consistent with the estimation-noise argument for avoiding ratio objectives on short training samples \cite{lo2002}.
+
+\subsection{External validation on the FTSE 100}\label{subsec:ftse}
+
+To test whether the risk-aware profile of the ensemble is specific to the WSE or transfers to a different market structure, the entire pipeline is replicated on the FTSE~100 panel described in Section~\ref{subsec:dataset}. The transaction-cost model is adjusted to reflect UK conditions: a proportional commission of $5$ bps and one-way slippage of $5$ bps on every trade, plus a $50$ bps Stamp Duty Reserve Tax charged on purchases only, which makes the FTSE cost environment asymmetric and, on the buy side, considerably more punitive than the WIG20 calibration. The decision-agent grid, the indicator hyperparameters, and every evaluation procedure are held identical; only the market data and the cost model change.
+
+The anchored walk-forward selects the same decision-agent family as on WIG20 (\texttt{aggressive} mode) and evaluates it on \FtseOOSDays{} held-out trading days. Table~\ref{tab:ftse} reports the headline comparison. As on WIG20, the ensemble trails buy-and-hold on gross total return (\FtseTRtest{} against \FtseBHtest{}) but leads on every risk axis: the Sharpe ratio is \FtseSharpe{} against \FtseBHsharpe{}, the maximum drawdown is \FtseMDD{} against \FtseBHmdd{}, a reduction of roughly one half, and the Calmar ratio is \FtseCalmar{} against \FtseBHcalmar{}.
+
+The extended risk-adjusted metrics show the same pattern: the Sortino ratio is \FtseEnsSortino{} against \FtseBHSortino{}, the Ulcer Index is \FtseEnsUlcer{} against \FtseBHUlcer{}, and the downside deviation is \FtseEnsDownDev{} against \FtseBHDownDev{}. The one interesting reversal is the Martin ratio (\FtseEnsMartin{} against \FtseBHMartin{}), which is marginally lower for the ensemble because the FTSE test window is overwhelmingly a bull market and buy-and-hold sustains a very shallow integrated drawdown over it.
+
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{External validation on the FTSE 100 held-out test window, net of transaction costs (including the $50$ bps buy-side Stamp Duty Reserve Tax). Brackets give $95\%$ bootstrap confidence intervals.}
+\label{tab:ftse}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{Multi-agent} & \textbf{LSTM} & \textbf{GBM} & \textbf{Buy-and-hold} \\
+\midrule
+Total return     & $\FtseTRtest$ $[\FtseTRtestCIlow, \FtseTRtestCIhigh]$ & $\FtseLSTMtest$   & $\FtseGBMtest$ & $\FtseBHtest$ \\
+CAGR             & $\FtseCAGR$    & --              & -- & $\FtseBHcagr$ \\
+Sharpe ratio     & $\FtseSharpe$ $[\FtseSharpeCIlow, \FtseSharpeCIhigh]$ & $\FtseLSTMsharpe$ & $\FtseGBMsharpe$ & $\FtseBHsharpe$ \\
+Max drawdown     & $\FtseMDD$     & $\FtseLSTMmdd$  & $\FtseGBMmdd$ & $\FtseBHmdd$ \\
+Calmar ratio     & $\FtseCalmar$  & --              & $\FtseGBMcalmar$ & $\FtseBHcalmar$ \\
+Sortino ratio    & $\FtseEnsSortino$ & --           & -- & $\FtseBHSortino$ \\
+Ulcer Index      & $\FtseEnsUlcer$   & --           & -- & $\FtseBHUlcer$ \\
+Number of trades & $\FtseNtrades$ & $\FtseLSTMtrades$ & $\FtseGBMtrades$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The regime decomposition explains the aggregate numbers. The FTSE test window is $\FtseRegBullShare{}$ bull ($\FtseRegBullDays{}$ of \FtseOOSDays{} days), with only $\FtseRegCorrectionDays{}$ correction days and $\FtseRegSidewaysDays{}$ sideways days, so it offers little opportunity for the correction-regime defence that drives the WIG20 result. Even so, during the sideways subperiods the ensemble earns \FtseEnsSidewaysTR{} against \FtseBHSidewaysTR{} for buy-and-hold, the same sideways-carry pattern observed on WIG20. The aggregate total-return shortfall is again concentrated in the bull regime (\FtseEnsBullTR{} against \FtseBHBullTR{}), where a partially invested strategy mechanically trails a fully invested benchmark. Matching the two series on ex-ante volatility, as in Section~\ref{subsec:volscaled}, raises the ensemble total return to \FtseVolScaledTR{} at a leverage of $\lambda = \FtseLeverage{}$, a gain of \FtseVolScaledExcessPP{} percentage points over buy-and-hold with a still-smaller drawdown (\FtseVolScaledMDD{}).
+
+The paired bootstrap tests tell the same statistical-power story as on WIG20. The buy-and-hold point estimates lie inside the ensemble confidence intervals, and the one-sided $p$-values for the ensemble exceeding buy-and-hold are \FtsePvsBH{} on total return and \FtsePvsBHsharpe{} on Sharpe ratio; none crosses $p < 0.05$.
+
+The LSTM baseline posts higher point estimates than the ensemble on this particular window, both on gross total return (\FtseLSTMtest{} against \FtseTRtest{}) and on Sharpe ratio (\FtseLSTMsharpe{} against \FtseSharpe{}), but neither gap is statistically significant; the one-sided $p$-value for the ensemble exceeding the LSTM on total return is \FtsePensVsLSTM{}. Two observations put this apparent edge in perspective. It is a bull-market-exposure effect rather than evidence of superior risk control, since the LSTM remains almost continuously invested across a window that is $\FtseRegBullShare{}$ bull, so it captures more of the upside at the price of a deeper drawdown (\FtseLSTMmdd{} against \FtseMDD{}). Moreover, the LSTM is itself statistically indistinguishable from passive buy-and-hold on this window (one-sided $p = \FtsePLSTMvsBH{}$), which is consistent with a near-fully-invested strategy tracking the index; the transparent ensemble, by contrast, deliberately trades part of that exposure for the shallower drawdown documented above.
+
+The GBM baseline pushes the same pattern to its extreme. It posts the highest point estimates on the window (\FtseGBMtest{} total return at a Sharpe ratio of \FtseGBMsharpe{}), and it does so by never closing a position over the \FtseOOSDays{} held-out days, an effectively fully invested stance in a window that is \FtseRegBullShare{} bull. On total return its gap over the ensemble is marginally significant at the five-percent level, since the one-sided $p$-value for the ensemble exceeding the GBM is \FtsePensVsGBM{}, although the corresponding Sharpe-ratio comparison is not (one-sided $p = \FtsePensVsGBMsharpe{}$), and its advantage over buy-and-hold remains statistically non-significant (one-sided $p = \FtsePGBMvsBH{}$ on total return). That is the signature of a near-fully-invested strategy tracking a bull market rather than of superior risk control.
+
+Its maximum drawdown of \FtseGBMmdd{} is deeper than the \FtseMDD{} of the ensemble, as is that of the LSTM, so the qualitative trade-off is unchanged: the learning-based baselines capture more bull-market upside by staying exposed, while the ensemble deliberately trades upside for drawdown control.
+
+The auxiliary analyses replicate on this market as well: the weight-sensitivity experiment yields the same qualitative ranking (Section~\ref{subsec:weights}), the walk-forward selection is invariant to the objective (Section~\ref{subsec:objective}), and the confidence heuristic is equally uninformative at the signal level (Section~\ref{subsec:confvalid}). Taken together, the FTSE results show that the central finding of the thesis, namely a consistent drawdown and downside-risk advantage over passive buy-and-hold purchased with some bull-market upside, transfers to a second market with a markedly different cost structure, and is not an artefact of the WIG20 sample.
+
+\section{Discussion}\label{sec:discussion}
+
+This section interprets the results reported above. It first traces the path from forecast-combination theory to the empirical evidence, then assesses the three hypotheses in turn, examines how far the findings generalise across markets, explains why a comparison on gross total return understates what the ensemble contributes, and closes with the practical, deployment, and design implications.
+
+\subsection{From forecast-combination theory to empirical evidence}\label{subsec:theory_to_evidence}
+
+Equation~\eqref{eq:combined_variance} predicts that the combined forecast error is strictly smaller than the smallest individual forecast error whenever the individual errors are not perfectly correlated. Table~\ref{tab:corr} and Fig.~\ref{fig:corr_matrix} show that the empirical pairwise correlations of the agent signals span the full range from $\CorrMin{}$ to $\CorrMax{}$, with a mean absolute off-diagonal correlation of $\CorrMeanAbs{}$. The theoretically most informative pairs are those with negative correlations, in particular RSI versus ROC ($\CorrMin{}$) and Bollinger versus ROC ($-0.55$).
+
+The RSI-ROC pair is especially diagnostic. RSI is a mean-reversion rule that emits a buy signal in oversold conditions, whereas ROC is a momentum rule that emits a sell signal in the same conditions. The two agents therefore naturally disagree, and the score of the decision agent resolves the disagreement by weighing confidences across families. In a window dominated by the bull regime, the trend family (MA trend) dominates the score; in sideways or correction regimes, the mean-reversion and volatility families gain relative weight. The regime decomposition in Table~\ref{tab:regime} shows the footprint of this mechanism: the ensemble loses less than buy-and-hold during corrections and earns more during sideways regimes, which is precisely the pattern predicted by a variance-minimising combination of agents with heterogeneous error structures.
+
+A concrete illustration clarifies the mechanism. Consider a day on which a WIG20 constituent has rallied sharply over the prior ten sessions. The ROC agent, a pure momentum rule, reports a buy signal with high confidence because the recent rate of change is large and positive. The RSI agent simultaneously reports a sell signal with moderate confidence because the $14$-day relative strength has crossed above its $70$ overbought threshold. The MA trend agent reports a buy signal, because the fast SMA is above the slow SMA, but with modest confidence because the spread between the two averages is small relative to the latest close.
+
+Under the family weights of Section~\ref{subsec:decision}, the combined score in \eqref{eq:score} receives positive contributions of roughly $1.0 \cdot c_\text{ROC}$ from momentum and $1.3 \cdot c_\text{MA}$ from trend, and a negative contribution of $-0.8 \cdot c_\text{RSI}$ from mean reversion. Whether the final action is a buy, a hold, or a sell depends on the confidences: on days when the RSI overbought signal is strong, the aggregated score can fall below the buy threshold even though two of the three agents call for a long position. This is precisely the variance-reduction mechanism of \eqref{eq:combined_variance} expressed in decision-agent terms. The ensemble uses the disagreement between a momentum agent and a mean-reversion agent to step out of a position that a single-family rule would have kept open, which in turn translates into the shallower drawdowns visible in Fig.~\ref{fig:drawdown_oos}.
+
+The confidence-validation experiment (Section~\ref{subsec:confvalid}) sharpens what this theoretical connection does and does not claim. Because the confidence values turn out to carry no measurable information about signal-level accuracy, the inverse-variance reading of \eqref{eq:score} must be understood as the conceptual motivation for the architecture rather than as a calibrated statistical mechanism. What the data support is the weaker and more robust half of the theory, namely that pooling forecasters with imperfectly correlated errors reduces the variance of the combined position, regardless of how the pool is weighted.
+
+The weight-sensitivity results reinforce this reading from the other side: near-equal (inverse-variance) weights, equal weights, and the fixed prior all deliver similar out-of-sample performance, exactly as the forecast-combination literature predicts for combinations whose members have similar individual accuracy \cite{clemen1989,smithwallis2009}. In short, the empirical content of the theory in this application is error diversity, not precision weighting, and the claims made in this thesis are framed accordingly.
+
+\subsection{Evidence for the three hypotheses}\label{subsec:hypotheses_evidence}
+
+The headline results, read together with the risk-adjusted table, the volatility-matched table, and the regime decomposition, are consistent with H1. On the aggregate test window, the ensemble trails buy-and-hold on gross total return by $\BullShortfallPP{}$ percentage points in the bull regime, more than enough to explain the aggregate shortfall, but on point estimates it leads buy-and-hold on every risk-adjusted metric considered: Sharpe ($\Shtest{}$ against $\BHsharpe{}$), Sortino ($\EnsSortino{}$ against $\BHSortino{}$), Calmar ($\Calmtest{}$ against $\Calmbh{}$), Ulcer Index ($\EnsUlcer{}$ against $\BHUlcer{}$), Martin ratio ($\EnsMartin{}$ against $\BHMartin{}$), and maximum drawdown ($\MDDtest{}$ against $\MDDbh{}$).
+
+Once the two series are matched on ex-ante volatility, the ensemble also leads buy-and-hold on total return, by $\VolScaledExcessPP{}$ percentage points, with materially smaller drawdown. As the significance analysis in Section~\ref{subsec:significance} makes clear, these advantages are point-estimate-level and do not attain conventional statistical significance on a single sub-two-year window, so they are read here as consistent and economically meaningful rather than as statistical dominance. The FTSE~100 replication in Section~\ref{subsec:ftse} yields the same qualitative H1 pattern on \FtseOOSDays{} held-out trading days under UK-specific costs, supporting external validity even though the formal hypothesis is stated against WIG20. These observations are consistent with the variance-reduction prediction of forecast-combination theory: the combination of heterogeneous directional forecasts lowers the variance of the equity curve, and the reduction is visible both in the volatility and in the drawdown profile.
+
+The comparison against the best single-agent baseline supports H2 on point estimates: the ensemble total return of $\TRtest$ exceeds the best single-agent total return of $\BestSingleTR$ (produced by \BestSingleName{}) by more than six percentage points on the test window. The bootstrap $p$-value of $\PvsBestSingle$ indicates that, with a single test window, this point-estimate advantage does not pass the $p < 0.05$ threshold. This is consistent with the known difficulty of establishing statistical significance for Sharpe-like metrics over windows of fewer than $400$ trading days \cite{bailey2014}. Interpreted through the lens of forecast-combination theory, the positive point-estimate advantage is a direct illustration of the variance-reduction argument: the diversified score has a smaller error variance than any single forecaster and achieves a materially higher total return without a proportional increase in drawdown.
+
+The ablation strongly supports H3. Removing any single signal agent moves the total return on the test window within a narrow band around the full ensemble, and the worst leave-one-out configuration still achieves a total return above $0.19$, a Sharpe ratio above $1$, and a Sortino ratio above buy-and-hold.
+
+Two observations deserve particular mention. First, removing the momentum family (MACD) slightly improves the headline metrics on this test window, which indicates that the pre-set family weights overweight momentum relative to what this particular period demands. The weight-sensitivity analysis of Section~\ref{subsec:weights} confirms this hindsight observation directly, since downweighting momentum improves the window, while also showing that in-sample weight optimisation does not reliably capture such regime-specific adjustments out of sample. Second, the Bollinger agent on its own produced very few trades under the selected configuration, so its removal has only a mild effect on the behaviour of the ensemble; it behaves as a low-activity member of the forecast pool on this test window.
+
+Taken together, these findings show that the ensemble is robust to the removal of any single signal agent, consistent with the forecast-combination prediction that variance reduction persists as long as at least two imperfectly correlated forecasters remain. The weight-sensitivity analysis extends this robustness from the roster of agents to the weights themselves: no perturbation, reordering, or data-driven re-estimation of the family weights changes the qualitative conclusion.
+
+\subsection{Cross-market generalisation}\label{subsec:crossmarket}
+
+The FTSE~100 replication in Section~\ref{subsec:ftse} addresses the most immediate external-validity concern, namely that the risk-aware profile of the ensemble might be an artefact of the WIG20 sample. The qualitative conclusion is unchanged on a market with a different constituent set, a different currency, and a materially different cost structure that includes an asymmetric $50$ bps buy-side transaction tax. The ensemble trails passive buy-and-hold on gross total return during a bull-dominated window, yet delivers a higher Sharpe ratio (\FtseSharpe{} against \FtseBHsharpe{}), a shallower maximum drawdown (\FtseMDD{} against \FtseBHmdd{}), and a better Sortino ratio and Ulcer Index, and it overtakes buy-and-hold on total return once the two series are matched on ex-ante volatility.
+
+That the same trade-off appears on two markets, despite an added stamp-duty friction that penalises the more active strategy, supports the interpretation that the drawdown and downside-risk advantage is a structural consequence of forecast combination rather than a market-specific coincidence. The transfer is not perfect: the FTSE test window contains almost no correction days, so the correction-regime defence that is prominent on WIG20 has little room to act, and the integrated-drawdown advantage narrows to the point where the Martin ratio marginally favours buy-and-hold. This is consistent with the regime-dependence predicted by the adaptive markets hypothesis \cite{lo2004}: the ensemble adds the most value in the regimes it is designed to defend, and a window that is almost entirely bull is the least favourable setting for it.
+
+Beyond the two markets studied here, three considerations delimit how far the results should be extrapolated. First, the profitability of technical trading rules varies systematically across markets and erodes as markets mature. Survey evidence reports stronger rule profitability in emerging and less liquid markets and weakening evidence in developed ones once transaction costs and data-snooping adjustments are applied \cite{parkirwin2007}, and classic evidence from Asian markets ties rule profitability to the level of market development and trading frictions \cite{bessembinderchan1995}.
+
+On this spectrum, the present results are consistent with two moderately mature markets in which naive signal-chasing no longer pays, since every single-agent baseline is unprofitable or marginal and neither learned baseline achieves a statistically significant edge, but in which a disciplined, diversified risk overlay still adds risk-adjusted value. The gross-return picture would accordingly be expected to be more favourable to the ensemble in less efficient, higher-friction markets, and the risk-control profile to be the more portable component in highly developed ones.
+
+Second, the transferable part of the framework is structural rather than numerical. The agent interfaces, the anchored walk-forward protocol, the calibrated cost model, and the evaluation battery apply unchanged to any market with reliable daily closes, and the FTSE replication required only a new data source and cost model, whereas the specific calibrations (thresholds, weights, commissions, taxes) must be re-derived per market, as the asymmetric UK stamp duty illustrates.
+
+Third, the value added by the ensemble is regime-dependent, concentrated in corrections and sideways phases, so its realised advantage in any market will track the regime composition of the evaluation window. Markets or periods dominated by persistent bull regimes mechanically favour passive exposure, as both test windows here illustrate. Mapping the domain of validity of the framework across further developed and emerging indices, as outlined in Section~\ref{sec:limitations}, is therefore the most direct extension of this study.
+
+\subsection{Why gross total return understates the contribution of the ensemble}\label{subsec:why_gross}
+
+The standard comparison of a trading strategy against buy-and-hold reports a single gross total return for each series and declares the larger number the winner. On the present test window that comparison would declare the passive benchmark the winner, even though the equity curve of the ensemble has less than half of the drawdown of the benchmark and delivers materially higher Sharpe, Sortino, Calmar, Ulcer, and Martin ratios.
+
+Three observations suggest that the gross-total-return comparison is the wrong summary in this setting. First, the ensemble is not fully invested on all dates by design: the decision-agent thresholds ensure that positions are opened only when the combined score crosses a confidence level. In a test window that is $\RegBullShare{}$ bull, any partially invested strategy will trail a fully invested benchmark on gross cumulative return almost by construction. Second, the volatility-matched comparison in Section~\ref{subsec:volscaled} shows that at equal ex-ante risk budget the ensemble produces $\VolScaledExcessPP{}$ percentage points more total return than buy-and-hold, with a smaller drawdown in absolute terms. Third, the regime decomposition in Section~\ref{subsec:regime} shows that the aggregate shortfall of the ensemble is entirely attributable to the bull regime; in the correction and sideways regimes, the ensemble matches or beats buy-and-hold even on gross return.
+
+These three pieces of evidence reframe the comparison: the ensemble adds value as a \emph{risk-aware decision support tool} that trades some bull-regime upside for shallower drawdowns and higher risk-adjusted performance overall.
+
+\subsection{Connections to the broader empirical literature}\label{subsec:connections}
+
+The pattern of results reported in Sections~\ref{sec:results} and~\ref{sec:robustness} is consistent with three well-documented stylised facts of empirical finance.
+
+First, time-series momentum and cross-sectional momentum are empirically orthogonal, and portfolios that combine them deliver better risk-adjusted performance than either alone \cite{jegadeeshtitman1993,moskowitz2012,asness2013}. The negative correlation, within the ensemble, between the momentum family (MACD, ROC) and the mean-reversion family (RSI) is the signal-level analogue of this finding: the two families produce forecasts that tend to disagree precisely when one or the other would have been wrong on its own, and the score of the decision agent integrates the two into a more conservative directional bet than either family would produce alone.
+
+Second, the literature on the adaptive markets hypothesis of \cite{lo2004} predicts that no single trading rule can dominate across all regimes, because the efficiency of a market with respect to any given rule is itself time-varying. The regime decomposition in Section~\ref{subsec:regime} is consistent with this prediction: the trend-heavy ensemble loses ground during the bull regime, where a passive benchmark mechanically dominates any partially invested strategy, but it outperforms the passive benchmark during corrections and sideways periods, where mean-reversion and volatility agents contribute directional information that the trend agent on its own would miss.
+
+Third, the literature on risk-adjusted performance evaluation has long argued that the Sharpe ratio alone is inadequate for comparing strategies with different drawdown profiles \cite{young1991,sortino1994,martin1989}. The quantitative spread between the Sharpe advantage of the ensemble (\Shtest{} against \BHsharpe{}, a factor of $1.3$) and its Martin-ratio advantage (\EnsMartin{} against \BHMartin{}, a factor of $2.1$) illustrates the difference between adjusting for realised volatility and adjusting for the full drawdown profile, and explains why the headline claim of this thesis leads with Calmar and Ulcer rather than with Sharpe alone.
+
+\subsection{Practical implications for a retail investor}\label{subsec:practical}
+
+For a WSE-focused retail investor with access to standard daily data and typical Polish brokerage conditions, two practical implications stand out. First, the ensemble reduces the worst realised drawdown by a factor greater than two and reduces the integrated drawdown, as measured by the Ulcer Index, by nearly two-thirds. This is the dominant axis on which retail portfolios tend to be evaluated in practice, both because maximum drawdown has a direct operational meaning, being the worst unrealised loss the investor has to live through, and because sustained drawdowns are empirically associated with behavioural deviations from the original plan.
+
+Second, the cost-sensitivity sweep shows that the risk-adjusted edge of the ensemble over buy-and-hold is preserved at every plausible combination of commission and slippage, including the punitive $100$ bps and $20$ bps configuration, which is well above current WSE retail tariffs. Neither of these implications depends on leverage, and both can be consumed by a retail investor as decision-support signals overlaid on a passive benchmark rather than as a replacement for the benchmark.
+
+Two operational considerations follow from this framing. The first concerns the update cadence. The five agents and the decision agent consume only end-of-day closes, so a retail deployment amounts to running the pipeline once after the daily WSE close and acting on the resulting recommendations at the open or close of the following session. No intraday infrastructure, tick data, or order-book integration is required, which lowers the bar for adoption outside the institutional segment.
+
+The second concerns monitoring. Because the decision-agent score in \eqref{eq:score} is a linear combination of agent signals weighted by confidence and family, the score can be decomposed, day by day, into per-agent contributions and plotted alongside the equity curve. This decomposition gives the investor an interpretable audit trail of which agents drove each position change, and makes it straightforward to detect structural shifts in the signal distribution, for example an agent whose confidence collapses for an extended period, without retraining the ensemble.
+
+This interpretability is a distinctive strength of a theory-motivated forecast-combination design relative to end-to-end deep-reinforcement-learning trading systems, which typically produce a scalar action without a transparent attribution to individual input signals.
+
+The strength comes at little cost in performance on the markets studied here. On WIG20 the ensemble leads both the LSTM and GBM directional baselines of Section~\ref{subsec:lstm}, two structurally different learning-based competitors trained on the same price history and executed under identical costs, on total return and on every risk-adjusted ratio, notwithstanding the marginally shallower drawdown that the GBM achieves by barely taking any risk at all (Section~\ref{subsec:lstm_results}). On the FTSE~100 the learned models post higher point estimates, and the total-return gap of the GBM is marginally significant on that single window, but they achieve this only by remaining near-fully invested through an almost pure bull window, which leaves them statistically indistinguishable from passive buy-and-hold while giving up the drawdown control that motivates the ensemble (Section~\ref{subsec:ftse}). The ensemble thus retains full per-signal attribution while remaining competitive on the risk axis with opaque learned models.
+
+\subsection{Deployment and scalability}\label{subsec:deployment}
+
+Several practical considerations determine whether the system can be deployed beyond a backtest, and the transparent design has favourable properties on most of them.
+
+\emph{Computational cost.} Decision-time inference is non-iterative. Each signal agent is a closed-form indicator computed over a rolling window, updated incrementally per symbol, and the decision agent reduces the per-symbol signals to a single confidence-weighted sum followed by a threshold comparison, as in \eqref{eq:score}. There is no model training, no gradient computation, and no specialised hardware at decision time; one pass over the closing prices of the day on a commodity CPU suffices. This contrasts with the LSTM and GBM baselines of Section~\ref{subsec:lstm} and with end-to-end deep-reinforcement-learning systems, which require training and periodic retraining.
+
+\emph{Scalability across symbols and markets.} The total work per day is of order $O(N_\text{symbols} \times N_\text{agents})$, linear in the size of the traded universe, and it is embarrassingly parallel because each agent processes the history of a single symbol independently through the shared base-agent interface. The FTSE~100 study of Section~\ref{subsec:ftse} is concrete evidence of market portability: re-pointing the entire pipeline at a different exchange is a configuration change, comprising a new data source and cost model, rather than a change to the agents or the decision layer.
+
+\emph{Liquidity.} The evaluation trades only large-capitalisation index constituents at the daily close, and the selected configuration is low-turnover, so the resting-order footprint is small at retail size. Price impact, partial fills, and order-book dynamics are not modelled and are discussed as a limitation in Section~\ref{sec:limitations}.
+
+\emph{Execution latency.} Because signals are computed once after the close and acted on at the next session, the design tolerates latencies of seconds to minutes and requires no co-location, tick data, or order-book integration, which places it at the opposite end of the infrastructure spectrum from high-frequency trading.
+
+\emph{Portfolio scalability and the retail-institutional distinction.} The fractional position-sizing rule scales capital mechanically, but the assumption of fills at the closing price without impact bounds the deployable capital relative to average daily volume, so the profile is most defensible at retail-to-moderate assets under management. For a retail investor the system is usable as an end-of-day decision-support overlay on a passive benchmark, without leverage or dedicated infrastructure. For an institutional user the linear scaling and market-agnostic interface make wider universes feasible, but explicit price-impact modelling and the analytical-only leverage caveat of Section~\ref{subsec:volscaled} would become binding.
+
+\subsection{Design implications}\label{subsec:design_implications}
+
+Three design implications follow from the experiments. First, the transparency of the decision-agent score, which is a linear combination of agent signals weighted by confidence and by family, is both a theoretical convenience and a practical one. The contribution of each agent on a given day can be read off directly from the score, and the ablation shows that this attribution is consistent with the marginal contribution of that agent to the headline metrics.
+
+Second, the fact that the cost-sensitivity sweep in Table~\ref{tab:cost_sensitivity} preserves a Sharpe ratio strictly above the passive benchmark at every plausible cost configuration suggests that the ensemble is not surviving only thanks to a favourable cost calibration.
+
+Third, the stability of the selected $(\text{mode}, c_{\min})$ configuration across the three walk-forward folds indicates that a simple grid-search procedure on a long enough training window is adequate, and that more elaborate parameter-adaptation machinery is not needed at the daily frequency on WIG20.
+
+\section{Chapter summary}\label{sec:evaluation_summary}
+
+The evaluation reported in this chapter was designed to produce results that survive scrutiny rather than results that look impressive. Parameters were selected on a training window and never revisited, every trade was charged realistic commissions and slippage, and every headline figure was accompanied by a bootstrap confidence interval and a paired significance test.
+
+Under that protocol, the finding is consistent and narrow. The ensemble does not beat passive buy-and-hold on gross total return in either test window, and on the WIG20 panel it trails by eight percentage points. It does, however, lead on every risk-adjusted metric considered, halves the maximum drawdown, reduces the integrated drawdown by nearly two-thirds, and overtakes the benchmark on total return once the two series are placed on the same ex-ante risk budget. The regime decomposition locates the source of this profile precisely: the ensemble defends during corrections and carries during sideways phases, and pays for both by under-participating in bull legs.
+
+The robustness checks constrain how much of this can be attributed to chance or to arbitrary design choices. The profile survives the removal of any single agent, perturbation and re-estimation of the family weights, every plausible transaction-cost calibration, a change of the selection objective, a three-fold chronological re-split, and a full replication on a second market with a different cost regime. What it does not survive is the demand for conventional statistical significance on a single sub-two-year window, and that limitation is stated plainly rather than glossed over.
+
+One result deserves emphasis because it cuts against the original design intent. The confidence values that the decision agent uses as weights carry no measurable information about signal-level accuracy. The system works, on the risk axis, but not for the reason its architecture suggests: the operative mechanism is the pooling of weakly and negatively correlated signals across methodological families, not precision weighting. Chapter~\ref{sec:conclusion} returns to what this implies for the contribution of the thesis and for the work that should follow it.

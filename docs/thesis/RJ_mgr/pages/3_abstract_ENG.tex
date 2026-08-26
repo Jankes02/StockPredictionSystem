@@ -1,0 +1,20 @@
+%% ============================================================
+%% Abstract (English)
+%% ============================================================
+\addcontentsline{toc}{chapter}{Abstract}
+\chapter*{Abstract}
+
+This thesis presents a multi-agent decision support system for stock trading on the Warsaw Stock Exchange, an underrepresented Central and Eastern European market, and evaluates it under a protocol designed to address four weaknesses that recur in empirical studies of trading strategies: in-sample parameter selection, absent transaction costs, neglect of risk-adjusted performance, and lack of significance tests.
+
+The system consists of five heterogeneous technical-analysis agents, each confined to a single methodological family, feeding a transparent, confidence-weighted decision agent whose aggregation rule is grounded in forecast-combination theory. The evaluation combines anchored walk-forward tuning, calibrated commissions and slippage, the Sharpe, Sortino, Calmar and Martin ratios together with the Ulcer Index, a volatility-matched comparison, bootstrap confidence intervals and paired significance tests, a decomposition of the test window into market regimes, a leave-one-agent-out ablation, sensitivity analyses over the decision-agent weights, the selection objective and transaction costs, and an empirical audit of the confidence heuristic. Two machine-learning baselines, an LSTM directional classifier and a gradient-boosted-trees classifier, are evaluated under the identical protocol.
+
+On \OOSDays{} held-out trading days for WIG20, the system trails passive buy-and-hold on gross total return in a bull-dominated window, but improves every risk-adjusted metric, halves the maximum drawdown, reduces the integrated drawdown by nearly two-thirds, and overtakes the benchmark on total return once both series are scaled ex ante to the same volatility. These differences are economically meaningful yet not statistically significant on a single sub-two-year window.
+
+Regime analysis attributes the profile to smaller losses during corrections and gains during sideways phases, offset by lower bull-market exposure. The same qualitative pattern appears in an external validation on the FTSE 100 under UK-specific costs, and the system remains competitive with both machine-learning baselines. A dedicated experiment shows that the confidence values carry no measurable information about signal-level accuracy, so the operative mechanism is the pooling of weakly and negatively correlated signals rather than precision weighting. The results support theory-motivated ensembles as risk-aware decision support rather than as return enhancers.
+
+\section*{Keywords:}
+\noindent algorithmic trading, decision support systems, multi-agent systems, forecast combination, risk-adjusted performance, walk-forward validation, cross-market validation, Warsaw Stock Exchange.
+
+%% TODO(author): confirm the OECD classification before submission.
+\section*{Field of science and technology in accordance with OECD requirements:}
+\noindent engineering and technology; electrical, electronic and information engineering; computer and information sciences.
