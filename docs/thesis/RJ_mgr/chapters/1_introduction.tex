@@ -1,25 +1,20 @@
-%% ============================================================
-%% Chapter 1 - Introduction
-%% Ported from paper.tex, Section I, and extended with the
-%% statement of own contribution and the structure of the thesis.
-%% ============================================================
 \chapter{Introduction}\label{chap:introduction}
 
-Decision support systems and algorithmic trading occupy a central place in contemporary financial markets. They help both institutional and retail investors process large volumes of market information and translate that information into trading actions \cite{hendershott_does_2011}. Over the last two decades, research on algorithmic trading has expanded from simple rule-based strategies \cite{brock1992} to machine-learning classifiers \cite{gerlein2016,fischerkrauss2018}, and more recently to deep reinforcement learning systems that learn trading policies directly from data \cite{huang2022,shavandi2022,hambly2023}.
+Modern financial markets run substantially on decision support systems and algorithmic trading. Institutional and retail participants alike depend on them to reduce large volumes of market information to something that can be acted upon \cite{hendershott_does_2011}. What that machinery consists of has changed considerably over two decades of research. Rule-based strategies came first \cite{brock1992}, classifiers drawn from machine learning followed \cite{gerlein2016,fischerkrauss2018}, and the most recent generation learns its trading policy from the data directly, by deep reinforcement learning \cite{huang2022,shavandi2022,hambly2023}.
 
-In parallel, multi-agent systems (MAS) have been proposed as a natural way to organise this diversity of trading rules and models, so that independent agents can produce signals that a coordinator combines into the final decision \cite{luo2002,korczak2013,hernes2016,hernes2024}. The appeal of the arrangement is that it separates two concerns that are easily confused: what an individual indicator says about the market, and what a portfolio should do about it.
+Running alongside that progression, multi-agent systems (MAS) have been put forward as a way of imposing order on so many competing rules and models: independent agents each issue a signal, and a coordinator resolves those signals into one decision \cite{luo2002,korczak2013,hernes2016,hernes2024}. What recommends the arrangement is the separation it enforces between two questions that are easily run together, namely what a given indicator reports about the market and what a portfolio ought to do in response.
 
 The practical problem that motivates this thesis is narrower than the breadth of that literature suggests. A retail investor on the Warsaw Stock Exchange (WSE) has access to daily price data, a modest brokerage account, and a large menu of published trading rules, but has no reliable way to tell which of those rules, or which combination of them, is worth following. The published evidence is not much help, because a substantial part of it is produced under evaluation protocols that make results look better than they are.
 
 \section{Problem statement}\label{sec:problem}
 
-Four methodological weaknesses recur in empirical studies of trading strategies, and together they undermine the credibility of reported results.
+Empirical studies of trading strategies are prone to four methodological weaknesses, and in combination these undermine the credibility of what such studies report.
 
-The first is \emph{in-sample parameter selection}. When the best configuration of a strategy is chosen on the same data used to evaluate it, the out-of-sample performance is overstated \cite{bailey2014,harvey2016}. The second is the \emph{omission of realistic frictions}, in particular commissions and slippage, which can erode a noticeable fraction of the gross return of high-turnover configurations.
+\emph{In-sample parameter selection} is the first. Choosing the best configuration of a strategy on the very data that will afterwards be used to judge it inflates the apparent out-of-sample performance \cite{bailey2014,harvey2016}. \emph{Omission of realistic frictions} is the second, commissions and slippage above all, which between them can consume a noticeable share of whatever gross return a high-turnover configuration produces.
 
-The third is the \emph{neglect of risk-adjusted performance}. Many studies compare a trading strategy to passive buy-and-hold purely on cumulative profit, without taking into consideration that an active strategy can produce a smoother equity curve at a lower unleveraged return. This weakness is particularly acute during sustained bull markets, where passive exposure mechanically dominates any strategy that is occasionally out of the market \cite{dichtl2020}. The fourth is the \emph{absence of formal significance tests}. Headline metrics are often reported as point estimates without confidence intervals or paired tests against the benchmark, even though trading-strategy metrics are known to be non-Gaussian and path-dependent \cite{politis1994,bailey2014}.
+\emph{Neglect of risk-adjusted performance} is the third. Cumulative profit alone is a common basis for setting a trading strategy against passive buy-and-hold, and it leaves out of account that an active strategy may deliver a smoother equity curve while returning less unleveraged. Sustained bull markets sharpen the problem, since anything less than continuous exposure is mechanically outpaced there by a fully invested benchmark \cite{dichtl2020}. \emph{Absence of formal significance tests} is the fourth. Headline figures appear as bare point estimates, unaccompanied by confidence intervals or by paired tests against the benchmark, notwithstanding that the metrics involved are known to be non-Gaussian and path-dependent \cite{politis1994,bailey2014}.
 
-Beyond these methodological issues, the empirical evidence on multi-agent decision support systems is strongly concentrated on major markets in the United States, Western Europe, and Asia. The Warsaw Stock Exchange, the largest exchange in Central and Eastern Europe (CEE) by capitalisation, has received much less attention \cite{czapkiewicz2018,kompa2009,gurgul2025}. A retail investor on that market therefore faces a double difficulty: the available evidence is methodologically fragile, and what evidence exists was gathered elsewhere.
+A geographical concentration compounds these methodological ones. Evidence on multi-agent decision support systems clusters heavily on the major markets of the United States, Western Europe and Asia, whereas the Warsaw Stock Exchange, the largest in Central and Eastern Europe (CEE) by capitalisation, has drawn comparatively little study \cite{czapkiewicz2018,kompa2009,gurgul2025}. The difficulty facing a retail investor there is consequently twofold: the evidence available is methodologically fragile, and such of it as exists was collected somewhere else.
 
 \section{Aim and scope of the thesis}\label{sec:aim}
 
@@ -43,13 +38,11 @@ The work reported in this thesis is the author's own. The system, the experiment
     \item the execution and interpretation of all experiments reported in Chapter~\ref{chap:evaluation}, including the external validation on the FTSE~100.
 \end{itemize}
 
-An earlier version of parts of this material was prepared by the author for publication in a co-authored journal article; the text of this thesis was written by the author for this purpose.
-
 \section{Structure of the thesis}\label{sec:structure}
 
 The thesis is organised into six chapters, whose significance is unequal by design: Chapters~\ref{chap:implementation} and~\ref{chap:evaluation} carry the original work, while the remaining chapters frame it.
 
-Chapter~\ref{sec:related_work} reviews the state of the art in four streams: algorithmic trading and technical analysis, multi-agent systems in finance, algorithmic trading on Central and Eastern European markets, and risk-adjusted performance evaluation. It establishes both the methodological gap and the empirical niche that the thesis addresses.
+Chapter~\ref{sec:related_work} reviews the state of the art across four streams: technical analysis and algorithmic trading; multi-agent systems in finance; the algorithmic trading literature on Central and Eastern European markets; and the evaluation of risk-adjusted performance. It establishes both the methodological gap and the empirical niche that the thesis addresses.
 
 Chapter~\ref{sec:theory} presents the theoretical background and the system design. It introduces forecast-combination theory and the variance-reduction argument that motivates the architecture, maps that theory onto the trading problem, states the three hypotheses, and then describes the four-layer architecture, the five signal agents, the decision agent, and the agent taxonomy.
 
