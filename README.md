@@ -2,6 +2,8 @@
 
 Multi-agent stock trading system for the Polish market (GPW), focused on WIG20. Signal agents (MACD, RSI, ROC, Bollinger, MA trend) produce buy/sell/hold signals with confidence; a decision agent aggregates them into final trades. Built for daily backtesting and for use in a master's thesis (computer science).
 
+> **Publication:** The article describing this system has been accepted for publication in *IEEE Access*. It is available here: [DOI](https://doi.org/10.1109/ACCESS.2026.3735585)
+
 ## Requirements
 
 - Python 3.x
