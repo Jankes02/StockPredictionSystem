@@ -10,6 +10,7 @@ class Position(TypedDict):
     quantity: int
     entry_price: float
     entry_date: pd.Timestamp
+    entry_commission: float
 
 
 class Trade(TypedDict):
@@ -21,15 +22,27 @@ class Trade(TypedDict):
     pnl: Optional[float]
 
 
+BPS = 1e-4
+
+
 class PortfolioSimulator:
     def __init__(
         self,
         initial_cash: float = 100_000,
         position_size: float = 0.1,  # How much capital should be invested
+        commission_bps: float = 0.0,
+        slippage_bps: float = 0.0,
+        stamp_duty_bps: float = 0.0,
     ):
         self.initial_cash = initial_cash
         self.cash = initial_cash
         self.position_size = position_size
+        self.commission_bps = commission_bps
+        self.slippage_bps = slippage_bps
+        # One-way tax charged on purchases only (e.g. UK Stamp Duty Reserve Tax).
+        # Sells are not charged. Kept separate from commission so the two legs
+        # can carry asymmetric rates.
+        self.stamp_duty_bps = stamp_duty_bps
 
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
@@ -61,28 +74,40 @@ class PortfolioSimulator:
         if symbol in self.positions:
             return
 
+        fill_price = price * (1.0 + self.slippage_bps * BPS)
+        # Purchases bear commission plus any one-way stamp duty.
+        buy_charge_rate = (self.commission_bps + self.stamp_duty_bps) * BPS
+
+        # Size the position against cash capacity inclusive of entry charges
         allocation = self.cash * self.position_size
-        if allocation <= 0:
+        max_spend = allocation / (1.0 + buy_charge_rate)
+        if max_spend <= 0:
             return
 
-        quantity = int(allocation // price)
+        quantity = int(max_spend // fill_price)
         if quantity <= 0:
             return
 
-        cost = quantity * price
-        self.cash -= cost
+        notional = quantity * fill_price
+        entry_charge = notional * buy_charge_rate
+        total_cost = notional + entry_charge
+        if total_cost > self.cash:
+            return
+
+        self.cash -= total_cost
 
         self.positions[symbol] = {
             "symbol": symbol,
             "quantity": quantity,
-            "entry_price": price,
+            "entry_price": fill_price,
             "entry_date": date,
+            "entry_commission": entry_charge,
         }
 
         self.trades.append({
             "symbol": symbol,
             "action": "BUY",
-            "price": price,
+            "price": fill_price,
             "quantity": quantity,
             "date": date,
             "pnl": None,
@@ -94,17 +119,22 @@ class PortfolioSimulator:
         if symbol not in self.positions:
             return
 
+        fill_price = price * (1.0 - self.slippage_bps * BPS)
+        commission_rate = self.commission_bps * BPS
+
         pos = self.positions.pop(symbol)
         quantity = pos["quantity"]
-        proceeds = quantity * price
+        notional = quantity * fill_price
+        commission = notional * commission_rate
+        proceeds = notional - commission
         self.cash += proceeds
 
-        pnl = (price - pos["entry_price"]) * quantity
+        pnl = (fill_price - pos["entry_price"]) * quantity - commission - pos["entry_commission"]
 
         self.trades.append({
             "symbol": symbol,
             "action": "SELL",
-            "price": price,
+            "price": fill_price,
             "quantity": quantity,
             "date": date,
             "pnl": pnl,

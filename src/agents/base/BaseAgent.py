@@ -5,7 +5,6 @@ from src.agents.base.AgentSignal import AgentSignal
 
 class BaseAgent(ABC):
     name: str
-    horizon: str
     kind: str
 
     def _neutral_signal(self, symbol: str) -> AgentSignal:
@@ -14,7 +13,6 @@ class BaseAgent(ABC):
             "agent": self.name,
             "signal": 0,
             "confidence": 0,
-            "horizon": self.horizon,
             "kind": self.kind
         }
         
@@ -24,7 +22,6 @@ class BaseAgent(ABC):
             "agent": self.name,
             "signal": signal,
             "confidence": min(max(confidence, 0.0), 1.0),
-            "horizon": self.horizon,
             "kind": self.kind
         }
 

@@ -5,7 +5,6 @@ import pandas as pd
 
 class MATrendAgent(BaseAgent):
     name = "ma_trend"
-    horizon = "daily"
     kind = "trend"
 
     def __init__(self, fast=50, slow=200):

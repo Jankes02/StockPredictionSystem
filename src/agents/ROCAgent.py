@@ -5,7 +5,6 @@ import pandas as pd
 
 class ROCAgent(BaseAgent):
     name = "roc"
-    horizon = "daily"
     kind = "momentum"
 
     def __init__(self, period=10, threshold=0.02):

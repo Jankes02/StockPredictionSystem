@@ -5,7 +5,6 @@ import pandas as pd
 
 class RSIAgent(BaseAgent):
     name = "rsi"
-    horizon = "daily"
     kind = "mean_reversion"
 
     def __init__(self, period: int = 14):

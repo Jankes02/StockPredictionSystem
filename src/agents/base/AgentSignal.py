@@ -6,5 +6,4 @@ class AgentSignal(TypedDict):
     agent: str
     signal: int           # -1, 0, 1
     confidence: float
-    horizon: Literal["intraday", "daily"]
     kind: Literal["trend", "momentum", "volatility", "mean_reversion"]
