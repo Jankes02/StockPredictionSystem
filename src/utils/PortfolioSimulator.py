@@ -47,6 +47,7 @@ class PortfolioSimulator:
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
         self.equity_curve: List[dict] = []
+        self._last_prices: Dict[str, float] = {}
 
     # ---------- MAIN API ----------
 
@@ -156,9 +157,13 @@ class PortfolioSimulator:
     # ---------- EQUITY ----------
 
     def _record_equity(self, date: pd.Timestamp, prices: Dict[str, float]) -> None:
+        # A held symbol without a bar today (halt, data gap, or a calendar that
+        # is not the intersection of all symbols) is marked at its last known
+        # price instead of silently dropping out of equity.
+        self._last_prices.update(prices)
         value = self.cash
         for pos in self.positions.values():
-            price = prices.get(pos["symbol"])
+            price = self._last_prices.get(pos["symbol"])
             if price is not None:
                 value += pos["quantity"] * price
 

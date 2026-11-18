@@ -37,5 +37,5 @@ dmypy.json
 *.log
 
 # Live tool: downloaded market-data cache and local trading state
-data/cache/
-state/
+/data/cache/
+/state/

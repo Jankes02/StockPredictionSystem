@@ -117,8 +117,25 @@ class MarketDataStore:
 
     # ---------- updating ----------
 
-    def update(self, symbols: Sequence[str], timeframe: Timeframe) -> UpdateReport:
+    def update(self, symbols: Sequence[str], timeframe: Timeframe, chunk_size: int = 200) -> UpdateReport:
+        """
+        Update in chunks of `chunk_size` symbols; each chunk is written to the
+        cache before the next one is downloaded, so an interrupted long first
+        download resumes where it stopped.
+        """
         symbols = list(dict.fromkeys(s.upper() for s in symbols))
+        report = UpdateReport(timeframe=timeframe)
+        for i in range(0, len(symbols), chunk_size):
+            part = self._update_chunk(symbols[i: i + chunk_size], timeframe)
+            report.updates.update(part.updates)
+            report.missing.extend(part.missing)
+            report.requests += part.requests
+            if len(symbols) > chunk_size:
+                log.info("%s: %d/%d symbols done", timeframe.value,
+                         min(i + chunk_size, len(symbols)), len(symbols))
+        return report
+
+    def _update_chunk(self, symbols: List[str], timeframe: Timeframe) -> UpdateReport:
         report = UpdateReport(timeframe=timeframe)
         start_default = self.history_start[timeframe]
 

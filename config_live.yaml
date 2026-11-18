@@ -14,14 +14,26 @@ data:
     15Min: "2021-01-01"
     5Min: "2023-01-01"
 
-# Temporary static seed list (large, liquid US stocks across sectors).
-# Phase 2 replaces it with the automatic liquidity screener.
 universe:
-  symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, JPM, V, UNH, XOM,
-            JNJ, PG, HD, COST, KO, PEP, CVX, BAC, WMT, CAT]
+  mode: screen         # screen: liquidity screen over the asset pool | static: trade exactly `symbols`
+  symbols: []          # used only in static mode
+  pool:
+    exchanges: [NYSE, NASDAQ]   # ETFs, funds, warrants, preferreds, SPACs are filtered out by name
+  screen:
+    top_n: 100         # universe size
+    min_price: 5.0     # USD, last close
+    lookback: 60       # sessions for the median dollar volume
+    min_bars: 50       # bars required within the lookback (drops halted / sparse names)
+    min_history: 200   # total bars required (MA200 agent)
+    keep_buffer: 1.25  # members stay while ranked <= top_n * keep_buffer (less turnover)
+    rebalance: monthly # snapshot at each month-end close, effective next session
+  exit_policy: hold_until_sell_signal   # or force_exit: sell when a stock leaves the universe
 
 benchmark: SPY
 
 logging:
   level: INFO
   file: state/logs/tool.log
+
+state:
+  db: state/tool.db

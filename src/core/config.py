@@ -10,7 +10,7 @@ from typing import Dict, List, Literal, Optional
 
 import pandas as pd
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.core.settings import PROJECT_ROOT
 from src.data.base import Timeframe
@@ -38,17 +38,49 @@ class DataConfig(_Strict):
         return v
 
 
+class PoolConfig(_Strict):
+    exchanges: List[str] = ["NYSE", "NASDAQ"]
+
+
+class ScreenConfig(_Strict):
+    top_n: int = Field(100, ge=1)
+    min_price: float = Field(5.0, ge=0)
+    lookback: int = Field(60, ge=5)
+    min_bars: int = Field(50, ge=1)
+    min_history: int = Field(200, ge=1)
+    keep_buffer: float = Field(1.25, ge=1.0)
+    rebalance: Literal["monthly"] = "monthly"
+
+    def criteria(self):
+        from src.universe.screener import ScreenCriteria
+        return ScreenCriteria(top_n=self.top_n, min_price=self.min_price, lookback=self.lookback,
+                              min_bars=self.min_bars, min_history=self.min_history,
+                              keep_buffer=self.keep_buffer)
+
+
 class UniverseConfig(_Strict):
-    # Static seed list; replaced by the liquidity screener in phase 2.
-    symbols: List[str]
+    # static: trade exactly `symbols`; screen: liquidity screen over the asset pool
+    mode: Literal["static", "screen"] = "screen"
+    symbols: List[str] = []
+    pool: PoolConfig = PoolConfig()
+    screen: ScreenConfig = ScreenConfig()
+    # What happens to a position whose symbol drops out of the universe
+    exit_policy: Literal["hold_until_sell_signal", "force_exit"] = "hold_until_sell_signal"
 
     @field_validator("symbols")
     @classmethod
     def _upper_unique(cls, v):
-        out = list(dict.fromkeys(s.strip().upper() for s in v if s.strip()))
-        if not out:
-            raise ValueError("universe.symbols must not be empty")
-        return out
+        return list(dict.fromkeys(s.strip().upper() for s in v if s.strip()))
+
+    @model_validator(mode="after")
+    def _static_needs_symbols(self):
+        if self.mode == "static" and not self.symbols:
+            raise ValueError("universe.symbols must not be empty when universe.mode is 'static'")
+        return self
+
+
+class StateConfig(_Strict):
+    db: Path = Path("state/tool.db")
 
 
 class LoggingConfig(_Strict):
@@ -61,6 +93,7 @@ class LiveConfig(_Strict):
     universe: UniverseConfig
     benchmark: str = "SPY"
     logging: LoggingConfig = LoggingConfig()
+    state: StateConfig = StateConfig()
 
     base_dir: Path = PROJECT_ROOT
 
@@ -69,9 +102,14 @@ class LiveConfig(_Strict):
             return None
         return p if p.is_absolute() else (self.base_dir / p).resolve()
 
-    def data_symbols(self) -> List[str]:
-        """Symbols whose data must be kept up to date (universe + benchmark)."""
-        return list(dict.fromkeys([*self.universe.symbols, self.benchmark.upper()]))
+    def data_symbols(self, pool: Optional[List[str]] = None) -> List[str]:
+        """
+        Symbols whose daily data must be kept up to date: the static list, or
+        in screen mode the whole asset pool (the screen needs its liquidity
+        history), plus the benchmark.
+        """
+        base = self.universe.symbols if self.universe.mode == "static" else (pool or [])
+        return list(dict.fromkeys([*base, self.benchmark.upper()]))
 
 
 DEFAULT_CONFIG = PROJECT_ROOT / "config_live.yaml"
