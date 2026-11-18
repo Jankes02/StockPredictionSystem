@@ -56,14 +56,27 @@ class PortfolioSimulator:
         prices: Dict[str, float],
         decisions: List[Decision],
     ) -> None:
+        """Fill `decisions` at `prices` and mark equity at the same prices."""
+        self.execute(date, prices, decisions)
+        self.mark(date, prices)
+
+    def execute(
+        self,
+        date: pd.Timestamp,
+        fill_prices: Dict[str, float],
+        decisions: List[Decision],
+    ) -> None:
+        """Fill decisions (sells first, freeing cash, then buys) at `fill_prices`."""
         for d in decisions:
             if d["action"] == "SELL":
-                self._sell(d["symbol"], prices.get(d["symbol"]), date)
+                self._sell(d["symbol"], fill_prices.get(d["symbol"]), date)
 
         for d in decisions:
             if d["action"] == "BUY":
-                self._buy(d["symbol"], prices.get(d["symbol"]), date)
+                self._buy(d["symbol"], fill_prices.get(d["symbol"]), date)
 
+    def mark(self, date: pd.Timestamp, prices: Dict[str, float]) -> None:
+        """Record end-of-day equity at mark `prices`."""
         self._record_equity(date, prices)
 
     # ---------- TRADING ----------

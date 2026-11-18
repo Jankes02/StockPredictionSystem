@@ -1,5 +1,6 @@
 from src.agents.base.AgentSignal import AgentSignal
 from src.agents.base.BaseAgent import BaseAgent
+import numpy as np
 import pandas as pd
 
 
@@ -27,3 +28,16 @@ class MATrendAgent(BaseAgent):
         confidence = abs(diff) / last_close
 
         return self._pack(symbol, signal, confidence)
+
+    def generate_signal_series(self, data: pd.DataFrame) -> pd.DataFrame:
+        close = data["Close"]
+        diff = (close.rolling(self.fast).mean() - close.rolling(self.slow).mean()).to_numpy(dtype=float)
+        last = close.to_numpy(dtype=float)
+
+        ok = ~np.isnan(last) & (last > 0)
+        signal = np.where(ok, np.where(diff > 0, 1, -1), 0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            conf = np.abs(diff) / last
+
+        valid = np.arange(len(last)) + 1 >= self.slow
+        return self._series_frame(data.index, signal, conf, valid)

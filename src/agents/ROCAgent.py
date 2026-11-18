@@ -1,5 +1,6 @@
 from src.agents.base.AgentSignal import AgentSignal
 from src.agents.base.BaseAgent import BaseAgent
+import numpy as np
 import pandas as pd
 
 
@@ -23,3 +24,9 @@ class ROCAgent(BaseAgent):
             return self._pack(symbol, -1, abs(roc))
 
         return self._neutral_signal(symbol)
+
+    def generate_signal_series(self, data: pd.DataFrame) -> pd.DataFrame:
+        roc = data["Close"].pct_change(self.period).to_numpy(dtype=float)
+        signal = np.where(roc > self.threshold, 1, np.where(roc < -self.threshold, -1, 0))
+        valid = np.arange(len(roc)) + 1 >= self.period + 1
+        return self._series_frame(data.index, signal, np.abs(roc), valid)

@@ -120,7 +120,9 @@ def get_backtest_options(cfg: dict) -> dict:
     backtest = cfg.get("backtest") or {}
     portfolio = cfg.get("portfolio") or {}
     costs = cfg.get("costs") or {}
+    execution = cfg.get("execution") or {}
     return {
+        "fill": execution.get("fill", "close"),
         "initial_cash": backtest.get("initial_cash", 100_000),
         "position_size": portfolio.get("position_size", 0.1),
         "commission_bps": costs.get("commission_bps", 0.0),

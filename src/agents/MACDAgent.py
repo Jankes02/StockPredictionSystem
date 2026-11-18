@@ -57,3 +57,36 @@ class MACDAgent(BaseAgent):
             confidence = 0.5
 
         return self._pack(symbol, signal, float(confidence))
+
+    def generate_signal_series(self, data: pd.DataFrame) -> pd.DataFrame:
+        close = data["Close"]
+        n = len(close)
+        min_len = self.slow_period + self.signal_period + 2
+
+        ema_fast = close.ewm(span=self.fast_period, adjust=False).mean()
+        ema_slow = close.ewm(span=self.slow_period, adjust=False).mean()
+        macd_line = ema_fast - ema_slow
+        signal_line = macd_line.ewm(span=self.signal_period, adjust=False).mean()
+        histogram = (macd_line - signal_line).to_numpy(dtype=float)
+
+        m, s = macd_line.to_numpy(dtype=float), signal_line.to_numpy(dtype=float)
+        pm, ps = np.roll(m, 1), np.roll(s, 1)
+        up = (pm < ps) & (m > s)
+        down = (pm > ps) & (m < s)
+        signal = np.where(up, 1, np.where(down, -1, 0))
+        signal[:1] = 0
+
+        # Confidence only matters on crossover rows, which are rare, so compute
+        # `histogram.tail(50).std()` exactly as `generate_signal` does, per row.
+        window = 50
+        hist_series = pd.Series(histogram)
+        conf = np.zeros(n)
+        for i in np.flatnonzero(signal):
+            hist_std = hist_series.iloc[max(0, i - window + 1): i + 1].std()
+            if hist_std > 0:
+                conf[i] = float(np.tanh(abs(histogram[i]) / (2 * hist_std)))
+            else:
+                conf[i] = 0.5
+
+        valid = np.arange(n) + 1 >= min_len
+        return self._series_frame(data.index, signal, conf, valid)

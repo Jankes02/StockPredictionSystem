@@ -1,0 +1,33 @@
+[project]
+name = "stock-prediction-system"
+version = "0.2.0"
+description = "Multi-agent technical-indicator trading system: research backtests and a live paper-trading tool"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "PyYAML>=6.0",
+    "matplotlib>=3.7.0",
+    "scipy>=1.10.0",
+]
+
+[project.optional-dependencies]
+# Live / paper-trading tool (data API, broker, local state)
+live = [
+    "alpaca-py>=0.30",
+    "pyarrow>=14.0",
+    "pydantic>=2.5",
+    "python-dotenv>=1.0",
+]
+# ML comparison baselines used only by the paper's research scripts
+research = [
+    "torch>=2.2.0,<3.0.0",
+    "lightgbm>=4.0.0",
+]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

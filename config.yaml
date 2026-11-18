@@ -34,6 +34,9 @@ costs:
   commission_bps: 39   # per-trade commission in basis points (typical WSE retail)
   slippage_bps: 5      # one-way price slippage in basis points
 
+execution:
+  fill: "close"   # close (paper protocol: fill on signal-day Close) | next_open (live-realistic)
+
 evaluation:
   mode: "walk_forward"    # in_sample | walk_forward
   train_end: "2024-06-30" # anchored split: last date included in train
