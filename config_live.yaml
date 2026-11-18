@@ -1,0 +1,27 @@
+# Configuration of the live / paper-trading tool (apps/cli.py).
+# Research scripts use config.yaml / config_ftse.yaml instead.
+# Secrets (Alpaca keys) live in .env, never here.
+
+data:
+  provider: alpaca
+  feed: sip            # sip: all US venues, 15-min delayed on the free plan | iex: real-time, ~2-3% of volume
+  adjustment: all      # prices adjusted for splits and dividends
+  cache_dir: data/cache
+  overlap_bars: 5      # bars re-downloaded on each update to detect re-adjusted history
+  timeframes: [1Day]
+  history_start:
+    1Day: "2016-01-01"
+    15Min: "2021-01-01"
+    5Min: "2023-01-01"
+
+# Temporary static seed list (large, liquid US stocks across sectors).
+# Phase 2 replaces it with the automatic liquidity screener.
+universe:
+  symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, JPM, V, UNH, XOM,
+            JNJ, PG, HD, COST, KO, PEP, CVX, BAC, WMT, CAT]
+
+benchmark: SPY
+
+logging:
+  level: INFO
+  file: state/logs/tool.log
