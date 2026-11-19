@@ -31,6 +31,17 @@ class ScreenCriteria:
     min_bars: int = 50
     min_history: int = 200
     keep_buffer: float = 1.25
+    # Exclude names whose annualised volatility of daily returns over the
+    # lookback exceeds this (None = no filter). Dollar volume alone favours
+    # very volatile, speculative stocks.
+    max_volatility: Optional[float] = None
+    # "dollar_volume": the top_n most liquid names.
+    # "low_volatility": among the `prefilter_top_n` most liquid names, the top_n
+    #                   with the lowest volatility over the lookback.
+    rank_by: str = "dollar_volume"
+    prefilter_top_n: int = 300
+    # skip the `prefilter_skip` most liquid names first (e.g. 300 -> mid caps)
+    prefilter_skip: int = 0
 
 
 @dataclass
@@ -47,7 +58,10 @@ class Snapshot:
 class LiquidityPanel:
     """Close and dollar-volume panels (calendar x symbols) for the whole pool."""
 
-    def __init__(self, data_by_symbol: Dict[str, pd.DataFrame], calendar: pd.DatetimeIndex):
+    def __init__(self, data_by_symbol: Dict[str, pd.DataFrame], calendar: pd.DatetimeIndex,
+                 issuer: Optional[Dict[str, str]] = None):
+        """`issuer`: symbol -> issuer id; only the most liquid share class of an issuer is kept."""
+        self.issuer = issuer or {}
         self.calendar = pd.DatetimeIndex(calendar).sort_values()
         symbols = sorted(data_by_symbol)
         close = {s: data_by_symbol[s]["Close"] for s in symbols}
@@ -80,9 +94,28 @@ class LiquidityPanel:
 
         eligible = (close >= criteria.min_price) & (n_bars >= criteria.min_bars) & \
                    (hist >= criteria.min_history) & ~np.isnan(median_dv)
-        ranked = pd.DataFrame({"median_dollar_volume": median_dv, "close": close},
+        need_vol = criteria.max_volatility is not None or criteria.rank_by == "low_volatility"
+        vol = np.full(len(close), np.nan)
+        if need_vol:
+            px = self.close.iloc[max(0, lo - 1): pos + 1].to_numpy(dtype="float64")
+            with warnings.catch_warnings(), np.errstate(all="ignore"):
+                warnings.simplefilter("ignore", RuntimeWarning)
+                vol = np.nanstd(np.diff(np.log(px), axis=0), axis=0, ddof=1) * np.sqrt(252)
+            eligible &= ~np.isnan(vol)
+        if criteria.max_volatility is not None:
+            eligible &= vol <= criteria.max_volatility
+        ranked = pd.DataFrame({"median_dollar_volume": median_dv, "close": close, "volatility": vol},
                               index=self.close.columns)[eligible]
         ranked = ranked.sort_values("median_dollar_volume", ascending=False, kind="mergesort")
+        if self.issuer:
+            # keep only the most liquid share class of each issuer (GOOGL vs GOOG)
+            ids = pd.Index([self.issuer.get(sym, sym) for sym in ranked.index])
+            ranked = ranked[~ids.duplicated(keep="first")]
+        if criteria.rank_by == "low_volatility":
+            lo_, hi_ = criteria.prefilter_skip, criteria.prefilter_skip + criteria.prefilter_top_n
+            ranked = ranked.iloc[lo_:hi_].sort_values("volatility", kind="mergesort")
+        elif criteria.rank_by != "dollar_volume":
+            raise ValueError(f"Unknown rank_by: {criteria.rank_by!r}")
         ranked["rank"] = np.arange(1, len(ranked) + 1)
 
         top = ranked[ranked["rank"] <= criteria.top_n]

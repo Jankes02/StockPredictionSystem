@@ -23,3 +23,24 @@ def build_store(cfg: LiveConfig, provider: Optional[DataProvider] = None) -> Mar
         history_start={tf: pd.Timestamp(ts) for tf, ts in cfg.data.history_start.items()},
         overlap=cfg.data.overlap_bars,
     )
+
+
+RAW_CACHE_SUBDIR = "raw"
+
+
+def build_raw_store(cfg: LiveConfig, provider: Optional[DataProvider] = None) -> MarketDataStore:
+    """
+    Unadjusted daily bars (actual traded prices) in <cache_dir>/raw, for
+    market capitalisation = shares outstanding (as filed) x price on the day.
+    Adjusted prices would understate market caps before every split.
+    """
+    if provider is None:
+        from src.core.settings import load_alpaca_settings
+        from src.data.alpaca_provider import AlpacaProvider
+        provider = AlpacaProvider(load_alpaca_settings(), feed=cfg.data.feed, adjustment="raw")
+    return MarketDataStore(
+        provider,
+        ParquetBarCache(cfg.resolve(cfg.data.cache_dir) / RAW_CACHE_SUBDIR),
+        history_start={tf: pd.Timestamp(ts) for tf, ts in cfg.data.history_start.items()},
+        overlap=cfg.data.overlap_bars,
+    )

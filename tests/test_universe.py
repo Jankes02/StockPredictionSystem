@@ -68,6 +68,42 @@ def test_screen_ranks_by_dollar_volume_and_applies_filters():
     assert t_short_hist.index[0] == "NEW"
 
 
+def test_share_classes_deduplicated_keeping_most_liquid():
+    from src.universe.pool import issuer_map
+    cal, data = _panel()
+    data["BIG2"] = data["BIG"].assign(Volume=data["BIG"]["Volume"] * 0.5)
+    pool = pd.DataFrame({"symbol": ["BIG", "BIG2", "MID", "SMALL"],
+                         "name": ["Big Inc. Class A Common Stock", "Big Inc. Class C Capital Stock",
+                                  "Mid Corp", "Small Co"]})
+    panel = LiquidityPanel(data, cal, issuer=issuer_map(pool))
+    t = panel.screen(cal[-1], ScreenCriteria(top_n=3, min_history=200))
+    assert t.index.tolist() == ["BIG", "MID", "SMALL"]
+    assert t["rank"].tolist() == [1, 2, 3]
+
+
+def test_issuer_map_does_not_merge_lookalike_companies():
+    from src.universe.pool import issuer_map
+    pool = pd.DataFrame({"symbol": ["FBNC", "FBP", "GOOG", "GOOGL"],
+                         "name": ["First Bancorp Common Stock", "First BanCorp.",
+                                  "Alphabet Inc. Class C Capital Stock", "Alphabet Inc. Class A Common Stock"]})
+    m = issuer_map(pool)
+    assert m["FBNC"] != m["FBP"]
+    assert m["GOOG"] == m["GOOGL"]
+
+
+def test_volatility_filter():
+    cal, data = _panel()
+    rng = np.random.default_rng(1)
+    wild = data["MID"].copy()
+    wild["Close"] = 50.0 * np.exp(np.cumsum(0.05 * rng.standard_normal(len(wild))))  # ~80% vol
+    wild["Volume"] = 4e6 * 50.0 / wild["Close"]   # keep dollar volume comparable
+    data["MID"] = wild
+    panel = LiquidityPanel(data, cal)
+    assert "MID" in panel.screen(cal[-1], ScreenCriteria(top_n=3, min_history=200)).index
+    assert "MID" not in panel.screen(cal[-1], ScreenCriteria(top_n=3, min_history=200,
+                                                              max_volatility=0.5)).index
+
+
 def test_screen_is_point_in_time():
     cal, data = _panel()
     d = cal[150]

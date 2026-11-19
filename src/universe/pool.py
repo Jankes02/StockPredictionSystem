@@ -24,6 +24,39 @@ EXCLUDED_NAME = re.compile(
 COMMON_SYMBOL = re.compile(r"[A-Z]{1,5}")  # excludes share classes/preferreds like BRK.B, T.PRA
 
 
+_SHARE_CLASS_MARKER = re.compile(
+    r"\b(class|series|common stock|common shares|capital stock|ordinary shares)\b", re.IGNORECASE)
+
+
+def issuer_key(name: str) -> str:
+    """
+    Issuer identity for de-duplicating share classes, e.g. both
+    "Alphabet Inc. Class A Common Stock" (GOOGL) and "Alphabet Inc. Class C
+    Capital Stock" (GOOG) -> "alphabet inc". Only the text before the share-class
+    marker is used and only punctuation/case is normalised (legal suffixes are
+    kept, otherwise "Blue Owl Capital Corp" and "Blue Owl Capital Inc" collide).
+    """
+    head = _SHARE_CLASS_MARKER.split(name or "", maxsplit=1)[0]
+    return " ".join(re.sub(r"[^a-z0-9&]+", " ", head.lower()).split())
+
+
+_EXPLICIT_CLASS = re.compile(r"\b(class|series)\b", re.IGNORECASE)
+
+
+def issuer_map(pool: pd.DataFrame) -> dict:
+    """
+    symbol -> issuer id. Symbols share an id only when their `issuer_key`
+    matches AND at least one name in the group names a share class/series
+    explicitly; this keeps look-alike names of different companies apart
+    (e.g. "First Bancorp" FBNC vs "First BanCorp." FBP).
+    """
+    df = pool[["symbol", "name"]].copy()
+    df["key"] = df["name"].map(issuer_key)
+    df["explicit"] = df["name"].fillna("").map(lambda n: bool(_EXPLICIT_CLASS.search(n)))
+    grouped = df.groupby("key")["explicit"].transform("any") & df.duplicated("key", keep=False)
+    return {s: (k if g else s) for s, k, g in zip(df["symbol"], df["key"], grouped)}
+
+
 def filter_pool(assets: pd.DataFrame, exchanges: Sequence[str]) -> pd.DataFrame:
     """
     `assets`: columns symbol, name, exchange, tradable, status.

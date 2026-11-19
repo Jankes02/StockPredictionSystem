@@ -1,0 +1,249 @@
+# Daily strategy frozen after research rounds 1-8 (see docs/practical_tool/daily_strategy_research.md).
+# Change it by re-running the research, not by hand.
+name: daily_lowvol_quality_blend
+sleeves:
+- weight: 0.5
+  strategy:
+    name: lowvol_quality_ensemble
+    type: ensemble
+    momentum:
+      lookback: 252
+      skip: 21
+      vol_adjusted: false
+      require_positive: true
+    mean_reversion:
+      rsi_period: 2
+      entry_rsi: 10.0
+      exit_rsi: 70.0
+      trend_window: 200
+      exit_sma: 5
+    trend_timing:
+      window: 200
+    fundamental:
+      score: quality_value
+    pead:
+      sue_threshold: 2.0
+    agents:
+      macd:
+        fast_period: 8
+        slow_period: 17
+        signal_period: 9
+        confidence_scale: 5
+      rsi:
+        period: 14
+      roc:
+        period: 10
+        threshold: 0.02
+      bollinger:
+        window: 20
+        std_mult: 2
+      matrend:
+        fast: 50
+        slow: 200
+    decision:
+      mode: aggressive
+      min_confidence: 0.0
+      kind_weights: null
+    portfolio:
+      sizing: equity
+      position_size: 0.1
+      max_positions: 10
+      max_gross_exposure: 1.0
+    costs:
+      commission_bps: 0.0
+      slippage_bps: 5.0
+      stamp_duty_bps: 0.0
+    execution:
+      fill: next_open
+      buy_priority: score
+    exits:
+      score_below: null
+      trailing_stop: null
+      max_holding_days: null
+    regime:
+      enabled: false
+      ma_days: 200
+      min_votes: 0.5
+      action: block_buys
+    vol_target:
+      enabled: true
+      target_vol: 0.2
+      window: 20
+      trim_band: 0.1
+    universe:
+      max_volatility: null
+      rank_by: low_volatility
+      prefilter_top_n: null
+      prefilter_skip: null
+      quality_keep: 0.5
+      quality_kind: quality
+      static_symbols: null
+    calibration: null
+- weight: 0.5
+  strategy:
+    name: lowvol_quality_momentum
+    type: momentum
+    momentum:
+      lookback: 252
+      skip: 21
+      vol_adjusted: true
+      require_positive: true
+    mean_reversion:
+      rsi_period: 2
+      entry_rsi: 10.0
+      exit_rsi: 70.0
+      trend_window: 200
+      exit_sma: 5
+    trend_timing:
+      window: 200
+    fundamental:
+      score: quality_value
+    pead:
+      sue_threshold: 2.0
+    agents:
+      macd:
+        fast_period: 8
+        slow_period: 17
+        signal_period: 9
+        confidence_scale: 5
+      rsi:
+        period: 14
+      roc:
+        period: 10
+        threshold: 0.02
+      bollinger:
+        window: 20
+        std_mult: 2
+      matrend:
+        fast: 50
+        slow: 200
+    decision:
+      mode: aggressive
+      min_confidence: 0.05
+      kind_weights: null
+    portfolio:
+      sizing: equity
+      position_size: 0.1
+      max_positions: 10
+      max_gross_exposure: 1.0
+    costs:
+      commission_bps: 0.0
+      slippage_bps: 5.0
+      stamp_duty_bps: 0.0
+    execution:
+      fill: next_open
+      buy_priority: score
+    exits:
+      score_below: null
+      trailing_stop: null
+      max_holding_days: null
+    regime:
+      enabled: false
+      ma_days: 200
+      min_votes: 0.5
+      action: block_buys
+    vol_target:
+      enabled: true
+      target_vol: 0.2
+      window: 20
+      trim_band: 0.1
+    universe:
+      max_volatility: null
+      rank_by: low_volatility
+      prefilter_top_n: null
+      prefilter_skip: null
+      quality_keep: 0.5
+      quality_kind: quality
+      static_symbols: null
+    calibration: null
+calibration:
+  frozen: '2026-11-19T20:45:59+00:00'
+  goal: 'safer than the index: Sharpe >= 0.75 x benchmark and |maxDD| <= 2/3 x benchmark'
+  summary: 'Universe: 100 least volatile of the 300 most liquid US stocks, top half
+    by SEC quality score. Two equal sleeves: the paper''s 5-agent ensemble (aggressive,
+    min_confidence 0) and 12-1 vol-adjusted momentum; 10 positions each; exposure
+    scaled to 20% target volatility.'
+  evidence:
+    with_quality_filter_us_sets:
+      us_large_train:
+        sharpe: 0.786
+        max_drawdown: -0.195
+        cagr: 0.105
+        benchmark_sharpe: 0.639
+        benchmark_max_drawdown: -0.338
+        benchmark_cagr: 0.111
+        gate_pass: true
+      us_large_test:
+        sharpe: 1.209
+        max_drawdown: -0.099
+        cagr: 0.131
+        benchmark_sharpe: 1.275
+        benchmark_max_drawdown: -0.188
+        benchmark_cagr: 0.198
+        gate_pass: true
+      us_mid:
+        sharpe: 0.653
+        max_drawdown: -0.216
+        cagr: 0.075
+        benchmark_sharpe: 0.536
+        benchmark_max_drawdown: -0.422
+        benchmark_cagr: 0.095
+        gate_pass: true
+    without_quality_filter_all_5_sets:
+      us_large_train:
+        sharpe: 0.813
+        max_drawdown: -0.212
+        cagr: 0.107
+        benchmark_sharpe: 0.639
+        benchmark_max_drawdown: -0.338
+        benchmark_cagr: 0.111
+        gate_pass: true
+      us_large_test:
+        sharpe: 1.082
+        max_drawdown: -0.12
+        cagr: 0.12
+        benchmark_sharpe: 1.275
+        benchmark_max_drawdown: -0.188
+        benchmark_cagr: 0.198
+        gate_pass: true
+      us_mid:
+        sharpe: 0.562
+        max_drawdown: -0.191
+        cagr: 0.057
+        benchmark_sharpe: 0.536
+        benchmark_max_drawdown: -0.422
+        benchmark_cagr: 0.095
+        gate_pass: true
+      wig20:
+        sharpe: 1.19
+        max_drawdown: -0.118
+        cagr: 0.146
+        benchmark_sharpe: 0.75
+        benchmark_max_drawdown: -0.292
+        benchmark_cagr: 0.151
+        gate_pass: true
+      ftse100:
+        sharpe: 0.874
+        max_drawdown: -0.082
+        cagr: 0.044
+        benchmark_sharpe: 0.696
+        benchmark_max_drawdown: -0.134
+        benchmark_cagr: 0.08
+        gate_pass: true
+  caveats:
+  - ~470 configurations were examined over 8 research rounds; the US test window 2023-2026
+    was viewed repeatedly.
+  - 'Deflated Sharpe ratio of the closely related blend ~0.7 (< 0.95): not statistically
+    proven.'
+  - Asset pool = currently listed stocks (survivorship bias); WIG20/FTSE checks used
+    current constituents.
+  - Quality filter only verifiable on US data (no SEC filings for WIG20/FTSE); foreign
+    IFRS filers get no score and are excluded.
+  - Returns are below the index in strong bull markets by design (lower exposure to
+    volatile large caps).
+  reports:
+  - state/reports/robustness_round5.csv
+  - robustness_round6.csv
+  - robustness_round7*.csv
+  - robustness_round8.csv
+  - calibration_daily_grid_*.csv

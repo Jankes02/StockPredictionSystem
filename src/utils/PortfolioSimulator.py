@@ -33,7 +33,23 @@ class PortfolioSimulator:
         commission_bps: float = 0.0,
         slippage_bps: float = 0.0,
         stamp_duty_bps: float = 0.0,
+        sizing: Literal["cash", "equity"] = "cash",
+        max_positions: Optional[int] = None,
+        max_gross_exposure: float = 1.0,
     ):
+        """
+        sizing="cash" (paper protocol): each buy allocates `position_size` of
+        the *remaining cash*, so allocations shrink geometrically.
+        sizing="equity": each buy allocates `position_size` of current equity
+        (marked at last known prices), limited by available cash, by
+        `max_positions` open positions and by gross exposure
+        <= `max_gross_exposure` x equity.
+        """
+        if sizing not in ("cash", "equity"):
+            raise ValueError(f"Unknown sizing: {sizing!r}")
+        self.sizing = sizing
+        self.max_positions = max_positions
+        self.max_gross_exposure = max_gross_exposure
         self.initial_cash = initial_cash
         self.cash = initial_cash
         self.position_size = position_size
@@ -88,12 +104,21 @@ class PortfolioSimulator:
         if symbol in self.positions:
             return
 
+        if self.max_positions is not None and len(self.positions) >= self.max_positions:
+            return
+
         fill_price = price * (1.0 + self.slippage_bps * BPS)
         # Purchases bear commission plus any one-way stamp duty.
         buy_charge_rate = (self.commission_bps + self.stamp_duty_bps) * BPS
 
         # Size the position against cash capacity inclusive of entry charges
-        allocation = self.cash * self.position_size
+        if self.sizing == "cash":
+            allocation = self.cash * self.position_size
+        else:
+            invested = self._invested_value()
+            equity = self.cash + invested
+            room = self.max_gross_exposure * equity - invested
+            allocation = min(equity * self.position_size, room, self.cash)
         max_spend = allocation / (1.0 + buy_charge_rate)
         if max_spend <= 0:
             return
@@ -154,7 +179,48 @@ class PortfolioSimulator:
             "pnl": pnl,
         })
 
+    def trim_to_exposure(self, date: pd.Timestamp, prices: Dict[str, float], target_gross: float) -> None:
+        """
+        Sell the same fraction of every position so that gross exposure (at
+        `prices`, last known prices otherwise) is at most `target_gross` x equity.
+        Partial sells are recorded as SELL trades with `partial: True`.
+        """
+        marks = {s: prices.get(s, self._last_prices.get(s, p["entry_price"])) for s, p in self.positions.items()}
+        invested = sum(p["quantity"] * marks[s] for s, p in self.positions.items())
+        equity = self.cash + invested
+        if invested <= 0 or invested <= target_gross * equity:
+            return
+        keep = max(0.0, target_gross * equity / invested)
+        for sym in sorted(self.positions):
+            pos = self.positions[sym]
+            sell_qty = pos["quantity"] - int(pos["quantity"] * keep)
+            if sell_qty <= 0 or sym not in prices:
+                continue
+            if sell_qty >= pos["quantity"]:
+                self._sell(sym, prices[sym], date)
+                continue
+            fill_price = prices[sym] * (1.0 - self.slippage_bps * BPS)
+            notional = sell_qty * fill_price
+            commission = notional * self.commission_bps * BPS
+            self.cash += notional - commission
+            share = sell_qty / pos["quantity"]
+            entry_comm = pos["entry_commission"] * share
+            pos["entry_commission"] -= entry_comm
+            pos["quantity"] -= sell_qty
+            self.trades.append({
+                "symbol": sym, "action": "SELL", "price": fill_price, "quantity": sell_qty,
+                "date": date, "pnl": (fill_price - pos["entry_price"]) * sell_qty - commission - entry_comm,
+                "partial": True,
+            })
+
     # ---------- EQUITY ----------
+
+    def _invested_value(self) -> float:
+        """Market value of open positions at last known prices (entry price if none yet)."""
+        return sum(
+            pos["quantity"] * self._last_prices.get(sym, pos["entry_price"])
+            for sym, pos in self.positions.items()
+        )
 
     def _record_equity(self, date: pd.Timestamp, prices: Dict[str, float]) -> None:
         # A held symbol without a bar today (halt, data gap, or a calendar that

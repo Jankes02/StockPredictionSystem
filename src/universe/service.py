@@ -10,6 +10,7 @@ from src.data.store import MarketDataStore
 from src.state.db import StateDB
 from src.universe.screener import (
     LiquidityPanel,
+    ScreenCriteria,
     Snapshot,
     UniverseSchedule,
     build_universe_history,
@@ -28,14 +29,17 @@ def trading_calendar(cfg: LiveConfig, store: MarketDataStore) -> pd.DatetimeInde
 
 
 def load_panel(cfg: LiveConfig, store: MarketDataStore, db: StateDB) -> LiquidityPanel:
-    pool = db.pool_symbols()
+    from src.universe.pool import issuer_map
+
+    pool_df = db.pool()
+    pool = pool_df["symbol"].tolist()
     if not pool:
         raise RuntimeError("Asset pool is empty; run `update-pool` first")
     calendar = trading_calendar(cfg, store)
     data = store.load(pool, Timeframe.DAY)
     log.info("Liquidity panel: %d/%d pool symbols with cached data, %d sessions",
              len(data), len(pool), len(calendar))
-    return LiquidityPanel(data, calendar)
+    return LiquidityPanel(data, calendar, issuer=issuer_map(pool_df))
 
 
 def screen_now(cfg: LiveConfig, store: MarketDataStore, db: StateDB,
@@ -58,13 +62,21 @@ def screen_now(cfg: LiveConfig, store: MarketDataStore, db: StateDB,
 def universe_schedule(
     cfg: LiveConfig, store: MarketDataStore, db: StateDB,
     start: Optional[pd.Timestamp] = None, end: Optional[pd.Timestamp] = None,
+    *, criteria: Optional[ScreenCriteria] = None, panel: Optional[LiquidityPanel] = None,
 ) -> Tuple[UniverseSchedule, List[Snapshot], pd.DatetimeIndex]:
-    """Point-in-time schedule for backtests, built from cached history."""
+    """
+    Point-in-time schedule for backtests, built from cached history.
+    `criteria` overrides config_live.yaml's screen; `panel` reuses an already
+    loaded liquidity panel (loading the whole pool takes a while).
+    Leave `start` unset for backtests: rank hysteresis depends on the earlier
+    snapshots, so a schedule started mid-history differs slightly.
+    """
     if cfg.universe.mode == "static":
         calendar = trading_calendar(cfg, store)
         start = pd.Timestamp(start) if start is not None else calendar[0]
         return UniverseSchedule.static(cfg.universe.symbols, start), [], calendar
-    panel = load_panel(cfg, store, db)
+    panel = panel or load_panel(cfg, store, db)
+    criteria = criteria or cfg.universe.screen.criteria()
     rebal = month_end_sessions(panel.calendar)
     if start is not None:
         # include the month-end before `start` so the universe is defined on day one
@@ -72,5 +84,5 @@ def universe_schedule(
         rebal = rebal[rebal >= (before[-1] if len(before) else rebal[0])]
     if end is not None:
         rebal = rebal[rebal <= pd.Timestamp(end)]
-    snaps = build_universe_history(panel, cfg.universe.screen.criteria(), rebal)
+    snaps = build_universe_history(panel, criteria, rebal)
     return UniverseSchedule(snaps), snaps, panel.calendar

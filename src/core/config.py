@@ -49,13 +49,17 @@ class ScreenConfig(_Strict):
     min_bars: int = Field(50, ge=1)
     min_history: int = Field(200, ge=1)
     keep_buffer: float = Field(1.25, ge=1.0)
+    max_volatility: Optional[float] = Field(None, gt=0)
+    rank_by: Literal["dollar_volume", "low_volatility"] = "dollar_volume"
+    prefilter_top_n: int = Field(300, ge=1)
     rebalance: Literal["monthly"] = "monthly"
 
     def criteria(self):
         from src.universe.screener import ScreenCriteria
         return ScreenCriteria(top_n=self.top_n, min_price=self.min_price, lookback=self.lookback,
                               min_bars=self.min_bars, min_history=self.min_history,
-                              keep_buffer=self.keep_buffer)
+                              keep_buffer=self.keep_buffer, max_volatility=self.max_volatility,
+                              rank_by=self.rank_by, prefilter_top_n=self.prefilter_top_n)
 
 
 class UniverseConfig(_Strict):

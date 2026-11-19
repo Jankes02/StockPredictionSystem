@@ -47,6 +47,44 @@ class DecisionAgent:
         return self._apply_portfolio_constraints(decisions)
 
 
+    def scores(self, signals: List[dict]) -> Dict[str, float]:
+        """
+        Raw ensemble score per symbol, before the buy/sell thresholds are
+        applied (0.0 when no signal passes `min_confidence`). Used by exit
+        rules that act on a weakening score rather than on a SELL decision.
+        """
+        return {
+            symbol: self._score(sym_signals)[0]
+            for symbol, sym_signals in self._group_by_symbol(signals).items()
+        }
+
+    def _score(self, signals: List[dict]):
+        filtered = [
+            s for s in signals
+            if s["signal"] != 0 and s["confidence"] >= self.min_confidence
+        ]
+        if not filtered:
+            return 0.0, None
+
+        trend_dir = self._trend_direction(signals)
+        score = 0.0
+        contributors = []
+
+        for s in filtered:
+            if self.mode == "passive" and trend_dir != 0:
+                if s["signal"] != trend_dir:
+                    continue
+
+            weight = self.kind_weights.get(s["kind"], 1.0)
+            score += s["signal"] * s["confidence"] * weight
+            contributors.append({
+                "agent": s["agent"],
+                "signal": s["signal"],
+                "confidence": s["confidence"],
+                "kind": s["kind"],
+            })
+        return score, contributors
+
     def _decide_for_symbol(self, symbol: str, signals: List[dict]) -> Decision:
         filtered = [
             s for s in signals
