@@ -5,6 +5,7 @@ Command-line entry point of the live / paper-trading tool.
     python -m apps.cli update-data [--timeframe 1Day] [--symbols AAPL MSFT]
     python -m apps.cli screen                      # liquidity screen -> universe snapshot
     python -m apps.cli data-status [--timeframe 1Day]
+    python -m apps.cli run-daily [--live]          # daily paper-trading cycle (dry run by default)
 
 All commands accept --config (default: config_live.yaml).
 """
@@ -327,6 +328,102 @@ def cmd_robustness_daily(cfg: LiveConfig, args) -> int:
     return 0
 
 
+def _age_days(ts) -> float:
+    import pandas as pd
+    if ts is None:
+        return float("inf")
+    return (pd.Timestamp.now(tz="UTC") - pd.Timestamp(ts)).total_seconds() / 86400
+
+
+def _refresh_inputs(cfg: LiveConfig) -> int:
+    """Data the daily cycle needs: asset pool (monthly), daily bars (every run), SEC data (weekly)."""
+    import argparse as _ap
+    import pandas as pd
+
+    db = _db(cfg)
+    pool = db.pool()
+    pool_age = _age_days(pool["updated_at"].max() if not pool.empty else None)
+    if pool_age > cfg.live.pool_max_age_days:
+        log.info("asset pool is %.0f days old: refreshing", pool_age)
+        cmd_update_pool(cfg, _ap.Namespace())
+    rc = cmd_update_data(cfg, _ap.Namespace(timeframe=["1Day"], symbols=None))
+    if rc:
+        return rc
+    files = list(cfg.resolve(FUNDAMENTALS_DIR).glob("*.parquet"))
+    newest = max((f.stat().st_mtime for f in files), default=None)
+    sec_age = _age_days(pd.Timestamp(newest, unit="s", tz="UTC") if newest else None)
+    if sec_age > cfg.live.fundamentals_max_age_days:
+        log.info("SEC fundamentals are %.0f days old: refreshing", sec_age)
+        cmd_update_fundamentals(cfg, _ap.Namespace(symbols=None, refresh=True))
+    return 0
+
+
+def cmd_run_daily(cfg: LiveConfig, args) -> int:
+    import pandas as pd
+    from src.core.settings import load_alpaca_settings
+    from src.data.calendar import SessionCalendar
+    from src.execution.broker import AlpacaBroker
+    from src.live.cycle import run_cycle
+    from src.strategies.daily.config import load_strategy_daily
+
+    if not args.skip_update:
+        rc = _refresh_inputs(cfg)
+        if rc:
+            log.error("data update failed: no planning on stale data")
+            return rc
+    settings = load_alpaca_settings()
+    cal_path = cfg.resolve(Path("data/cache/calendar.parquet"))
+    if not cal_path.exists() or _age_days(pd.Timestamp(cal_path.stat().st_mtime, unit="s", tz="UTC")) > 30:
+        SessionCalendar.fetch_alpaca(settings).save(cal_path)
+    sessions = SessionCalendar.load(cal_path).sessions.index
+
+    strat = load_strategy_daily(cfg.resolve(cfg.live.strategy))
+    research = _research(cfg, strat)
+    res = run_cycle(broker=AlpacaBroker(settings), db=_db(cfg), research=research, strat=strat,
+                    sessions=sessions, limits=cfg.live.limits.limits(), shadow_start=cfg.live.shadow_start,
+                    live=args.live, prefix=cfg.live.order_prefix, cash_buffer=cfg.live.cash_buffer,
+                    min_notional=cfg.live.min_order_notional, replace=args.replace)
+    _print_cycle(res)
+    if res.plan is not None:
+        out = _reports_dir(cfg) / "live"
+        out.mkdir(exist_ok=True)
+        rows = [{"symbol": o.symbol, "side": o.side, "qty": o.qty, "est_price": round(o.est_price, 4),
+                 "notional": round(o.notional, 2), "held_qty": o.held_qty, "target_qty": o.target_qty,
+                 "target_weight": round(o.target_weight, 5), "reason": o.reason} for o in res.plan.orders]
+        path = out / f"plan_{res.session:%Y%m%d}_{res.mode}.csv"
+        pd.DataFrame(rows).to_csv(path, index=False)
+        print(f"plan written to {path}")
+    return 0 if res.status in ("planned", "submitted", "skipped") else 1
+
+
+def _print_cycle(res) -> None:
+    print(f"run {res.run_id} [{res.mode}] -> {res.status.upper()}")
+    if res.session is not None:
+        print(f"  orders for the open of {res.session.date()}, decisions on the close of "
+              f"{res.as_of.date() if res.as_of is not None else '?'}")
+    if res.equity:
+        print(f"  account equity ${res.equity:,.2f}  drawdown from peak {res.drawdown:.1%}")
+    t = res.target
+    if t is not None:
+        print(f"  target: {len(t.weights)} positions, gross {t.gross:.1%}")
+        for s, w in sorted(t.weights.items(), key=lambda kv: -kv[1]):
+            print(f"    {s:<6} {w:6.1%}")
+        acts = [d for d in t.decisions if d["action"] in ("BUY", "SELL")]
+        if acts:
+            print("  strategy decisions on that close: " + ", ".join(f"{d['action']} {d['symbol']} ({d['sleeve']})"
+                                                                   for d in acts))
+    p = res.plan
+    if p is not None and p.orders:
+        print(f"  orders ({len(p.orders)}):")
+        for o in p.orders:
+            print(f"    {o.side:<4} {o.qty:>6} {o.symbol:<6} ~${o.notional:>11,.2f}  "
+                  f"({o.reason}; held {o.held_qty:g} -> {o.target_qty})")
+    elif p is not None:
+        print("  no orders needed")
+    for m in res.messages:
+        print(f"  - {m}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="apps.cli", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -365,6 +462,14 @@ def build_parser() -> argparse.ArgumentParser:
     bt.add_argument("--start", default="2017-01-01")
     bt.add_argument("--end", default=None)
     bt.set_defaults(func=cmd_backtest)
+
+    rd = sub.add_parser("run-daily", help="daily paper-trading cycle (dry run unless --live)")
+    rd.add_argument("--live", action="store_true",
+                    help="submit market-on-open orders to the Alpaca PAPER account (default: dry run)")
+    rd.add_argument("--skip-update", action="store_true", help="plan on the cached data without updating it")
+    rd.add_argument("--replace", action="store_true",
+                    help="cancel orders already placed for the next session and plan again")
+    rd.set_defaults(func=cmd_run_daily)
 
     cd = sub.add_parser("calibrate-daily", help="walk-forward calibration -> strategy_daily.yaml")
     cd.add_argument("--train-start", default="2017-01-01")

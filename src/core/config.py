@@ -95,12 +95,37 @@ class LoggingConfig(_Strict):
     file: Optional[Path] = Path("state/logs/tool.log")
 
 
+class LiveLimitsConfig(_Strict):
+    max_position_weight: float = Field(0.20, gt=0, le=1)
+    max_gross: float = Field(1.0, gt=0, le=1)          # no leverage
+    max_positions: int = Field(25, ge=1)
+    max_turnover: float = Field(1.0, gt=0)             # traded notional / equity in one run
+    max_drawdown_halt: float = Field(0.30, gt=0, lt=1)
+
+    def limits(self):
+        from src.live.daily import LiveLimits
+        return LiveLimits(**self.model_dump())
+
+
+class LiveTradingConfig(_Strict):
+    """Daily paper-trading cycle (`apps.cli run-daily`)."""
+    strategy: Path = Path("strategy_daily.yaml")
+    shadow_start: str = "2017-01-01"     # the strategy is replayed from here to get today's targets
+    cash_buffer: float = Field(0.01, ge=0, lt=0.5)
+    min_order_notional: float = Field(100.0, ge=0)
+    order_prefix: str = "d1"
+    fundamentals_max_age_days: int = Field(7, ge=1)
+    pool_max_age_days: int = Field(30, ge=1)
+    limits: LiveLimitsConfig = LiveLimitsConfig()
+
+
 class LiveConfig(_Strict):
     data: DataConfig = DataConfig()
     universe: UniverseConfig
     benchmark: str = "SPY"
     logging: LoggingConfig = LoggingConfig()
     state: StateConfig = StateConfig()
+    live: LiveTradingConfig = LiveTradingConfig()
 
     base_dir: Path = PROJECT_ROOT
 

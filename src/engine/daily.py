@@ -313,7 +313,37 @@ def run_daily_backtest(
             if sym not in portfolio.positions:
                 del peak[sym]
 
+    # decisions taken on the last session's close that the next open would fill
+    # (live trading turns these into orders; see project_next_open)
+    portfolio.pending_execution = PendingExecution(
+        pending if fill == "next_open" else [], pending_cap if fill == "next_open" else None,
+        base_gross, risk.trim_band)
     return portfolio
+
+
+@dataclass
+class PendingExecution:
+    decisions: List[Decision]
+    cap: Optional[float]
+    base_gross: float
+    trim_band: float
+
+
+def project_next_open(portfolio: PortfolioSimulator, fill_prices: Dict[str, float],
+                      date: Optional[pd.Timestamp] = None) -> PortfolioSimulator:
+    """
+    Copy of `portfolio` after its pending next-open decisions are filled at
+    `fill_prices` (e.g. the last closes, as an estimate of the next open),
+    with exactly the engine's rules (sells, trim to the exposure cap, buys).
+    """
+    import copy
+
+    p = copy.deepcopy(portfolio)
+    pe = getattr(portfolio, "pending_execution", None)
+    if pe is not None and (pe.decisions or pe.cap is not None):
+        _execute(p, date if date is not None else pd.Timestamp.now().normalize(), fill_prices,
+                 pe.decisions, pe.cap, pe.base_gross, pe.trim_band)
+    return p
 
 
 def _execute(portfolio: PortfolioSimulator, date, fill_prices: Dict[str, float],

@@ -181,8 +181,17 @@ class DailyResearch:
     def run(self, strat, start, end, initial_cash: float = 100_000):
         """Backtest a StrategyDailyConfig, or a BlendConfig as independent sleeves."""
         if getattr(strat, "type", None) == "blend":
-            parts = [self.run(sl.strategy, start, end, initial_cash * sl.weight) for sl in strat.sleeves]
-            return CombinedPortfolio.combine(parts)
+            return CombinedPortfolio.combine([p for _, p in self.run_sleeves(strat, start, end, initial_cash)])
+        return self._run_single(strat, start, end, initial_cash)
+
+    def run_sleeves(self, strat, start, end, initial_cash: float = 100_000):
+        """[(sleeve name, PortfolioSimulator)]: one per sleeve of a blend, or the single strategy."""
+        if getattr(strat, "type", None) != "blend":
+            return [(strat.name, self._run_single(strat, start, end, initial_cash))]
+        return [(sl.strategy.name, self._run_single(sl.strategy, start, end, initial_cash * sl.weight))
+                for sl in strat.sleeves]
+
+    def _run_single(self, strat, start, end, initial_cash: float):
         ctx = self.context(strat.universe)
         return run_daily_backtest(
             prices=ctx.prices, universe=ctx.schedule, source=self.source(strat, ctx),

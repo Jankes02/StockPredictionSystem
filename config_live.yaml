@@ -34,6 +34,21 @@ universe:
 
 benchmark: SPY
 
+live:                  # daily paper-trading cycle: python -m apps.cli run-daily [--live]
+  strategy: strategy_daily.yaml
+  shadow_start: "2017-01-01"   # the frozen strategy is replayed from here to get the next targets
+  cash_buffer: 0.01            # keep 1% of equity in cash (open auction prices differ from the last close)
+  min_order_notional: 100      # USD; smaller rebalancing changes are skipped (full entries/exits never)
+  order_prefix: d1             # client_order_id = d1-YYYYMMDD-SYMBOL-side (re-runs cannot duplicate orders)
+  fundamentals_max_age_days: 7 # SEC data older than this is refreshed before planning
+  pool_max_age_days: 30        # asset pool older than this is refreshed from Alpaca
+  limits:
+    max_position_weight: 0.20  # one name, both sleeves together
+    max_gross: 1.0             # no leverage
+    max_positions: 25
+    max_turnover: 1.0          # traded notional / equity in one run
+    max_drawdown_halt: 0.30    # stop trading if the account falls 30% from its peak
+
 logging:
   level: INFO
   file: state/logs/tool.log
