@@ -58,7 +58,8 @@ def cmd_update_data(cfg: LiveConfig, args) -> int:
     for tf in _timeframes(cfg, args.timeframe):
         symbols = [s.upper() for s in args.symbols] if args.symbols else _symbols_for(cfg, tf)
         log.info("Updating %s bars for %d symbols ...", tf.value, len(symbols))
-        report = store.update(symbols, tf)
+        # intraday history is heavy: write every few symbols so an aborted run keeps its progress
+        report = store.update(symbols, tf, chunk_size=200 if tf.is_daily else 10)
         log.info("%s", report.summary())
         if cfg.benchmark.upper() in report.missing:
             log.error("No data for benchmark %s", cfg.benchmark)

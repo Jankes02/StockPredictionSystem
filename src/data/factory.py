@@ -12,7 +12,8 @@ def build_provider(cfg: LiveConfig) -> DataProvider:
     if cfg.data.provider == "alpaca":
         from src.data.alpaca_provider import AlpacaProvider
 
-        return AlpacaProvider(load_alpaca_settings(), feed=cfg.data.feed, adjustment=cfg.data.adjustment)
+        return AlpacaProvider(load_alpaca_settings(), feed=cfg.data.feed, adjustment=cfg.data.adjustment,
+                              session=cfg.data.intraday_session, max_workers=cfg.data.intraday_workers)
     raise ValueError(f"Unknown data provider {cfg.data.provider!r}")
 
 

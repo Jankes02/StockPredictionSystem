@@ -9,10 +9,13 @@ data:
   cache_dir: data/cache
   overlap_bars: 5      # bars re-downloaded on each update to detect re-adjusted history
   timeframes: [1Day]
+  intraday_session: regular   # intraday bars 09:30-16:00 ET only
+  intraday_workers: 4         # parallel download tasks (symbol x year)
   history_start:
     1Day: "2016-01-01"
     15Min: "2021-01-01"
-    5Min: "2023-01-01"
+    5Min: "2020-01-01"
+    1Min: "2020-01-01"   # ETFs only (intraday research); stocks get targeted 1-min fetches
 
 universe:
   mode: screen         # screen: liquidity screen over the asset pool | static: trade exactly `symbols`

@@ -1,7 +1,7 @@
 """Offline tests of the Alpaca response conversion (no network)."""
 import pandas as pd
 
-from src.data.alpaca_provider import AlpacaProvider, split_bars_frame
+from src.data.alpaca_provider import AlpacaProvider, _with_timeout, split_bars_frame
 from src.data.base import BAR_COLUMNS, Timeframe
 
 ET = "America/New_York"
@@ -61,3 +61,20 @@ def test_provider_batches_symbols_and_clamps_end_to_sip_delay():
     # alpaca-py normalises request datetimes to naive UTC
     assert all(pd.Timestamp(r.end).tz_localize("UTC") <= now - pd.Timedelta(minutes=15)
                for r in client.requests)
+
+
+def test_http_session_gets_default_timeout_once():
+    class Session:
+        def __init__(self):
+            self.calls = []
+
+        def request(self, method, url, **kw):
+            self.calls.append(kw)
+
+    class Client:
+        _session = Session()
+
+    c = _with_timeout(_with_timeout(Client()))
+    c._session.request("GET", "u")
+    c._session.request("GET", "u", timeout=5)
+    assert c._session.calls == [{"timeout": (15.0, 60.0)}, {"timeout": 5}]

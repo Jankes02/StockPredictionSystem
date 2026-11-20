@@ -26,6 +26,9 @@ class DataConfig(_Strict):
     adjustment: Literal["raw", "split", "dividend", "all"] = "all"
     cache_dir: Path = Path("data/cache")
     overlap_bars: int = Field(5, ge=1)
+    # intraday bars: "regular" keeps 09:30-16:00 ET only; downloads in parallel
+    intraday_session: Literal["all", "regular"] = "regular"
+    intraday_workers: int = Field(8, ge=1, le=32)
     # Earliest bar to download per timeframe (key: 1Day, 1Hour, 15Min, 5Min, 1Min).
     history_start: Dict[Timeframe, str] = {Timeframe.DAY: "2016-01-01"}
     timeframes: List[Timeframe] = [Timeframe.DAY]
